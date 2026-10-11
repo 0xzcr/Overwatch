@@ -13,14 +13,6 @@ export function stage(shape: ShapeName | "drift", opts: MorphOptions = {}, pulse
 
 export const GRADE_WORD: Record<string, string> = { A: "Strong", B: "Good", C: "Caution", D: "Weak", F: "Dangerous" };
 
-export function Mark({ className = "logo-mark" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
-      <use href="#ow-mark" />
-    </svg>
-  );
-}
-
 export function Vis({ html, className }: { html: string; className?: string }) {
   return <div className={className} dangerouslySetInnerHTML={{ __html: html }} />;
 }
@@ -84,7 +76,7 @@ export function PageHero({
   dock,
   compact = true,
 }: {
-  eyebrow: ReactNode;
+  eyebrow?: ReactNode;
   lines: ReactNode[];
   lede?: ReactNode;
   aside?: ReactNode;
@@ -95,7 +87,7 @@ export function PageHero({
   return (
     <section className={`hero${compact ? " hero--page" : ""}`} id="top" data-dock={dock} {...stageAttrs}>
       <div className="hero__title-wrap">
-        <p className="hero__eyebrow mono">{eyebrow}</p>
+        {eyebrow && <p className="hero__eyebrow mono">{eyebrow}</p>}
         <h1 className="hero__title hero__title--page">
           {lines.map((l, i) => (
             <span className="hero__line" key={i}>
@@ -114,11 +106,10 @@ export function PageHero({
   );
 }
 
-export function SectionHead({ label, title, lede, row = false }: { label: string; title: ReactNode; lede?: ReactNode; row?: boolean }) {
+export function SectionHead({ title, lede, row = false }: { title: ReactNode; lede?: ReactNode; row?: boolean }) {
   return (
     <header className={`section-head${row ? " section-head--row" : ""}`}>
       <div>
-        <p className="label mono">[ {label} ]</p>
         <h2 className="h2">{title}</h2>
       </div>
       {lede && <p className="section-head__lede">{lede}</p>}

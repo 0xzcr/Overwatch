@@ -97,7 +97,7 @@ export function AlertsForms({ protocols, preselect, bot, emailEnabled }: { proto
       </div>
 
       <div className="form-card" id="webhook">
-        <p className="label mono">[ Create a webhook ]</p>
+        <h3 className="form-card__title">Create a webhook</h3>
         <label className="field-label mono" htmlFor="wh-url">
           Endpoint URL
         </label>

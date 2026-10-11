@@ -7,5 +7,8 @@ const config: NextConfig = {
   env: { NEXT_PUBLIC_DEMO_MODE: process.env.DEMO_MODE ?? "false" },
   typescript: { ignoreBuildErrors: false },
   eslint: { ignoreDuringBuilds: true },
+  async redirects() {
+    return [{ source: "/case/drift", destination: "/case-study", permanent: true }];
+  },
 };
 export default config;

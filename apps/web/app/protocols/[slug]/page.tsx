@@ -60,7 +60,7 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
         dock={p.name}
         eyebrow={
           <span className="detail__crumbs">
-            <Link href="/protocols">← Control map</Link> <span>{p.category}</span> <span>{live ? "live from mainnet" : SNAPSHOT_LABEL}</span>
+            <Link href="/protocols">← Control map</Link>
           </span>
         }
         lines={[p.name]}
@@ -88,13 +88,13 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
       />
 
       <section className="page-block" data-dock="Control graph" {...stage("graph", { colorA: tone, colorB: "#1b2340", opacity: 0.22, scale: 1.4, autoRotate: 0.04 })}>
-        <SectionHead label="01" title={<>Who can move your money</>} />
+        <SectionHead title={<>Who can move your money</>} />
         <ControlGraph nodes={graph.nodes} edges={graph.edges} network={net} summary={!s} />
       </section>
 
       <section className="page-block detail__grid" data-dock="Facts">
         <div>
-          <SectionHead label="02" title="Facts" />
+          <SectionHead title="Facts" />
           {s ? (
             <dl className="facts">
               {s.programs.map((x) => (
@@ -282,7 +282,7 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
 
         <div className="detail__side">
           <div>
-            <SectionHead label="03" title="Score breakdown" />
+            <SectionHead title="Score breakdown" />
             <div className="breakdown">
               <div className="breakdown__row">
                 <span>Start</span>
@@ -308,7 +308,7 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
           </div>
 
           <div>
-            <SectionHead label="04" title="Onchain registry" />
+            <SectionHead title="Onchain registry" />
             {record ? (
               <dl className="facts__card facts__rows">
                 <span>RiskRecord PDA</span>
@@ -337,7 +337,7 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
           </div>
 
           <div>
-            <SectionHead label="05" title="Get alerts" />
+            <SectionHead title="Get alerts" />
             <div className="detail__ctas">
               {bot ? (
                 <a href={`https://t.me/${bot}?start=watch_${slug}`} className="btn btn--glow btn--sm" data-cursor="Telegram">
@@ -357,7 +357,7 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
       </section>
 
       <section className="page-block" data-dock="Timeline">
-        <SectionHead label="06" title="Governance timeline" />
+        <SectionHead title="Governance timeline" />
         <Timeline
           events={events}
           network={net}

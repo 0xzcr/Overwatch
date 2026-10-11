@@ -11,7 +11,6 @@ export default async function VaultPage() {
     <>
       <PageHero
         dock="Vault"
-        eyebrow={<span data-scramble>Protected vault · demo · devnet</span>}
         lines={["A vault that", <span key="s" className="serif hero__accent">leaves first.</span>]}
         lede={
           <>

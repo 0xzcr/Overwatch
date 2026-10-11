@@ -53,7 +53,6 @@ export default function Methodology() {
     <>
       <PageHero
         dock="Methodology"
-        eyebrow={<span data-scramble>Methodology · v1</span>}
         lines={["Facts first,", <span key="s" className="serif hero__accent">opinions second.</span>]}
         lede={
           <>
@@ -66,7 +65,7 @@ export default function Methodology() {
       />
 
       <section className="page-block method" data-dock="Score" {...stage("shield", { colorA: "#8B7CFF", colorB: "#1b2340", opacity: 0.2, scale: 1.4, front: true, sway: 0.3 })}>
-        <SectionHead label="01" title="Score, 0 to 100" lede="Start at 100, subtract, clamp to 0–100. Threshold and timelock deductions use the weakest relevant multisig, not the sum." row />
+        <SectionHead title="Score, 0 to 100" lede="Start at 100, subtract, clamp to 0–100. Threshold and timelock deductions use the weakest relevant multisig, not the sum." row />
         <div className="method__split">
           <table className="dtable">
             <tbody>
@@ -96,7 +95,7 @@ export default function Methodology() {
       </section>
 
       <section className="page-block method" data-dock="Events">
-        <SectionHead label="02" title="Events and severity" lede="The rules engine diffs each new snapshot against the previous one and emits typed events with a plain-English explanation." row />
+        <SectionHead title="Events and severity" lede="The rules engine diffs each new snapshot against the previous one and emits typed events with a plain-English explanation." row />
         <table className="dtable">
           <tbody>
             {EVENTS.map(([e, s]) => (
@@ -114,7 +113,7 @@ export default function Methodology() {
       </section>
 
       <section className="page-block method" data-dock="Flags">
-        <SectionHead label="03" title="Flags bitmap (u64, published onchain)" row />
+        <SectionHead title="Flags bitmap (u64, published onchain)" row />
         <div className="method__split">
           <table className="dtable">
             <tbody>
@@ -138,7 +137,7 @@ export default function Methodology() {
       </section>
 
       <section className="page-block method" data-dock="Sources">
-        <SectionHead label="04" title="Data sources" row />
+        <SectionHead title="Data sources" row />
         <ul className="bullets">
           <li>
             Program and ProgramData accounts (BPF upgradeable loader): the 36-byte program account and the 45-byte ProgramData header, fetched with{" "}
@@ -161,7 +160,7 @@ export default function Methodology() {
       </section>
 
       <section className="page-block method" data-dock="Limitations">
-        <SectionHead label="05" title="Limitations" row />
+        <SectionHead title="Limitations" row />
         <ul className="bullets">
           <li>Some programs are controlled by addresses we have not attributed yet. They are labelled &quot;unmapped&quot; and lose 15 points, because unknown is not safe.</li>
           <li>Realms DAO and Squads v3 governance parameters are not decoded yet (Squads v3 has limited support).</li>

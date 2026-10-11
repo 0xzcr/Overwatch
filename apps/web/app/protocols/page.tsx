@@ -1,4 +1,4 @@
-import { loadProtocols, SNAPSHOT_LABEL } from "@/site/data";
+import { loadProtocols } from "@/site/data";
 import { Leaderboard } from "@/site/Leaderboard";
 import { PageHero, stage } from "@/site/ui";
 
@@ -11,7 +11,6 @@ export default async function Protocols() {
     <>
       <PageHero
         dock="Control map"
-        eyebrow={<span data-scramble>Control map · {live ? "live from mainnet" : SNAPSHOT_LABEL}</span>}
         lines={["Who can move", <span key="s" className="serif hero__accent">the money.</span>]}
         lede={
           <>

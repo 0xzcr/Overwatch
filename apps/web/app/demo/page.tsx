@@ -10,7 +10,6 @@ export default function Demo() {
     <>
       <PageHero
         dock="Demo"
-        eyebrow={<span data-scramble>Demo console · devnet · real Squads v4 transactions</span>}
         lines={["Weaken the locks.", <span key="s" className="serif hero__accent">Watch the alarm.</span>]}
         lede={
           <>

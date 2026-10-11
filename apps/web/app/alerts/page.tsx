@@ -11,7 +11,6 @@ export default async function Alerts({ searchParams }: { searchParams: Promise<{
     <>
       <PageHero
         dock="Alerts"
-        eyebrow={<span data-scramble>Alerts · free for depositors</span>}
         lines={["Get the alarm", <span key="s" className="serif hero__accent">where you are.</span>]}
         lede="Each alert is plain English: what changed, why it matters, what you can do, with links to the transaction. Curators and funds use the API."
         stageAttrs={stage("burst", { colorA: "#FF5A3D", colorB: "#FFB547", x: 2.7, y: 0.4, yNarrow: 1.5, scale: 0.8, opacity: 1, autoRotate: 0.14 })}

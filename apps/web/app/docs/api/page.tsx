@@ -32,7 +32,6 @@ export default function ApiDocs() {
     <>
       <PageHero
         dock="API"
-        eyebrow={<span data-scramble>API reference · version 2026-10-11</span>}
         lines={["Read the watch", <span key="s" className="serif hero__accent">from anywhere.</span>]}
         lede={
           <>
@@ -44,7 +43,7 @@ export default function ApiDocs() {
       />
 
       <section className="page-block" data-dock="Endpoints" {...stage("terrain", { colorA: "#5AA8FF", colorB: "#1b2340", opacity: 0.25, y: -1.2, scale: 1.3, autoRotate: 0.02 })}>
-        <SectionHead label="01" title="Endpoints" />
+        <SectionHead title="Endpoints" />
         <table className="dtable dtable--api">
           <tbody>
             {EP.map(([m, p, d]) => (
@@ -59,7 +58,7 @@ export default function ApiDocs() {
       </section>
 
       <section className="page-block" data-dock="Examples">
-        <SectionHead label="02" title="Examples" />
+        <SectionHead title="Examples" />
         <div className="codegrid" data-reveal>
           <Code title="curl">{`curl -s https://<host>/api/v1/protocols/drift -H "x-api-key: $OVERWATCH_KEY" \\
   | jq '.data | {grade, score, flagNames, threshold, timelockSec}'
@@ -77,7 +76,6 @@ curl -N https://<host>/api/v1/stream   # event: event / score / registry / shiel
 
       <section className="page-block" data-dock="Webhooks">
         <SectionHead
-          label="03"
           title="Webhook signatures"
           lede={
             <>
@@ -95,7 +93,6 @@ if (!ok) return new Response(null, { status: 401 });`}</Code>
 
       <section className="page-block" data-dock="Onchain">
         <SectionHead
-          label="04"
           title="Onchain: read the registry from your program"
           lede={
             <>
