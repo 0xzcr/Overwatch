@@ -23,7 +23,7 @@ export const pages = [
   { href: "/", name: "Overview", kicker: "What Overwatch watches", shape: "orb", color: "#2BFFB0" },
   { href: "/protocols", name: "Control map", kicker: "Grades for the top Solana protocols", shape: "globe", color: "#2BFFB0" },
   { href: "/events", name: "Live events", kicker: "Every change, as it happens", shape: "radar", color: "#7CF3FF" },
-  { href: "/case/drift", name: "Drift case", kicker: "9 days of warning", shape: "knot", color: "#FF5A3D" },
+  { href: "/case-study", name: "Case study", kicker: "Why Overwatch exists", shape: "knot", color: "#FF5A3D" },
   { href: "/alerts", name: "Alerts", kicker: "Telegram · webhooks · email", shape: "burst", color: "#FFB547" },
   { href: "/vault", name: "Protected vault", kicker: "Devnet demo", shape: "lock", color: "#B6FF3B" },
   { href: "/demo", name: "Demo console", kicker: "Weaken the locks on devnet", shape: "lattice", color: "#D27DFF" },
@@ -108,7 +108,7 @@ export const layers: (Capability & { href: string; cta: string; color: string })
     title: "The Drift pattern",
     vis: "terminal",
     color: "#FFB547",
-    href: "/case/drift",
+    href: "/case-study",
     cta: "Replay the Drift timeline",
     summary: "A weakening of controls within 14 days of a signer creating durable nonce accounts escalates to CRITICAL: the exact sequence that preceded the $285M Drift drain.",
     term: [

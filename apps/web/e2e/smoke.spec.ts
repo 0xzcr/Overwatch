@@ -1,9 +1,9 @@
 import { test, expect } from "@playwright/test";
 
-test("landing renders the promise and the live headline stat", async ({ page }) => {
+test("landing renders the title and the control map preview", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName("Know who can move your money.");
-  await expect(page.getByText(/Solana protocols can be changed by ≤2 people with no delay/).first()).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName("The Protocol Watchdog");
+  await expect(page.getByRole("link", { name: /All \d+ protocols/ })).toBeVisible();
 });
 
 test("leaderboard lists protocols and links to the detail page", async ({ page }) => {
@@ -14,8 +14,9 @@ test("leaderboard lists protocols and links to the detail page", async ({ page }
   await expect(page.getByText("Who can move your money")).toBeVisible();
 });
 
-test("drift case study replays alerts from the rules engine", async ({ page }) => {
+test("case study replays alerts from the rules engine", async ({ page }) => {
   await page.goto("/case/drift");
+  await expect(page).toHaveURL(/\/case-study$/);
   await expect(page.locator("body")).not.toHaveClass(/is-loading/);
   await page.locator("#driftNext").click();
   await expect(page.getByText(/never-expiring/).first()).toBeVisible();

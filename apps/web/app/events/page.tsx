@@ -11,7 +11,6 @@ export default async function Events() {
     <>
       <PageHero
         dock="Live events"
-        eyebrow={<span data-scramble>Live feed · server-sent events</span>}
         lines={["Every change,", <span key="s" className="serif hero__accent">as it happens.</span>]}
         lede="Timelocks, thresholds, upgrade keys, signers, durable nonces, pending votes, collateral and oracles. Weakening changes in amber or red, strengthening changes in green."
         stageAttrs={stage("radar", { colorA: "#7CF3FF", colorB: "#3b4dff", x: 2.6, y: 0.3, yNarrow: 1.4, opacity: 1, autoRotate: 0.12 })}

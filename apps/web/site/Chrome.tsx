@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { pages } from "./content";
-import { Mark, cssVars } from "./ui";
+import { cssVars } from "./ui";
+import { Logo } from "./Logo";
 import { NavLinks } from "./NavLinks";
 
 /** Persistent chrome: boot sequence, WebGL canvas, cursor, nav, menu and dock. Rendered once in the root layout. */
@@ -14,11 +15,11 @@ export function Chrome() {
       <div className="boot" id="boot" aria-hidden="true">
         <div className="boot__grid" />
         <div className="boot__inner">
-          <Mark className="logo-mark logo-mark--boot" />
+          <Logo className="logo logo--boot" />
           <ol className="boot__log" id="bootLog" />
         </div>
         <div className="boot__foot">
-          <span className="mono">OVERWATCH // SOLANA DEFI EARLY WARNING</span>
+          <span className="mono">OVERWATCH</span>
           <span className="boot__pct mono" id="bootPct">
             000
           </span>
@@ -46,8 +47,7 @@ export function Chrome() {
 
       <header className="nav" id="nav">
         <Link href="/" className="nav__brand" data-cursor="Home" aria-label="Overwatch home">
-          <Mark />
-          <span className="nav__word">OVERWATCH</span>
+          <Logo />
         </Link>
         <NavLinks />
         <div className="nav__actions">
@@ -68,7 +68,7 @@ export function Chrome() {
         <div className="menu__bg" />
         <div className="menu__inner">
           <div className="menu__head mono">
-            <span>[ Overwatch ]</span>
+            <span />
             <button className="menu__close" id="menuClose" data-cursor="Close" aria-label="Close menu">
               Close <span>✕</span>
             </button>
@@ -136,18 +136,15 @@ export function Footer() {
     <footer className="footer">
       <div className="footer__top">
         <div className="footer__brand">
-          <Mark />
+          <Logo className="logo logo--footer" />
           <p>A smoke detector for Solana DeFi. We map who can move your money, and we tell you the moment those controls get weaker.</p>
-          <p className="mono footer__status">
-            <span className="dot dot--live" /> Mainnet slot <b data-slot>—</b>
-          </p>
         </div>
         <div className="footer__cols">
           <div>
             <h4 className="mono">Watch</h4>
             <Link href="/protocols">Control map</Link>
             <Link href="/events">Live events</Link>
-            <Link href="/case/drift">Drift case study</Link>
+            <Link href="/case-study">Case study</Link>
           </div>
           <div>
             <h4 className="mono">Act</h4>
