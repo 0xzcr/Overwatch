@@ -252,3 +252,5 @@ export async function rearmVault(log: Log = console.log) {
 
 export const ACTIONS = { "remove-timelock": removeTimelock, "lower-threshold": (l: Log) => lowerThreshold(l, 1), "create-signer-nonce": createSignerNonce, "transfer-authority": transferAuthority, reset } as const;
 export type ActionName = keyof typeof ACTIONS;
+export { send } from "./tx";
+export { connection, keys } from "./env";

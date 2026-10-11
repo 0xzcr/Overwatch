@@ -13,7 +13,7 @@ export class WsSubscriptions {
   public healthy = false;
   public lastMessageAt = 0;
 
-  constructor(private url: string, private log: (m: string) => void = () => {}) {}
+  constructor(private url: string, private log: (m: string) => void = () => {}, private subsPerSecond = 20) {}
 
   start() {
     this.connect();
@@ -26,9 +26,13 @@ export class WsSubscriptions {
     this.ws = ws;
     ws.onopen = () => {
       this.healthy = true;
-      this.backoff = 500;
+      const opened = Date.now();
       this.log(`ws connected (${this.subs.size} subs)`);
-      for (const [local, s] of this.subs) this.send(local, s);
+      // throttle re-subscription bursts (public RPCs drop connections that subscribe too fast)
+      let i = 0;
+      for (const [local, s] of this.subs) setTimeout(() => this.send(local, s), (i++ * 1000) / this.subsPerSecond);
+      // only reset backoff once the connection has been stable for 30s
+      setTimeout(() => { if (this.ws === ws && ws.readyState === ws.OPEN && Date.now() - opened >= 30_000) this.backoff = 500; }, 30_000);
     };
     ws.onmessage = (ev) => {
       this.lastMessageAt = Date.now();
@@ -75,11 +79,27 @@ export class WsSubscriptions {
     return this.add({ method: "logsSubscribe", params: [{ mentions: [mention] }, { commitment: "confirmed" }], handler });
   }
 
+  /** programSubscribe with filters, e.g. System program nonce accounts whose authority (offset 8) is a watched signer. */
+  programSubscribe(program: string, filters: unknown[], handler: Handler) {
+    return this.add({ method: "programSubscribe", params: [program, { encoding: "base64", commitment: "confirmed", filters }], handler });
+  }
+
+  private queue: number[] = [];
+  private draining = false;
   private add(s: Sub) {
     const local = this.nextLocal++;
     this.subs.set(local, s);
-    this.send(local, s);
+    this.queue.push(local);
+    if (!this.draining) this.drain();
     return local;
+  }
+  private drain() {
+    this.draining = true;
+    const next = this.queue.shift();
+    if (next === undefined) { this.draining = false; return; }
+    const s = this.subs.get(next);
+    if (s && s.serverId === undefined) this.send(next, s);
+    setTimeout(() => this.drain(), 1000 / this.subsPerSecond);
   }
 
   get size() {

@@ -36,7 +36,7 @@ export interface DriftStep {
 }
 
 export const DRIFT_STEPS: DriftStep[] = [
-  { date: "2026-03-20T00:00:00Z", headline: "Baseline", detail: "Security Council: 2-of-5 Squads multisig, zero timelock (configuration reported at the time of the attack).", snapshot: base("2026-03-20T00:00:00Z", OLD, []) },
+  { date: "2026-03-20T00:00:00Z", headline: "Baseline", detail: "Security Council: 2-of-5 Squads multisig, zero timelock (configuration reported at the time of the attack). Overwatch would already grade this red: two people can change everything instantly.", snapshot: base("2026-03-20T00:00:00Z", OLD, []) },
   { date: "2026-03-23T12:00:00Z", headline: "Durable nonce accounts appear", detail: "Four durable nonce accounts are created: two tied to Security Council signers, two to the attacker. Two of five signers have now signed transactions that never expire.", snapshot: base("2026-03-23T12:00:00Z", OLD, [nonce("nonce-1", "signer-A"), nonce("nonce-2", "signer-B")]) },
   { date: "2026-03-27T12:00:00Z", headline: "Council migration", detail: "Planned Security Council migration after a member change. Still 2-of-5, still no timelock. Old pre-signed transactions are invalidated, but the attacker starts over.", snapshot: base("2026-03-27T12:00:00Z", NEW, []) },
   { date: "2026-03-30T12:00:00Z", headline: "New nonce on new council", detail: "A new durable nonce account is tied to a member of the new multisig, putting the attacker back at the 2-of-5 threshold.", snapshot: base("2026-03-30T12:00:00Z", NEW, [nonce("nonce-5", "signer-A"), nonce("nonce-6", "signer-B")]) },

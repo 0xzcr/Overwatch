@@ -1,0 +1,24 @@
+{
+  "name": "@overwatch/indexer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "tsx src/main.ts",
+    "typecheck": "tsc -p .",
+    "lint": "eslint src",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@overwatch/core": "workspace:*",
+    "@overwatch/db": "workspace:*",
+    "@overwatch/demo": "workspace:*",
+    "@overwatch/sdk": "workspace:*",
+    "@overwatch/solana": "workspace:*",
+    "@solana/web3.js": "^1.98.0",
+    "bs58": "^6.0.0",
+    "dotenv": "^16.4.7",
+    "tsx": "^4.19.2"
+  }
+}

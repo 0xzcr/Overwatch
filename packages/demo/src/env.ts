@@ -1,10 +1,10 @@
 // DEVNET ONLY. Every connection in this package is created here and refuses mainnet URLs.
-import "dotenv/config";
+import { repoRoot } from "@overwatch/db/env";
 import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 
-export const ROOT = resolve(new URL("../../..", import.meta.url).pathname);
+export const ROOT = repoRoot();
 const p = (f: string) => (f.startsWith("/") ? f : resolve(ROOT, f.replace(/^~\//, `${process.env.HOME}/`)));
 
 export function connection() {

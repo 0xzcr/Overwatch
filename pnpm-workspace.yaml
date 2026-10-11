@@ -9,3 +9,7 @@ allowBuilds:
   sharp: true
   unrs-resolver: true
   protobufjs: true
+  '@stellar/stellar-sdk': set this to true or false
+  blake-hash: set this to true or false
+  tiny-secp256k1: set this to true or false
+  usb: set this to true or false
