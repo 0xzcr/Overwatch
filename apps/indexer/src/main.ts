@@ -6,7 +6,7 @@ import "@overwatch/db/env";
 import { createServer } from "node:http";
 import { mainnetRpc, devnetRpc, WsSubscriptions, type Rpc } from "@overwatch/solana";
 import {
-  collectSnapshot, NONCE_ACCOUNT_LEN, NONCE_AUTHORITY_OFFSET, SYSTEM_PROGRAM, decodeNonce, short, type NonceFacts, type ProtocolConfig, type ControlSnapshot,
+  collectSnapshot, adapters, NONCE_ACCOUNT_LEN, NONCE_AUTHORITY_OFFSET, SYSTEM_PROGRAM, decodeNonce, short, type NonceFacts, type ProtocolConfig, type ControlSnapshot,
 } from "@overwatch/core";
 import { db, protocols, events, nonceAccounts, signers, ingestSnapshot, notify, enqueueDeliveries, latestSnapshot, eq } from "@overwatch/db";
 import { schedulePublish } from "./publisher";
@@ -117,7 +117,7 @@ async function watch(row: Row) {
   const snap = (await latestSnapshot(row.id))?.data as ControlSnapshot | undefined;
   const accounts = new Set<string>([
     ...(snap?.programs.flatMap((p) => [p.programId, p.programDataAddress]) ?? cfg.programs.map((p) => p.id)),
-    ...cfg.multisigs.map((m) => m.address), ...cfg.collateral_mints, ...cfg.oracles, ...cfg.admin_accounts,
+    ...cfg.multisigs.map((m) => m.address), ...cfg.collateral_mints, ...cfg.oracles, ...cfg.admin_accounts, ...(adapters.get(row.slug)?.accounts() ?? []),
   ]);
   for (const a of accounts) sub(a, () => ws[n].accountSubscribe(a, () => trigger(row.slug, `account ${short(a)} changed`)));
   // nonce accounts whose authority is a watched signer (real-time) + tx stream mentioning signers/multisigs

@@ -1,0 +1,17 @@
+# fly launch --config fly.indexer.toml --dockerfile Dockerfile.worker --build-arg APP=indexer
+app = "overwatch-indexer"
+primary_region = "iad"
+[build]
+  dockerfile = "Dockerfile.worker"
+  [build.args]
+    APP = "indexer"
+[[services]]
+  internal_port = 8787
+  protocol = "tcp"
+  [[services.http_checks]]
+    path = "/health"
+    interval = "30s"
+    timeout = "5s"
+[mounts]
+  source = "overwatch_keys"
+  destination = "/app/keys"

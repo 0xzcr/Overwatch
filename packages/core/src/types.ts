@@ -128,7 +128,8 @@ export type EventType =
   | "PROGRAM_UPGRADED"
   | "COLLATERAL_RISKY_EXTENSION"
   | "ORACLE_DEPRECATED"
-  | "ADMIN_PARAM_CHANGED";
+  | "ADMIN_PARAM_CHANGED"
+  | "MULTISIG_CONFIG_EXECUTED";
 
 export interface OverwatchEvent {
   protocol: string;
