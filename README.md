@@ -3,11 +3,12 @@ public protocol overwatch @solana
 
 ## Web (`apps/web`)
 
-The site is a single page, "Overwatch Editions — The Vigil Edition", built with Next.js, Three.js and GSAP:
+Next.js site with a persistent Three.js particle stage, GSAP scroll animations and Lenis smooth scrolling:
 
-- `app/page.tsx` loads live protocols and events from the database. When the database is unreachable it falls back to the mainnet snapshot in `docs/submission/headline-stats.md`, so the page always renders.
-- `site/` holds the page: copy (`content.ts`), server data (`data.ts`), markup (`Site.tsx`), animated product mockups (`visuals.ts`) and the client engine (`engine/`: particle stage, scroll, modal, filters, Drift replay).
-- The public API under `app/api/*` is unchanged. Old page routes (`/protocols/:slug`, `/case/drift`, `/methodology` and so on) redirect to the matching section or modal, so links from the Telegram bot and alert emails keep working.
+- Pages: `/` landing, `/protocols` control map, `/protocols/[slug]` detail (React Flow control graph, facts, score breakdown, registry, timeline), `/events` live feed (SSE), `/case/drift`, `/alerts`, `/vault` (devnet, wallet adapter), `/demo` (needs `DEMO_MODE=true`), `/methodology`, `/docs/api`.
+- Data comes from the database. When it is unreachable, pages fall back to the mainnet snapshot in `docs/submission/headline-stats.md` and say so in the UI.
+- `site/` holds shared components, copy (`content.ts`), data loaders (`data.ts`) and the animation engine (`engine/`: `runtime.ts` persists across navigations, `page.ts` runs per route). Sections pick their particle shape with `data-stage` attributes.
+- The public API under `app/api/*` is unchanged.
 
 ```sh
 pnpm --filter @overwatch/web dev     # http://localhost:3000

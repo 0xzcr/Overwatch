@@ -2549,12 +2549,15 @@ section {
   gap: 6px;
   max-width: 1280px;
 }
-.proto {
+.proto__link {
   display: grid;
   grid-template-columns: 76px 1.4fr 1.2fr 0.8fr 0.8fr 1.3fr 28px;
   align-items: center;
   gap: 16px;
   padding: 12px 18px 12px 12px;
+  border-radius: 14px;
+}
+.proto {
   border-radius: 14px;
   border: 1px solid var(--line);
   background: rgba(6, 9, 16, 0.78);
@@ -3408,7 +3411,7 @@ section {
 
 /* ------------------------------------------------------------ responsive */
 @media (max-width: 1200px) {
-  .proto {
+  .proto__link {
     grid-template-columns: 70px 1.4fr 1.2fr 0.8fr 0.8fr 28px;
   }
   .proto__flags {
@@ -3550,7 +3553,7 @@ section {
     min-height: 0;
     aspect-ratio: 16 / 10;
   }
-  .proto {
+  .proto__link {
     grid-template-columns: 64px 1fr 28px;
     grid-template-areas: "g n go" "g f1 go";
     row-gap: 6px;

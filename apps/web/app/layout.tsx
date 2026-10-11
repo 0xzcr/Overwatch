@@ -4,15 +4,18 @@ import "@fontsource-variable/geist-mono";
 import "@fontsource/instrument-serif/400.css";
 import "@fontsource/instrument-serif/400-italic.css";
 import "./site.css";
+import "./pages.css";
+import { Chrome, Footer } from "@/site/Chrome";
+import { Experience } from "@/site/Experience";
 
 export const metadata: Metadata = {
-  title: "Overwatch Editions — The Vigil Edition",
+  title: { default: "Overwatch — Know who can move your money", template: "%s · Overwatch" },
   description:
     "A smoke detector for Solana DeFi. Overwatch maps who can change the protocols holding your deposits, watches every key and signer, and warns you the moment those controls get weaker.",
   icons: { icon: "/favicon.svg" },
   openGraph: {
-    title: "Overwatch Editions — The Vigil Edition",
-    description: "Know who can move your money. Live control grades, real-time alerts and an onchain risk registry for Solana DeFi.",
+    title: "Overwatch — Know who can move your money",
+    description: "Control grades, real-time alerts and an onchain risk registry for Solana DeFi depositors.",
   },
 };
 
@@ -21,7 +24,12 @@ export const viewport: Viewport = { themeColor: "#030407", width: "device-width"
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="is-loading">{children}</body>
+      <body className="is-loading">
+        <Chrome />
+        <main id="main">{children}</main>
+        <Footer />
+        <Experience />
+      </body>
     </html>
   );
 }
