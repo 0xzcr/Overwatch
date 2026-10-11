@@ -1,0 +1,7 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment: { POSTGRES_USER: overwatch, POSTGRES_PASSWORD: overwatch, POSTGRES_DB: overwatch }
+    ports: ["5433:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+volumes: { pgdata: {} }

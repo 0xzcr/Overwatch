@@ -1,0 +1,129 @@
+# Overwatch watch list. Program IDs come from each protocol's official docs/repos (docs_sources).
+# Multisigs were found from the upgrade authority's transaction history and are only trusted after
+# scripts/seed-protocols.ts re-derives the Squads v4 vault PDA (indices 0-7) and matches it onchain.
+# `verified` is written by the seed script into the DB; it is always false here by design.
+- slug: kamino-lend
+  name: Kamino Lend
+  category: lending
+  defillama_slug: kamino-lend
+  website: https://kamino.finance
+  docs_sources: [https://github.com/Kamino-Finance/klend, https://docs.kamino.finance]
+  programs: [{ id: KLend2g3cP87fffoy8q1mQqGKjrxjC8boSyAYavgmjD, label: Lending program }]
+  multisigs: [{ address: 6hhBGCtmg7tPWUSgp3LG6X2rsmYWAc4tNsA6G4CnfQbM, vault_index: 0, role: upgrade_authority, discovered_via: tx-history }]
+  collateral_mints: [EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v, 2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo, J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn]
+- slug: jupiter-lend
+  name: Jupiter Lend
+  category: lending
+  defillama_slug: jupiter-lend
+  website: https://jup.ag/lend
+  docs_sources: [https://dev.jup.ag/docs/lend-api]
+  programs: [{ id: jup3YeL8QhtSx1e253b2FDvsMNC87fDrgQZivbrndc9, label: Lending program }]
+  multisigs: [{ address: J3mJ3wz6xkVUk3T8qHnuAYNxsRH3ixHsryYNZAU2vG8P, vault_index: 0, role: upgrade_authority, discovered_via: tx-history }]
+  collateral_mints: [EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v]
+- slug: marginfi
+  name: marginfi
+  category: lending
+  defillama_slug: marginfi-lending
+  website: https://marginfi.com
+  docs_sources: [https://docs.marginfi.com/mfi-v2]
+  programs: [{ id: MFv2hWf31Z9kbCa1snEPYctwafyhdvnV7FZnsebVacA, label: marginfi v2 program }]
+  multisigs: [{ address: 7FCPipJWVbPbdHymVt1gJYwKciakkJz5GahdQySemvHk, vault_index: 0, role: upgrade_authority, discovered_via: tx-history }]
+  collateral_mints: [EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v]
+- slug: save
+  name: Save (formerly Solend)
+  category: lending
+  defillama_slug: save
+  website: https://save.finance
+  docs_sources: [https://docs.save.finance, https://github.com/solendprotocol/solana-program-library]
+  programs: [{ id: So1endDq2YkqhipRh3WViPa8hdiSpxWy6z3Z6tMCpAo, label: Lending program }]
+  collateral_mints: [EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v]
+- slug: drift
+  name: Drift Protocol
+  category: perps
+  defillama_slug: drift-trade
+  website: https://drift.trade
+  docs_sources: [https://docs.drift.trade, https://github.com/drift-labs/protocol-v2]
+  programs: [{ id: dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH, label: Drift v2 program }]
+  multisigs: [{ address: 7qipzLR9j1JcvdxE1XJEFgvoyFmgBpgw5hMdHBMPcJtM, vault_index: 0, role: upgrade_authority, discovered_via: tx-history }]
+  collateral_mints: [EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v]
+  notes: Case study. Current (post-incident) council is watched live; the March 2026 sequence is in /case/drift.
+- slug: jupiter-perps
+  name: Jupiter Perps
+  category: perps
+  defillama_slug: jupiter-perpetual-exchange
+  website: https://jup.ag/perps
+  docs_sources: [https://dev.jup.ag/docs/perp-api]
+  programs: [{ id: PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu, label: Perpetuals program }]
+  multisigs: [{ address: AxkJ8oH5aDu4ZRWfsujPtxdb6Vhq4gDehpoReBgrUUSm, vault_index: 0, role: upgrade_authority, discovered_via: tx-history }]
+- slug: raydium
+  name: Raydium
+  category: dex
+  defillama_slug: raydium-amm
+  website: https://raydium.io
+  docs_sources: [https://docs.raydium.io/raydium/protocol/developers/addresses]
+  programs:
+    - { id: 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8, label: AMM v4 }
+    - { id: CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK, label: CLMM }
+  multisigs: [{ address: tr8rgazUrZzgdkfc6Q622nVJHMMzh29trdBE2uBHb4u, vault_index: 0, role: upgrade_authority, discovered_via: tx-history }]
+- slug: orca
+  name: Orca Whirlpools
+  category: dex
+  defillama_slug: orca-dex
+  website: https://orca.so
+  docs_sources: [https://dev.orca.so, https://github.com/orca-so/whirlpools]
+  programs: [{ id: whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc, label: Whirlpools program }]
+  multisigs: [{ address: BQsDWkL417U4tVE2sDnPks469pKdm6YzFgKH77doiEjF, vault_index: 0, role: upgrade_authority, discovered_via: tx-history }]
+- slug: meteora-dlmm
+  name: Meteora DLMM
+  category: dex
+  defillama_slug: meteora-dlmm
+  website: https://meteora.ag
+  docs_sources: [https://docs.meteora.ag]
+  programs: [{ id: LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo, label: DLMM program }]
+- slug: pumpswap
+  name: PumpSwap
+  category: dex
+  defillama_slug: pumpswap
+  website: https://pump.fun
+  docs_sources: [https://github.com/pump-fun/pump-public-docs]
+  programs:
+    - { id: pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA, label: PumpSwap AMM }
+    - { id: 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P, label: Pump bonding curve }
+  multisigs: [{ address: 2yMoQqQrtbhq3nQ3wFoQQawWS65qcqUXcwHEYha4rshW, vault_index: 0, role: upgrade_authority, discovered_via: tx-history }]
+- slug: jupiter-aggregator
+  name: Jupiter Aggregator
+  category: aggregator
+  defillama_slug: jupiter-aggregator
+  website: https://jup.ag
+  docs_sources: [https://dev.jup.ag/docs/swap-api]
+  programs: [{ id: JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4, label: Aggregator v6 }]
+- slug: marinade
+  name: Marinade
+  category: lst
+  defillama_slug: marinade-liquid-staking
+  website: https://marinade.finance
+  docs_sources: [https://docs.marinade.finance, https://github.com/marinade-finance/liquid-staking-program]
+  programs: [{ id: MarBmsSgKXdrN1egZf5sqe1TMai9K1rChYNDJgjq7aD, label: Liquid staking program }]
+  collateral_mints: [mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So]
+- slug: jito
+  name: Jito (JitoSOL)
+  category: lst
+  defillama_slug: jito-liquid-staking
+  website: https://jito.network
+  docs_sources: [https://www.jito.network/docs/jitosol/jitosol-liquid-staking/]
+  programs: [{ id: SPoo1Ku8WFXoNDMHPsrGSTSG1Y47rzgn41SLUNakuHy, label: SPL Stake Pool program }]
+  collateral_mints: [J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn]
+- slug: sanctum
+  name: Sanctum
+  category: lst
+  defillama_slug: sanctum-validator-lsts
+  website: https://sanctum.so
+  docs_sources: [https://learn.sanctum.so/docs]
+  programs: [{ id: SP12tWFxD9oJsVWNavTTBZvMbA6gkAmxtVgxdqvyvhY, label: Sanctum SPL stake pool }]
+- slug: openbook
+  name: OpenBook v2
+  category: dex
+  defillama_slug: openbook
+  website: https://www.openbook-solana.com
+  docs_sources: [https://github.com/openbook-dex/openbook-v2]
+  programs: [{ id: opnb2LAfJYbRMAHHvqjCwQxanZn7ReEHp1k81EohpZb, label: OpenBook v2 program }]

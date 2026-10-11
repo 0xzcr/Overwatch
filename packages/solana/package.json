@@ -1,0 +1,10 @@
+{
+  "name": "@overwatch/solana",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "typecheck": "tsc -p .", "lint": "eslint src", "test": "vitest run --passWithNoTests" },
+  "dependencies": { "zod": "^3.24.1" }
+}
