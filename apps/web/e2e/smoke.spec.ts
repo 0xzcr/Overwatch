@@ -1,39 +1,39 @@
 import { test, expect } from "@playwright/test";
 
-test("landing renders the live headline stat", async ({ page }) => {
+test("landing renders the edition and the headline numbers", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("your money");
-  await expect(page.getByText(/top Solana protocols can be changed by ≤2 people/)).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName("The Vigil Edition");
+  await expect(page.getByText("Know who can move your money.").first()).toBeVisible();
+  await expect(page.getByText("multisigs with no timelock")).toBeVisible();
 });
 
-test("leaderboard lists seeded protocols and links to detail", async ({ page }) => {
-  await page.goto("/protocols");
-  await expect(page.getByRole("link", { name: /Drift Protocol/ })).toBeVisible();
-  await page.getByRole("link", { name: /Drift Protocol/ }).click();
-  await expect(page.getByRole("heading", { name: "Drift Protocol" })).toBeVisible();
-  await expect(page.getByText("Who can move your money")).toBeVisible();
-  await expect(page.getByText("7qipzLR9j1JcvdxE1XJEFgvoyFmgBpgw5hMdHBMPcJtM").first()).toBeVisible();
+test("control map lists protocols and opens a protocol in the modal", async ({ page }) => {
+  await page.goto("/");
+  const drift = page.locator("[data-proto=drift]");
+  await drift.scrollIntoViewIfNeeded();
+  await drift.click();
+  await expect(page.getByRole("dialog").getByRole("heading", { name: "Drift Protocol" })).toBeVisible();
+  await expect(page).toHaveURL(/#protocol\/drift$/);
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#modal")).toHaveAttribute("aria-hidden", "true");
 });
 
-test("drift case study replays alerts", async ({ page }) => {
-  await page.goto("/case/drift");
-  await page.getByRole("button", { name: "next step" }).click();
+test("old protocol URLs land on the protocol modal", async ({ page }) => {
+  await page.goto("/protocols/drift");
+  await expect(page.getByRole("dialog").getByRole("heading", { name: "Drift Protocol" })).toBeVisible();
+});
+
+test("drift case study replays alerts from the rules engine", async ({ page }) => {
+  await page.goto("/#drift");
+  await page.locator("#driftNext").click();
   await expect(page.getByText(/never-expiring/).first()).toBeVisible();
 });
 
-// Real devnet transactions: only when explicitly enabled.
-test("demo console: remove timelock → CRITICAL alert, registry update, vault shield", async ({ page }) => {
-  test.skip(process.env.E2E_DEVNET !== "true", "set E2E_DEVNET=true (needs DEMO_MODE, indexer running, demo set up)");
-  await page.goto("/demo");
-  await expect(page.getByRole("button", { name: /Remove timelock/ })).toBeEnabled({ timeout: 30_000 });
-  const t0 = Date.now();
-  await page.getByRole("button", { name: /Remove timelock/ }).click();
-  await expect(page.getByText(/removed its 2 days safety delay/).first()).toBeVisible({ timeout: 60_000 });
-  console.log(`alert visible ${((Date.now() - t0) / 1000).toFixed(1)}s after click`);
-  await expect(page.getByText("REGISTRY UPDATED · devnet").first()).toBeVisible({ timeout: 60_000 });
-  await expect(page.getByText("VAULT SHIELD TRIGGERED").first()).toBeVisible({ timeout: 60_000 });
-  console.log(`shield visible ${((Date.now() - t0) / 1000).toFixed(1)}s after click`);
-  await page.screenshot({ path: "test-results/demo-console.png", fullPage: true });
-  await page.getByRole("button", { name: /Reset demo/ }).click();
-  await expect(page.getByText(/demo epoch reset/)).toBeVisible({ timeout: 120_000 });
+test("capability index filters by search", async ({ page }) => {
+  await page.goto("/#index");
+  await expect(page.locator("body")).not.toHaveClass(/is-loading/);
+  await page.locator("#search").fill("webhook");
+  await expect(page.locator("#resultCount")).not.toHaveText(/Showing 40 of/);
+  await page.locator(".row:not(.is-hidden)").first().click();
+  await expect(page.getByRole("dialog")).toBeVisible();
 });
