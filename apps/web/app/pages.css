@@ -1360,99 +1360,171 @@ a.addr:hover {
   color: var(--ink);
 }
 
-/* ------------------------------------------------------------ logo */
+/* ------------------------------------------------------------ logo: the watchdog */
 .logo {
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   flex: none;
   overflow: visible;
-}
-.logo__shield {
-  fill: rgba(43, 255, 176, 0.06);
-  stroke: url(#owLogoGrad);
-  stroke-width: 2.4;
-  stroke-linejoin: round;
-  stroke-dasharray: 100;
-  stroke-dashoffset: 0;
-}
-.logo__ring {
-  fill: none;
-  stroke: rgba(124, 243, 255, 0.35);
-  stroke-width: 1.1;
-}
-.logo__ring--outer {
-  stroke: rgba(124, 243, 255, 0.18);
-}
-.logo__sweep {
-  transform-origin: 24px 24.5px;
-  transform: rotate(-20deg);
-}
-.logo__beam {
-  stroke: #2bffb0;
-  stroke-width: 1.4;
-  stroke-linecap: round;
-}
-.logo__core {
-  fill: #2bffb0;
-}
-.logo__ping {
-  fill: #ff5a3d;
-  opacity: 0;
-  transform-origin: 30.5px 17.5px;
-}
-a:hover > .logo .logo__shield,
-a:focus-visible > .logo .logo__shield,
-.logo--boot .logo__shield {
-  animation: logoDraw 1.1s var(--ease) both;
-}
-a:hover > .logo .logo__sweep,
-a:focus-visible > .logo .logo__sweep,
-.logo--boot .logo__sweep {
-  animation: logoSweep 1.6s linear infinite;
-}
-a:hover > .logo .logo__ping,
-a:focus-visible > .logo .logo__ping,
-.logo--boot .logo__ping {
-  animation: logoPing 1.6s ease-out infinite 0.45s;
-}
-a:hover > .logo .logo__core {
-  animation: logoCore 1.6s ease-in-out infinite;
-}
-a:hover > .logo {
-  filter: drop-shadow(0 0 10px rgba(43, 255, 176, 0.5));
-}
-.logo {
   transition: filter 0.4s, transform 0.5s var(--ease);
 }
-a:hover > .logo {
-  transform: scale(1.08);
+.dog__skull {
+  fill: #07120f;
+  stroke: url(#owDogGrad);
+  stroke-width: 2.2;
+  stroke-linejoin: round;
 }
-@keyframes logoDraw {
-  from { stroke-dashoffset: 100; }
-  to { stroke-dashoffset: 0; }
+.dog__ear {
+  fill: #0b1d18;
+  stroke: url(#owDogGrad);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  transition: transform 0.35s var(--ease);
 }
-@keyframes logoSweep {
-  from { transform: rotate(-20deg); }
-  to { transform: rotate(340deg); }
+.dog__ear--l { transform-origin: 17px 14px; }
+.dog__ear--r { transform-origin: 31px 14px; }
+.dog__tan {
+  fill: rgba(255, 181, 71, 0.2);
 }
-@keyframes logoPing {
-  0% { opacity: 0; transform: scale(0.4); }
-  12% { opacity: 1; transform: scale(1.3); }
-  60% { opacity: 0.8; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1); }
+.dog__spot {
+  fill: #ffb547;
+  opacity: 0.85;
 }
-@keyframes logoCore {
-  0%, 100% { transform: scale(1); transform-origin: 24px 24.5px; }
-  50% { transform: scale(1.35); transform-origin: 24px 24.5px; }
+.dog__collar {
+  stroke: url(#owDogGrad);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+.dog__spike {
+  fill: #eef1f7;
+}
+.dog__blaze {
+  fill: rgba(43, 255, 176, 0.14);
+}
+.dog__brow {
+  stroke: #7cf3ff;
+  stroke-width: 2;
+  stroke-linecap: round;
+  transition: transform 0.3s var(--ease);
+}
+.dog__eye {
+  fill: #2bffb0;
+  transition: fill 0.2s;
+  filter: drop-shadow(0 0 1.5px #2bffb0);
+}
+.dog__scar {
+  fill: none;
+  stroke: rgba(238, 241, 247, 0.55);
+  stroke-width: 0.9;
+  stroke-linecap: round;
+}
+.dog__nose {
+  fill: #7cf3ff;
+}
+.dog__mouth {
+  fill: none;
+  stroke: #7cf3ff;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.dog__fang {
+  fill: #eef1f7;
+  transform: scaleY(0.5);
+  transform-origin: 24px 35.6px;
+  transition: transform 0.25s var(--ease);
+}
+.dog__jaw {
+  transition: transform 0.3s var(--ease);
+}
+.dog__laser {
+  stroke: url(#owLaser);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  fill: none;
+  stroke-dasharray: 50;
+  stroke-dashoffset: 50;
+  opacity: 0;
+}
+.dog__laser--r {
+  stroke: #ff3b2f;
+}
+
+/* hover (and the boot screen, on a loop): growl */
+a:hover > .logo,
+a:focus-visible > .logo {
+  transform: scale(1.12);
+  filter: drop-shadow(0 0 10px rgba(255, 90, 61, 0.45));
+}
+a:hover > .logo .dog__head,
+a:focus-visible > .logo .dog__head,
+.logo--boot .dog__head {
+  animation: dogGrowl 0.32s linear infinite;
+  transform-origin: 24px 26px;
+}
+a:hover > .logo .dog__ear--l,
+a:focus-visible > .logo .dog__ear--l,
+.logo--boot .dog__ear--l {
+  transform: rotate(-16deg) translateY(1.5px);
+}
+a:hover > .logo .dog__ear--r,
+a:focus-visible > .logo .dog__ear--r,
+.logo--boot .dog__ear--r {
+  transform: rotate(16deg) translateY(1.5px);
+}
+a:hover > .logo .dog__brow,
+a:focus-visible > .logo .dog__brow,
+.logo--boot .dog__brow {
+  transform: translateY(1.3px);
+  stroke: #ff5a3d;
+}
+a:hover > .logo .dog__eye,
+a:focus-visible > .logo .dog__eye,
+.logo--boot .dog__eye {
+  fill: #ff2a2a;
+  filter: drop-shadow(0 0 2.5px #ff2a2a);
+}
+a:hover > .logo .dog__jaw,
+a:focus-visible > .logo .dog__jaw,
+.logo--boot .dog__jaw {
+  transform: translateY(1.6px);
+}
+a:hover > .logo .dog__fang,
+a:focus-visible > .logo .dog__fang,
+.logo--boot .dog__fang {
+  transform: scaleY(1.15);
+}
+a:hover > .logo .dog__laser,
+a:focus-visible > .logo .dog__laser,
+.logo--boot .dog__laser {
+  animation: dogLaser 1.4s var(--ease) infinite 0.15s;
+}
+@keyframes dogGrowl {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  25% { transform: translate(-0.4px, 0.2px) rotate(-1.2deg); }
+  50% { transform: translate(0.3px, -0.2px) rotate(0.8deg); }
+  75% { transform: translate(-0.2px, 0.3px) rotate(-0.6deg); }
+}
+@keyframes dogLaser {
+  0% { stroke-dashoffset: 50; opacity: 0; }
+  12% { opacity: 1; }
+  45% { stroke-dashoffset: 0; opacity: 1; }
+  80% { stroke-dashoffset: 0; opacity: 0.85; }
+  100% { stroke-dashoffset: -50; opacity: 0; }
 }
 .logo--boot {
-  width: 72px;
-  height: 72px;
-  filter: drop-shadow(0 0 18px rgba(43, 255, 176, 0.45));
+  width: 76px;
+  height: 76px;
 }
 .logo--footer {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dog__head,
+  .dog__laser {
+    animation: none !important;
+  }
 }
 
 /* ------------------------------------------------------------ landing hero: The Protocol Watchdog */
