@@ -1,0 +1,12 @@
+{
+  "network": "mainnet",
+  "address": "Fy3YMJCvwbAXUgUM5b91ucUVA3jYzwWLHL3MwBqKsh8n",
+  "owner": "BPFLoaderUpgradeab1e11111111111111111111111",
+  "lamports": 10236299440,
+  "capturedAt": "2026-10-11T05:45:31.836Z",
+  "slice": {
+    "offset": 0,
+    "length": 45
+  },
+  "data": "AwAAANwJCRIAAAAAACXAp0kL9hD+atgJDWt/6AsoVsOtYXVpCiDgmBYHziFl"
+}

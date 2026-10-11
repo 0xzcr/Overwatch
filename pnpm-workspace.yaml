@@ -1,0 +1,11 @@
+packages:
+  - apps/*
+  - packages/*
+allowBuilds:
+  esbuild: true
+  bufferutil: true
+  utf-8-validate: true
+  bigint-buffer: true
+  sharp: true
+  unrs-resolver: true
+  protobufjs: true
