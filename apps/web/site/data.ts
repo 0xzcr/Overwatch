@@ -1,7 +1,8 @@
 import "server-only";
 import { DRIFT_STEPS, DRIFT_SOURCES, diffSnapshots, scoreSnapshot, flagNames, fmtDuration, type OverwatchEvent } from "@overwatch/core";
-import { getProtocols, getEvents, type ProtocolView } from "@/lib/data";
+import { getProtocols, getEvents, getPublishes, type ProtocolView, type EventView } from "@/lib/data";
 
+/** A protocol row as the site shows it. Built from live DB data or the labelled snapshot below. */
 export interface ProtoCard {
   slug: string;
   name: string;
@@ -9,22 +10,21 @@ export interface ProtoCard {
   grade: string;
   score: number | null;
   red: boolean;
+  authorityKind: string;
   authority: string;
   threshold: string;
+  timelockSec: number | null;
   timelock: string;
+  tvlUsd: number | null;
   tvl: string;
   flags: string[];
   breakdown: { points: number; reason: string }[];
   nonceSigners: number;
+  controlled: boolean;
   verified: boolean;
-  programs: { label: string; id: string }[];
-}
-
-export interface FeedItem {
-  severity: string;
-  title: string;
-  name: string;
-  at: string;
+  lastChange: string | null;
+  source: string;
+  website: string | null;
 }
 
 export interface ReplayStep {
@@ -39,21 +39,12 @@ export interface ReplayStep {
   flags: string[];
 }
 
-export interface SiteData {
-  live: boolean;
-  at: string;
-  protocols: ProtoCard[];
-  stats: { total: number; tvl: string; noTimelock: number; noTimelockTvl: string; singleKey: number; unmapped: number; shortTimelock: number };
-  feed: FeedItem[];
-  drift: ReplayStep[];
-  driftSources: { label: string; url: string }[];
-  warningDays: number;
-}
+export const SNAPSHOT_LABEL = "mainnet snapshot · Oct 11 2026";
 
-const usd = (n: number | null | undefined) =>
+export const usd = (n: number | null | undefined) =>
   n == null ? "—" : n >= 1e9 ? `$${(n / 1e9).toFixed(2)}B` : n >= 1e6 ? `$${(n / 1e6).toFixed(1)}M` : `$${Math.round(n).toLocaleString()}`;
 
-const AUTH: Record<string, string> = {
+export const AUTH: Record<string, string> = {
   SQUADS_V4_VAULT: "Squads v4 multisig",
   SINGLE_KEY: "Single private key",
   OTHER_PROGRAM_PDA: "Program-owned (unmapped)",
@@ -63,42 +54,43 @@ const AUTH: Record<string, string> = {
   UNKNOWN: "Unknown",
 };
 
-// Snapshot of the mainnet watch list from docs/submission/headline-stats.md (2026-10-11).
-// Used when the database is not reachable, so the site always renders real numbers.
-const FALLBACK: [slug: string, name: string, category: string, grade: string, score: number, authority: string, threshold: string, timelock: string][] = [
-  ["drift", "Drift Protocol", "perps", "A", 85, "SQUADS_V4_VAULT", "4-of-7", "1 hour"],
-  ["jito", "Jito (JitoSOL)", "lst", "A", 85, "OTHER_PROGRAM_PDA", "—", "—"],
-  ["jupiter-aggregator", "Jupiter Aggregator", "aggregator", "A", 85, "OTHER_PROGRAM_PDA", "—", "—"],
-  ["jupiter-lend", "Jupiter Lend", "lending", "A", 85, "SQUADS_V4_VAULT", "4-of-7", "12 hours"],
-  ["jupiter-perps", "Jupiter Perps", "perps", "A", 95, "SQUADS_V4_VAULT", "4-of-8", "1 day"],
-  ["kamino-lend", "Kamino Lend", "lending", "A", 85, "SQUADS_V4_VAULT", "5-of-10", "1 day"],
-  ["marinade", "Marinade", "lst", "A", 85, "OTHER_PROGRAM_PDA", "—", "—"],
-  ["meteora-dlmm", "Meteora DLMM", "dex", "A", 85, "OTHER_PROGRAM_PDA", "—", "—"],
-  ["openbook", "OpenBook v2", "dex", "A", 85, "REALMS_GOVERNANCE", "—", "—"],
-  ["orca", "Orca Whirlpools", "dex", "A", 85, "SQUADS_V4_VAULT", "5-of-13", "1 day"],
-  ["pumpswap", "PumpSwap", "dex", "B", 75, "SQUADS_V4_VAULT", "3-of-4", "no delay"],
-  ["raydium", "Raydium", "dex", "B", 75, "SQUADS_V4_VAULT", "3-of-4", "no delay"],
-  ["sanctum", "Sanctum", "lst", "A", 85, "OTHER_PROGRAM_PDA", "—", "—"],
-  ["save", "Save (formerly Solend)", "lending", "D", 40, "SINGLE_KEY", "—", "—"],
-  ["marginfi", "marginfi", "lending", "C", 55, "SQUADS_V4_VAULT", "7-of-15", "no delay"],
+// Snapshot of the mainnet watch list from docs/submission/headline-stats.md (generated 2026-10-11).
+// Used only when the database is unreachable, and always labelled as a snapshot in the UI.
+const FALLBACK: [slug: string, name: string, category: string, grade: string, score: number, authority: string, threshold: string, timelockSec: number | null][] = [
+  ["drift", "Drift Protocol", "perps", "A", 85, "SQUADS_V4_VAULT", "4-of-7", 3600],
+  ["jito", "Jito (JitoSOL)", "lst", "A", 85, "OTHER_PROGRAM_PDA", "—", null],
+  ["jupiter-aggregator", "Jupiter Aggregator", "aggregator", "A", 85, "OTHER_PROGRAM_PDA", "—", null],
+  ["jupiter-lend", "Jupiter Lend", "lending", "A", 85, "SQUADS_V4_VAULT", "4-of-7", 43200],
+  ["jupiter-perps", "Jupiter Perps", "perps", "A", 95, "SQUADS_V4_VAULT", "4-of-8", 86400],
+  ["kamino-lend", "Kamino Lend", "lending", "A", 85, "SQUADS_V4_VAULT", "5-of-10", 86400],
+  ["marinade", "Marinade", "lst", "A", 85, "OTHER_PROGRAM_PDA", "—", null],
+  ["meteora-dlmm", "Meteora DLMM", "dex", "A", 85, "OTHER_PROGRAM_PDA", "—", null],
+  ["openbook", "OpenBook v2", "dex", "A", 85, "REALMS_GOVERNANCE", "—", null],
+  ["orca", "Orca Whirlpools", "dex", "A", 85, "SQUADS_V4_VAULT", "5-of-13", 86400],
+  ["pumpswap", "PumpSwap", "dex", "B", 75, "SQUADS_V4_VAULT", "3-of-4", 0],
+  ["raydium", "Raydium", "dex", "B", 75, "SQUADS_V4_VAULT", "3-of-4", 0],
+  ["sanctum", "Sanctum", "lst", "A", 85, "OTHER_PROGRAM_PDA", "—", null],
+  ["save", "Save (formerly Solend)", "lending", "D", 40, "SINGLE_KEY", "—", null],
+  ["marginfi", "marginfi", "lending", "C", 55, "SQUADS_V4_VAULT", "7-of-15", 0],
 ];
+const SNAPSHOT_TVL = 8.66e9;
+const SNAPSHOT_NO_TIMELOCK_TVL = 1.65e9;
 
-function fallbackProtocols(): ProtoCard[] {
-  return FALLBACK.map(([slug, name, category, grade, score, kind, threshold, timelock]) => {
-    const flags = [
-      ...(kind === "SINGLE_KEY" ? ["SINGLE_KEY"] : []),
-      ...(timelock === "no delay" ? ["NO_TIMELOCK"] : []),
-      ...(["OTHER_PROGRAM_PDA", "REALMS_GOVERNANCE"].includes(kind) ? ["UNVERIFIED"] : []),
-    ];
+const fmtTimelock = (s: number | null) => (s == null ? "—" : s === 0 ? "no delay" : fmtDuration(s));
+
+function fallbackCards(): ProtoCard[] {
+  return FALLBACK.map(([slug, name, category, grade, score, kind, threshold, timelockSec]) => {
+    const unmapped = ["OTHER_PROGRAM_PDA", "REALMS_GOVERNANCE"].includes(kind);
+    const flags = [...(kind === "SINGLE_KEY" ? ["SINGLE_KEY"] : []), ...(timelockSec === 0 ? ["NO_TIMELOCK"] : []), ...(unmapped ? ["UNVERIFIED"] : [])];
     return {
-      slug, name, category, grade, score, red: kind === "SINGLE_KEY", authority: AUTH[kind] ?? kind, threshold, timelock,
-      tvl: "—", flags, breakdown: [], nonceSigners: 0, verified: kind === "SQUADS_V4_VAULT", programs: [],
+      slug, name, category, grade, score, red: kind === "SINGLE_KEY", authorityKind: kind, authority: AUTH[kind] ?? kind, threshold, timelockSec,
+      timelock: fmtTimelock(timelockSec), tvlUsd: null, tvl: "—", flags, breakdown: [], nonceSigners: 0, controlled: false, verified: !unmapped,
+      lastChange: null, source: "snapshot", website: null,
     };
   });
 }
 
 function fromView(p: ProtocolView): ProtoCard {
-  const kinds = p.authorityKind.split(" + ");
   return {
     slug: p.slug,
     name: p.name,
@@ -106,17 +98,118 @@ function fromView(p: ProtocolView): ProtoCard {
     grade: p.grade ?? "?",
     score: p.score,
     red: p.red,
-    authority: kinds.map((k) => AUTH[k] ?? k).join(" + "),
+    authorityKind: p.authorityKind,
+    authority: p.authorityKind.split(" + ").map((k) => AUTH[k] ?? k).join(" + "),
     threshold: p.threshold,
-    timelock: p.timelockSec == null ? "—" : p.timelockSec === 0 ? "no delay" : fmtDuration(p.timelockSec),
+    timelockSec: p.timelockSec,
+    timelock: fmtTimelock(p.timelockSec),
+    tvlUsd: p.tvlUsd,
     tvl: usd(p.tvlUsd),
     flags: p.flagNames,
     breakdown: p.breakdown.map((d) => ({ points: d.points, reason: d.reason })),
     nonceSigners: p.nonceSigners,
+    controlled: p.controlled,
     verified: p.verified,
-    programs: (p.snapshot?.programs ?? []).map((x) => ({ label: x.label, id: x.programId })),
+    lastChange: p.lastChange,
+    source: p.source,
+    website: p.website,
   };
 }
+
+const withTimeout = <T,>(p: Promise<T>, ms = 2500) =>
+  Promise.race([p, new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
+
+/** Live protocol views, or null when the database is unreachable. */
+async function liveViews(): Promise<ProtocolView[] | null> {
+  try {
+    const views = await withTimeout(getProtocols());
+    return views.length ? views : null;
+  } catch {
+    return null;
+  }
+}
+
+const sortCards = (xs: ProtoCard[]) => xs.sort((a, b) => (b.score ?? -1) - (a.score ?? -1) || a.name.localeCompare(b.name));
+
+/** "Changeable by ≤2 people with no delay": a single upgrade key, or a multisig with threshold ≤ 2 and no timelock. */
+const lowNoDelay = (p: ProtoCard) => p.flags.includes("SINGLE_KEY") || (p.timelockSec === 0 && Number(p.threshold.split("-")[0]) <= 2);
+
+export interface Headline {
+  live: boolean;
+  at: string;
+  total: number;
+  lowNoDelay: number;
+  tvl: string;
+  noTimelock: number;
+  noTimelockTvl: string;
+  shortTimelock: number;
+  singleKey: number;
+  unmapped: number;
+}
+
+function headline(cards: ProtoCard[], live: boolean, views: ProtocolView[] | null): Headline {
+  const sum = (xs: ProtocolView[]) => (xs.some((x) => x.tvlUsd != null) ? xs.reduce((n, x) => n + (x.tvlUsd ?? 0), 0) : null);
+  return {
+    live,
+    at: new Date().toISOString(),
+    total: cards.length,
+    lowNoDelay: cards.filter(lowNoDelay).length,
+    tvl: usd(views ? sum(views) : SNAPSHOT_TVL),
+    noTimelock: cards.filter((p) => p.timelockSec === 0).length,
+    noTimelockTvl: usd(views ? sum(views.filter((p) => p.timelockSec === 0)) : SNAPSHOT_NO_TIMELOCK_TVL),
+    shortTimelock: cards.filter((p) => p.timelockSec != null && p.timelockSec > 0 && p.timelockSec < 86400).length,
+    singleKey: cards.filter((p) => p.flags.includes("SINGLE_KEY")).length,
+    unmapped: cards.filter((p) => p.flags.includes("UNVERIFIED")).length,
+  };
+}
+
+/** Mainnet protocols (demo excluded) plus the headline numbers. */
+export async function loadProtocols() {
+  const views = await liveViews();
+  const mainnet = views?.filter((p) => p.source !== "demo" && p.network === "mainnet") ?? null;
+  const live = !!mainnet?.length;
+  const cards = sortCards(live && mainnet ? mainnet.map(fromView) : fallbackCards());
+  return { live, cards, headline: headline(cards, live, live ? mainnet : null) };
+}
+
+export type FeedItem = Pick<EventView, "id" | "slug" | "name" | "type" | "severity" | "weakening" | "title" | "explanation" | "labels" | "slot" | "txSignature" | "source" | "blockTime" | "detectedAt">;
+
+export async function loadEvents(limit = 200, minSeverity?: string): Promise<{ live: boolean; events: FeedItem[] }> {
+  try {
+    const events = await withTimeout(getEvents({ limit, ...(minSeverity ? { minSeverity } : {}) }));
+    return { live: true, events };
+  } catch {
+    return { live: false, events: [] };
+  }
+}
+
+export async function loadProtocol(slug: string) {
+  const views = await liveViews();
+  const view = views?.find((p) => p.slug === slug) ?? null;
+  if (view) {
+    let events: FeedItem[] = [];
+    try {
+      events = await withTimeout(getEvents({ protocolId: view.id, limit: 100 }));
+    } catch {
+      /* timeline unavailable */
+    }
+    return { live: true, card: fromView(view), view, events };
+  }
+  if (views) return null; // DB is up and the protocol is unknown
+  const card = fallbackCards().find((c) => c.slug === slug);
+  return card ? { live: false, card, view: null, events: [] as FeedItem[] } : null;
+}
+
+export async function loadShields() {
+  try {
+    const pubs = await withTimeout(getPublishes(100));
+    return pubs.filter((p) => p.kind === "shield").map((p) => ({ tx: p.tx, at: p.at, slug: p.slug }));
+  } catch {
+    return [];
+  }
+}
+
+// ---------------------------------------------------------------- Drift replay
 
 // The reconstruction uses placeholder names ("drift-admin (council vault)", "attacker") that the
 // rules engine shortens like real addresses. Spell them out for readers.
@@ -127,7 +220,8 @@ const readable = (s: string) =>
     .replace(/sign…er-([A-F])/g, "signer-$1")
     .replace(/nonc…ce-(\d)/g, "nonce-$1");
 
-function driftReplay(): ReplayStep[] {
+/** Replays the reconstructed Drift snapshots through the real rules engine and scorer. */
+export function driftReplay(): ReplayStep[] {
   const history: OverwatchEvent[] = [];
   return DRIFT_STEPS.map((st, i) => {
     const prev = DRIFT_STEPS[i - 1];
@@ -150,53 +244,10 @@ function driftReplay(): ReplayStep[] {
   });
 }
 
-const withTimeout = <T,>(p: Promise<T>, ms: number) =>
-  Promise.race([p, new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
+export const driftSources = DRIFT_SOURCES;
 
 const DRAIN = Date.parse("2026-04-01T16:05:00Z");
-
-export async function loadSiteData(): Promise<SiteData> {
-  let live = false;
-  let protocols = fallbackProtocols();
-  let feed: FeedItem[] = [];
-  let tvlTotal: number | null = 8.66e9;
-  let noTimelockTvl: number | null = 1.65e9;
-
-  try {
-    const [views, events] = await withTimeout(Promise.all([getProtocols(), getEvents({ limit: 24, minSeverity: "MEDIUM" })]), 2500);
-    const mainnet = views.filter((p) => p.source !== "demo" && p.network === "mainnet");
-    if (mainnet.length) {
-      live = true;
-      protocols = mainnet.map(fromView);
-      const sum = (xs: ProtocolView[]) => (xs.some((x) => x.tvlUsd != null) ? xs.reduce((n, x) => n + (x.tvlUsd ?? 0), 0) : null);
-      tvlTotal = sum(mainnet);
-      noTimelockTvl = sum(mainnet.filter((p) => p.timelockSec === 0));
-      feed = events.map((e) => ({ severity: e.severity, title: e.title, name: e.name, at: e.blockTime ?? e.detectedAt }));
-    }
-  } catch {
-    // No database in this environment: keep the static snapshot.
-  }
-
-  const drift = driftReplay();
-  const firstAlert = drift.find((s) => s.alerts.some((a) => a.severity !== "INFO"));
-  const warningDays = firstAlert ? Math.round((DRAIN - Date.parse(firstAlert.date)) / 86_400_000) : 0;
-
-  return {
-    live,
-    at: new Date().toISOString(),
-    protocols: protocols.sort((a, b) => (b.score ?? -1) - (a.score ?? -1) || a.name.localeCompare(b.name)),
-    stats: {
-      total: protocols.length,
-      tvl: usd(tvlTotal),
-      noTimelock: protocols.filter((p) => p.timelock === "no delay").length,
-      noTimelockTvl: usd(noTimelockTvl),
-      singleKey: protocols.filter((p) => p.flags.includes("SINGLE_KEY")).length,
-      unmapped: protocols.filter((p) => p.flags.includes("UNVERIFIED")).length,
-      shortTimelock: protocols.filter((p) => /hour/.test(p.timelock)).length,
-    },
-    feed,
-    drift,
-    driftSources: DRIFT_SOURCES,
-    warningDays,
-  };
+export function warningDays(steps: ReplayStep[]) {
+  const first = steps.find((s) => s.alerts.some((a) => a.severity !== "INFO"));
+  return first ? Math.round((DRAIN - Date.parse(first.date)) / 86_400_000) : 0;
 }
