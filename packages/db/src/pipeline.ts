@@ -14,7 +14,9 @@ export async function ingestSnapshot(p: ProtocolRow, snap: ControlSnapshot, o: {
   const d = db();
   const hash = snapshotHash(snap);
   const [prev] = await d.select().from(snapshots).where(eq(snapshots.protocolId, p.id)).orderBy(desc(snapshots.createdAt), desc(snapshots.id)).limit(1);
-  const since = new Date(Date.now() - 30 * DAY);
+  // demo protocols start a fresh "epoch" on reset so old demo events stop counting as recent
+  const resetAt = (p.config as { demoResetAt?: string } | null)?.demoResetAt;
+  const since = new Date(Math.max(Date.now() - 30 * DAY, resetAt ? Date.parse(resetAt) : 0));
   const historyRows = await d.select().from(events).where(and(eq(events.protocolId, p.id), gte(events.detectedAt, since)));
   const history = historyRows.map((e) => ({ type: e.type as OverwatchEvent["type"], severity: e.severity as OverwatchEvent["severity"], weakening: e.weakening, title: e.title, detectedAt: e.detectedAt.toISOString(), blockTime: e.blockTime?.toISOString() ?? null }));
 

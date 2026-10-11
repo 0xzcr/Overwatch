@@ -1,0 +1,551 @@
+{
+  "address": "ZCq8qg8ALrZp4FtKra2FERRREWU8c5bu75EQ9CR3q1X",
+  "metadata": {
+    "name": "overwatch_registry",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Overwatch onchain risk registry: CPI/account-readable risk scores for Solana protocols"
+  },
+  "instructions": [
+    {
+      "name": "add_publisher",
+      "discriminator": [
+        38,
+        8,
+        234,
+        44,
+        75,
+        29,
+        163,
+        146
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "publisher",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "admin",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "remove_publisher",
+      "discriminator": [
+        91,
+        64,
+        158,
+        101,
+        76,
+        157,
+        68,
+        102
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "publisher",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "set_admin",
+      "discriminator": [
+        251,
+        163,
+        0,
+        52,
+        91,
+        194,
+        187,
+        92
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "new_admin",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "set_paused",
+      "discriminator": [
+        91,
+        60,
+        125,
+        192,
+        176,
+        225,
+        166,
+        218
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "paused",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "upsert_risk",
+      "discriminator": [
+        100,
+        193,
+        6,
+        204,
+        191,
+        188,
+        65,
+        166
+      ],
+      "accounts": [
+        {
+          "name": "publisher",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "risk",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  105,
+                  115,
+                  107
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "protocol_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "protocol_id",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "score",
+          "type": "u8"
+        },
+        {
+          "name": "grade",
+          "type": "u8"
+        },
+        {
+          "name": "flags",
+          "type": "u64"
+        },
+        {
+          "name": "last_event_slot",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Config",
+      "discriminator": [
+        155,
+        12,
+        170,
+        224,
+        30,
+        250,
+        204,
+        130
+      ]
+    },
+    {
+      "name": "RiskRecord",
+      "discriminator": [
+        204,
+        225,
+        214,
+        255,
+        142,
+        124,
+        214,
+        45
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "RiskUpdated",
+      "discriminator": [
+        87,
+        30,
+        13,
+        133,
+        134,
+        140,
+        42,
+        47
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Unauthorized",
+      "msg": "signer is not the registry admin"
+    },
+    {
+      "code": 6001,
+      "name": "NotPublisher",
+      "msg": "signer is not an authorized publisher"
+    },
+    {
+      "code": 6002,
+      "name": "AlreadyPublisher",
+      "msg": "publisher already registered"
+    },
+    {
+      "code": 6003,
+      "name": "TooManyPublishers",
+      "msg": "publisher list is full"
+    },
+    {
+      "code": 6004,
+      "name": "Paused",
+      "msg": "registry is paused"
+    },
+    {
+      "code": 6005,
+      "name": "StaleUpdate",
+      "msg": "update is older than the stored record"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidScore",
+      "msg": "score must be 0-100"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidGrade",
+      "msg": "grade must be 0-4"
+    }
+  ],
+  "types": [
+    {
+      "name": "Config",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "publishers",
+            "type": {
+              "array": [
+                "pubkey",
+                5
+              ]
+            }
+          },
+          {
+            "name": "publisher_count",
+            "type": "u8"
+          },
+          {
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RiskRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "protocol_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "score",
+            "type": "u8"
+          },
+          {
+            "name": "grade",
+            "docs": [
+              "0=A 1=B 2=C 3=D 4=F"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "flags",
+            "type": "u64"
+          },
+          {
+            "name": "last_event_slot",
+            "type": "u64"
+          },
+          {
+            "name": "updated_slot",
+            "type": "u64"
+          },
+          {
+            "name": "publisher",
+            "type": "pubkey"
+          },
+          {
+            "name": "version",
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RiskUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "protocol_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "score",
+            "type": "u8"
+          },
+          {
+            "name": "grade",
+            "type": "u8"
+          },
+          {
+            "name": "flags",
+            "type": "u64"
+          },
+          {
+            "name": "last_event_slot",
+            "type": "u64"
+          },
+          {
+            "name": "red",
+            "type": "bool"
+          },
+          {
+            "name": "version",
+            "type": "u32"
+          }
+        ]
+      }
+    }
+  ]
+}
