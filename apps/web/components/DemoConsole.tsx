@@ -22,7 +22,7 @@ export function DemoConsole() {
   const [feed, setFeed] = useState<Feed[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [st, setSt] = useState<DemoState | null>(null);
-  const [clickAt, setClickAt] = useState<number | null>(null);
+  const [_clickAt, setClickAt] = useState<number | null>(null);
   const [latency, setLatency] = useState<string | null>(null);
   const logRef = useRef<HTMLDivElement>(null);
 

@@ -27,3 +27,9 @@ await save(m, "mainnet", "realms-governance-openbook", "CZoAmQErbMwhSNA5WtbWLcwG
 await save(m, "mainnet", "mint-usdc", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
 await save(m, "mainnet", "mint-pyusd-t22", "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo");
 await save(d, "devnet", "nonce-devnet", "4Hub1pDfV2MSG6Xq3Urg1H5NssTHAZXwpQeoiuk48YCb");
+// admin-config adapter accounts
+const { DRIFT_STATE_PDA, KAMINO_MAIN_MARKET, MARGINFI_MAIN_GROUP, ORCA_CONFIG } = await import("@overwatch/core");
+await save(m, "mainnet", "admin-drift-state", DRIFT_STATE_PDA);
+await save(m, "mainnet", "admin-kamino-market", KAMINO_MAIN_MARKET);
+await save(m, "mainnet", "admin-marginfi-group", MARGINFI_MAIN_GROUP);
+await save(m, "mainnet", "admin-orca-config", ORCA_CONFIG);

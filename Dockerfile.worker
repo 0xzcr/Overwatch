@@ -1,0 +1,22 @@
+# Shared image for the long-running workers (indexer, bot). Build with:
+#   docker build -f Dockerfile.worker --build-arg APP=indexer -t overwatch-indexer .
+#   docker build -f Dockerfile.worker --build-arg APP=bot -t overwatch-bot .
+FROM node:22-slim AS base
+ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH
+RUN corepack enable && corepack prepare pnpm@11.3.0 --activate
+WORKDIR /app
+
+FROM base AS deps
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json tsconfig.base.json ./
+COPY packages ./packages
+COPY apps/indexer/package.json apps/indexer/
+COPY apps/bot/package.json apps/bot/
+RUN pnpm install --frozen-lockfile --filter "./apps/indexer..." --filter "./apps/bot..."
+
+FROM deps AS run
+ARG APP=indexer
+ENV APP=${APP} NODE_ENV=production
+COPY apps/${APP} apps/${APP}
+# keypairs are mounted at runtime (never baked into the image): -v /secure/keys:/app/keys:ro
+HEALTHCHECK --interval=30s --timeout=5s CMD node -e "fetch('http://127.0.0.1:'+(process.env.INDEXER_PORT||8787)+'/health').then(r=>process.exit(process.env.APP==='indexer'&&!r.ok?1:0)).catch(()=>process.exit(process.env.APP==='indexer'?1:0))"
+CMD ["sh", "-c", "cd apps/$APP && npx tsx src/main.ts"]

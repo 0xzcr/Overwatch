@@ -15,3 +15,6 @@ export * from "./constants/oracles";
 export * from "./adapters/index";
 export * from "./config";
 export * from "./collect";
+export * from "./adapters/idl";
+export * from "./adapters/protocols";
+export * from "./adapters/specs";

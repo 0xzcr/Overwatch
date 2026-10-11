@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getProtocol, getEvents } from "@/lib/data";
@@ -8,7 +9,7 @@ import { Addr } from "@/components/ui/Addr";
 import { Term } from "@/components/ui/Term";
 import { Section, Badge } from "@/components/ui/Section";
 import { usd } from "@/lib/format";
-import { fmtDuration, AUTHORITY_LABEL, mintRisks } from "@overwatch/core";
+import { fmtDuration, AUTHORITY_LABEL, mintRisks, findVaultIndex, isOnCurve } from "@overwatch/core";
 import { fetchRiskRecord, riskPda } from "@overwatch/sdk";
 
 export const dynamic = "force-dynamic";
@@ -91,9 +92,21 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
                 {s.mints.map((m) => <dd key={m.address} className="flex flex-wrap gap-2 items-center py-1"><Addr v={m.address} network={net} /><span className="mono text-[11px] text-dim">{m.tokenProgram}</span>{mintRisks(m).map((r) => <Badge key={r} tone={r === "PermanentDelegate" || r === "TransferHook" ? "bad" : "warn"}>{r}</Badge>)}</dd>)}
               </div>
             )}
-            <div className="border hairline p-4 border-dashed">
-              <dt className="label mb-2">Admin config</dt>
-              <dd className="text-chrome">{s?.admin.length ? s.admin.map((a) => <span key={a.account}>admin <Addr v={a.admin} network={net} /></span>) : <>Admin config: <span className="text-warn">not yet mapped</span>. Coming soon: decoding this protocol&apos;s admin, listing-authority and withdraw-limit settings from its IDL.</>}</dd>
+            <div className={`border hairline p-4 ${s?.admin.length ? "" : "border-dashed"}`}>
+              <dt className="label mb-3">Admin config</dt>
+              {s?.admin.length ? s.admin.map((a) => {
+                const vaultMatch = s.multisigs.some((m) => a.admin && findVaultIndex(m.address, a.admin) !== null);
+                const kind = !a.admin ? "none" : vaultMatch ? "same Squads vault as upgrades" : isOnCurve(a.admin) ? "single key (could be MPC/HSM-held, which is not verifiable onchain)" : "program address (unmapped)";
+                return (
+                  <dd key={a.account} className="grid grid-cols-[9rem_1fr] gap-y-2 gap-x-3">
+                    <span className="text-dim">Account</span><span><Addr v={a.account} network={net} /> <span className="mono text-[11px] text-dim">{a.adapter}</span></span>
+                    <span className="text-dim">Admin</span><span><Addr v={a.admin} network={net} /> <span className={kind.startsWith("single") ? "text-warn text-xs" : "text-chrome text-xs"}>{kind}</span></span>
+                    {a.guardian && <><span className="text-dim">Guardian</span><Addr v={a.guardian} network={net} /></>}
+                    {Object.entries(a.params).filter(([, v]) => v !== null).map(([k, v]) => <Fragment key={k}><span className="text-dim">{k}</span><span className="mono text-xs break-all">{String(v)}</span></Fragment>)}
+                  </dd>
+                );
+              }) : <dd className="text-chrome">Admin config: <span className="text-warn">not yet mapped</span>. Coming soon: decoding this protocol&apos;s admin, listing authority and withdraw limits from its IDL.</dd>}
+              {!!s?.admin.length && <p className="text-xs text-dim mt-3">Decoded from the protocol&apos;s onchain Anchor IDL. Admin keys can usually list collateral and change risk parameters. In the Drift attack, admin was the role that was taken over.</p>}
             </div>
           </dl>
         </Section>
