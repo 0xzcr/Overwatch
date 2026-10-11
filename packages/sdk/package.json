@@ -1,0 +1,12 @@
+{
+  "name": "@overwatch/sdk",
+  "version": "0.1.0",
+  "description": "Overwatch TS SDK: read onchain risk registry PDAs, build registry/vault instructions, call the public API.",
+  "type": "module",
+  "main": "src/index.ts",
+  "exports": { ".": "./src/index.ts", "./tx": "./src/tx.ts" },
+  "scripts": { "typecheck": "tsc -p .", "lint": "eslint src test", "test": "vitest run" },
+  "dependencies": { "@noble/hashes": "^1.6.1", "bs58": "^6.0.0", "@noble/curves": "^1.7.0" },
+  "peerDependencies": { "@solana/web3.js": "^1.98.0" },
+  "devDependencies": { "@solana/web3.js": "^1.98.0" }
+}

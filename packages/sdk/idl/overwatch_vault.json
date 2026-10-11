@@ -1,0 +1,1008 @@
+{
+  "address": "9HyNZKXgyJzCoSq3PQ16etGn7eC4ZDauTuRUUe9Jef5A",
+  "metadata": {
+    "name": "overwatch_vault",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "DEMO protected vault: permissionless auto-exit when the Overwatch registry turns red. Simulated strategies only."
+  },
+  "instructions": [
+    {
+      "name": "allocate",
+      "discriminator": [
+        64,
+        38,
+        189,
+        129,
+        24,
+        157,
+        82,
+        136
+      ],
+      "accounts": [
+        {
+          "name": "manager",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault.mint",
+                "account": "Vault"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "idle",
+          "writable": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "position",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "arg",
+                "path": "protocol_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "position_tokens",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "position"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "protocol_id",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "check_and_exit",
+      "docs": [
+        "Permissionless. The `risk` account is typed as the registry's `RiskRecord`, so Anchor checks its owner",
+        "is `overwatch_registry`; the seeds constraint checks it's the PDA for this position's protocol_id."
+      ],
+      "discriminator": [
+        50,
+        231,
+        150,
+        138,
+        251,
+        99,
+        222,
+        82
+      ],
+      "accounts": [
+        {
+          "name": "caller",
+          "signer": true
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault.mint",
+                "account": "Vault"
+              }
+            ]
+          },
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "idle",
+          "writable": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "position",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "account",
+                "path": "position.protocol_id",
+                "account": "Position"
+              }
+            ]
+          }
+        },
+        {
+          "name": "position_tokens",
+          "writable": true
+        },
+        {
+          "name": "risk",
+          "docs": [
+            "Owner checked by `Account<RiskRecord>` (must be overwatch_registry); PDA checked by seeds."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  105,
+                  115,
+                  107
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "position.protocol_id",
+                "account": "Position"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                8,
+                63,
+                246,
+                70,
+                235,
+                199,
+                62,
+                121,
+                43,
+                227,
+                185,
+                220,
+                165,
+                87,
+                15,
+                140,
+                37,
+                97,
+                25,
+                71,
+                11,
+                245,
+                157,
+                210,
+                47,
+                189,
+                13,
+                139,
+                145,
+                242,
+                99,
+                14
+              ]
+            }
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "deposit",
+      "discriminator": [
+        242,
+        35,
+        198,
+        137,
+        82,
+        225,
+        242,
+        182
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "signer": true
+        },
+        {
+          "name": "vault",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault.mint",
+                "account": "Vault"
+              }
+            ]
+          }
+        },
+        {
+          "name": "idle",
+          "writable": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "share_mint",
+          "writable": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "user_tokens",
+          "writable": true
+        },
+        {
+          "name": "user_shares",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initialize_vault",
+      "discriminator": [
+        48,
+        191,
+        163,
+        44,
+        71,
+        129,
+        63,
+        164
+      ],
+      "accounts": [
+        {
+          "name": "manager",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "share_mint",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault"
+              }
+            ]
+          }
+        },
+        {
+          "name": "idle",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  100,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "min_score",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "reset_position",
+      "docs": [
+        "Manager can re-arm a shielded position once the protocol is no longer red (demo reset)."
+      ],
+      "discriminator": [
+        26,
+        231,
+        79,
+        28,
+        18,
+        115,
+        223,
+        107
+      ],
+      "accounts": [
+        {
+          "name": "manager",
+          "signer": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "vault",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault.mint",
+                "account": "Vault"
+              }
+            ]
+          },
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "position",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "account",
+                "path": "position.protocol_id",
+                "account": "Position"
+              }
+            ]
+          }
+        },
+        {
+          "name": "risk",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  105,
+                  115,
+                  107
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "position.protocol_id",
+                "account": "Position"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                8,
+                63,
+                246,
+                70,
+                235,
+                199,
+                62,
+                121,
+                43,
+                227,
+                185,
+                220,
+                165,
+                87,
+                15,
+                140,
+                37,
+                97,
+                25,
+                71,
+                11,
+                245,
+                157,
+                210,
+                47,
+                189,
+                13,
+                139,
+                145,
+                242,
+                99,
+                14
+              ]
+            }
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "withdraw",
+      "discriminator": [
+        183,
+        18,
+        70,
+        156,
+        148,
+        109,
+        161,
+        34
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "signer": true
+        },
+        {
+          "name": "vault",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault.mint",
+                "account": "Vault"
+              }
+            ]
+          }
+        },
+        {
+          "name": "idle",
+          "writable": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "share_mint",
+          "writable": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "user_tokens",
+          "writable": true
+        },
+        {
+          "name": "user_shares",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "shares",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Position",
+      "discriminator": [
+        170,
+        188,
+        143,
+        228,
+        122,
+        64,
+        247,
+        208
+      ]
+    },
+    {
+      "name": "Vault",
+      "discriminator": [
+        211,
+        8,
+        232,
+        43,
+        2,
+        152,
+        117,
+        119
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "Deposited",
+      "discriminator": [
+        111,
+        141,
+        26,
+        45,
+        161,
+        35,
+        100,
+        57
+      ]
+    },
+    {
+      "name": "ShieldTriggered",
+      "discriminator": [
+        18,
+        135,
+        31,
+        17,
+        156,
+        54,
+        146,
+        166
+      ]
+    },
+    {
+      "name": "Withdrawn",
+      "discriminator": [
+        20,
+        89,
+        223,
+        198,
+        194,
+        124,
+        219,
+        13
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Unauthorized",
+      "msg": "only the vault manager can do this"
+    },
+    {
+      "code": 6001,
+      "name": "ZeroAmount",
+      "msg": "amount must be > 0"
+    },
+    {
+      "code": 6002,
+      "name": "MathOverflow",
+      "msg": "math overflow"
+    },
+    {
+      "code": 6003,
+      "name": "InsufficientIdle",
+      "msg": "not enough idle funds; position funds are allocated"
+    },
+    {
+      "code": 6004,
+      "name": "PositionShielded",
+      "msg": "position is shielded"
+    },
+    {
+      "code": 6005,
+      "name": "NotRed",
+      "msg": "protocol risk is not red; nothing to do"
+    },
+    {
+      "code": 6006,
+      "name": "StillRed",
+      "msg": "protocol is still red"
+    }
+  ],
+  "types": [
+    {
+      "name": "Deposited",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "shares",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Position",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "protocol_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "token_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "allocated",
+            "type": "u64"
+          },
+          {
+            "name": "shielded",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RiskRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "protocol_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "score",
+            "type": "u8"
+          },
+          {
+            "name": "grade",
+            "docs": [
+              "0=A 1=B 2=C 3=D 4=F"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "flags",
+            "type": "u64"
+          },
+          {
+            "name": "last_event_slot",
+            "type": "u64"
+          },
+          {
+            "name": "updated_slot",
+            "type": "u64"
+          },
+          {
+            "name": "publisher",
+            "type": "pubkey"
+          },
+          {
+            "name": "version",
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ShieldTriggered",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "protocol_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "score",
+            "type": "u8"
+          },
+          {
+            "name": "flags",
+            "type": "u64"
+          },
+          {
+            "name": "caller",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Vault",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "manager",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "share_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "idle",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_allocated",
+            "type": "u64"
+          },
+          {
+            "name": "min_score",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Withdrawn",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "shares",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+[package]
+name = "overwatch_demo_protocol"
+version = "0.1.0"
+description = "DEMO: a tiny no-op program whose upgrade authority is a Squads v4 vault on devnet, so Overwatch can watch it."
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+solana-program-entrypoint = "3"
+solana-account-info = "3"
+solana-pubkey = "3"
+solana-program-error = "3"
+solana-msg = "3"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }

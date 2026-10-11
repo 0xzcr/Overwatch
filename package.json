@@ -37,6 +37,7 @@
     "@noble/hashes": "^1.8.0",
     "@overwatch/core": "workspace:*",
     "@overwatch/db": "workspace:*",
+    "@overwatch/demo": "workspace:*",
     "@overwatch/solana": "workspace:*",
     "@solana/web3.js": "^1.99.0",
     "@sqds/multisig": "^2.1.4",
