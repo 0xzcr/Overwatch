@@ -15,11 +15,6 @@ export default async function Home() {
     <>
       {/* HERO */}
       <section className="hero hero--solo" id="top" data-dock="Intro" {...stage("orb", { colorA: "#2BFFB0", colorB: "#3a5cff", hud: true, y: 0.45, yNarrow: 0.9, front: true, sway: 0.18 })}>
-        <div className="hud hud--tr mono">
-          <span className="hud__dim">
-            TGT <b id="tgt">+0.000 / +0.000</b>
-          </span>
-        </div>
         <div className="hero__title-wrap">
           <p className="hero__eyebrow mono">
             <span data-scramble>OVERWATCH</span>
@@ -36,18 +31,13 @@ export default async function Home() {
             </span>
           </h1>
         </div>
-
-        <div className="hero__scroll mono" aria-hidden="true">
-          <span>Scroll</span>
-          <i />
-        </div>
       </section>
 
       {/* HOW IT WORKS */}
       <section className="tiles" id="how" data-dock="How it works" {...stage("scatter", { colorA: "#2BFFB0", colorB: "#1b2340", opacity: 0.5 })}>
         <header className="section-head">
           <h2 className="h2">
-            Map. Watch. <span className="serif">Warn.</span>
+            How it works
           </h2>
         </header>
         <div className="tiles__grid">
@@ -55,9 +45,6 @@ export default async function Home() {
             <div key={s.num} className="tile" data-shape={s.shape} data-color={s.color} style={cssVars({ "--c": s.color })}>
               <span className="tile__glow" />
               <Glyph shape={s.shape} />
-              <span className="tile__top mono">
-                <span>{s.num}</span>
-              </span>
               <span className="tile__name">{s.name}</span>
               <span className="tile__title">{s.title}</span>
               <span className="tile__text">{s.text}</span>
@@ -76,9 +63,7 @@ export default async function Home() {
         <div className="headliners__pin">
           <header className="headliners__head">
             <h2 className="h2">
-              Three layers.
-              <br />
-              <span className="serif">One alarm.</span>
+              What you get
             </h2>
             <div className="headliners__progress">
               <i id="hlProg" />
@@ -88,12 +73,9 @@ export default async function Home() {
             {layers.map((u) => (
               <Link key={u.id} href={u.href} className="hl" style={cssVars({ "--c": u.color })} data-cursor="Open">
                 <div className="hl__copy">
-                  <p className="hl__meta mono">
-                    <span>{u.code}</span>
-                  </p>
                   <h3 className="hl__title">{u.title}</h3>
                   <p className="hl__sum">{u.summary}</p>
-                  <span className="hl__more mono">{u.cta} →</span>
+                  <span className="hl__more">{u.cta} →</span>
                 </div>
                 <Vis className="hl__vis" html={visual(u, u.color)} />
               </Link>
@@ -111,9 +93,7 @@ export default async function Home() {
       >
         <header className="section-head">
           <h2 className="h2">
-            Every grade,
-            <br />
-            <span className="serif">with receipts.</span>
+            Control map
           </h2>
           <p className="section-head__lede">
             Graded A to F on who can change them. <Grade grade="A" score={85} size="sm" /> means strong controls; red means a vault reading the Overwatch registry should
@@ -142,27 +122,24 @@ export default async function Home() {
       >
         <div className="cta__head">
           <h2 className="cta__title">
-            Stand <span className="serif">watch.</span>
+            Start watching
           </h2>
         </div>
         <div className="paths">
           <Link className="path" href="/alerts" data-cursor="Alerts" style={cssVars({ "--c": "#FF5A3D" })}>
-            <span className="path__num mono">A</span>
             <h3>Protect your deposits</h3>
             <p>Watch the protocols you use and get a plain-English alert the moment their locks get weaker.</p>
-            <span className="path__cta mono">Set up alerts →</span>
+            <span className="path__cta">Set up alerts →</span>
           </Link>
           <Link className="path" href="/methodology" data-cursor="Read" style={cssVars({ "--c": "#8B7CFF" })}>
-            <span className="path__num mono">B</span>
             <h3>Raise your grade</h3>
             <p>Run a protocol? Every deduction is public and fixable: add a timelock, raise the threshold, retire the single key.</p>
-            <span className="path__cta mono">Read the methodology →</span>
+            <span className="path__cta">Read the methodology →</span>
           </Link>
           <Link className="path" href="/docs/api" data-cursor="Build" style={cssVars({ "--c": "#5AA8FF" })}>
-            <span className="path__num mono">C</span>
             <h3>Build on the watch</h3>
             <p>Read RiskRecords from your program, stream events into your risk desk, or verify webhooks in one call.</p>
-            <span className="path__cta mono">API &amp; SDK →</span>
+            <span className="path__cta">API &amp; SDK →</span>
           </Link>
         </div>
       </section>

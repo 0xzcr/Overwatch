@@ -18,14 +18,10 @@ export default async function CaseStudy() {
       <PageHero
         dock="Case study"
         lines={[
-          <>
-            Drift lost <span className="serif bad">$285M.</span>
-          </>,
-          <>
-            Warned <span className="serif hero__accent">{days} days</span> early.
-          </>,
+          "Drift lost $285M.",
+          `${days} days of warning.`,
         ]}
-        lede="No smart-contract bug was involved. The attacker collected pre-signed durable-nonce transactions from Security Council signers, waited, and used them to take admin. Reconstructed from public incident reports."
+        lede="The warning signs were onchain and public. No smart-contract bug was involved. The attacker collected pre-signed durable-nonce transactions from Security Council signers, waited, and used them to take admin. Reconstructed from public incident reports."
         stageAttrs={stage("knot", { colorA: "#FFB547", colorB: "#1b2340", x: 3, y: 0.6, yNarrow: 1.5, scale: 0.85, autoRotate: 0.16, jitter: 0.02, opacity: 0.95 })}
       />
 
@@ -50,7 +46,7 @@ export default async function CaseStudy() {
       >
         <header className="section-head">
           <h2 className="h2">
-            {h.total} protocols. <span className="serif">{h.tvl}</span> in deposits.
+            {h.total} protocols. {h.tvl} in deposits.
             <br />
             Here is who holds the keys.
           </h2>
@@ -140,7 +136,7 @@ export default async function CaseStudy() {
             </button>
           </div>
         </div>
-        <p className="page-note mono">Use ← and → to step through the timeline.</p>
+        <p className="page-note">Use ← and → to step through the timeline.</p>
       </section>
 
       <section className="page-block" data-dock="Sources">

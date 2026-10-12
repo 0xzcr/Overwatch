@@ -32,7 +32,7 @@ export default function ApiDocs() {
     <>
       <PageHero
         dock="API"
-        lines={["Read the watch", <span key="s" className="serif hero__accent">from anywhere.</span>]}
+        lines={["API"]}
         lede={
           <>
             JSON over HTTPS. Every response is <span className="mono">{"{ version, data }"}</span>. Pass <span className="mono">x-api-key</span> for paid tiers; anonymous use is

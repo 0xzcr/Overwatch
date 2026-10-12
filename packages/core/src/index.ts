@@ -18,3 +18,4 @@ export * from "./collect";
 export * from "./adapters/idl";
 export * from "./adapters/protocols";
 export * from "./adapters/specs";
+export * from "./rehearsal";

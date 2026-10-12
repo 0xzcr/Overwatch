@@ -7,7 +7,7 @@ const SEVS = ["INFO", "MEDIUM", "HIGH", "CRITICAL"];
 const tone = (s: string) => (s === "CRITICAL" ? "bad" : s === "HIGH" ? "warn" : s === "INFO" ? "ok" : "dim");
 
 /** Live feed over Server-Sent Events (/api/v1/stream), filterable by severity and protocol. */
-export function LiveFeed({ initial, protocols }: { initial: FeedItem[]; protocols: { slug: string; name: string }[] }) {
+export function LiveFeed({ initial, protocols, live }: { initial: FeedItem[]; protocols: { slug: string; name: string }[]; live: boolean }) {
   const [items, setItems] = useState(initial);
   const [min, setMin] = useState("INFO");
   const [proto, setProto] = useState("all");
@@ -77,11 +77,17 @@ export function LiveFeed({ initial, protocols }: { initial: FeedItem[]; protocol
 
       {!shown.length ? (
         <div className="feedx__empty">
-          <p className="mono">{items.length ? "No events at this severity." : "No events recorded yet."}</p>
           <p>
-            Events appear here within seconds of a change onchain. Weakening changes are amber or red; changes that strengthen controls are green. Demo events from the devnet
-            demo protocol are labelled.
+            <b>{items.length ? "No events at this severity." : live ? "No events recorded yet." : "No event history on this deployment."}</b>
           </p>
+          {live || items.length ? (
+            <p>Events appear here within seconds of a change onchain. Weakening changes are amber or red; changes that strengthen controls are green.</p>
+          ) : (
+            <p>
+              The live database isn&apos;t connected here, so there is nothing to stream. To see an alert fire, use the <Link href="/demo">demo console</Link> or step through the{" "}
+              <Link href="/case-study">Drift replay</Link>.
+            </p>
+          )}
         </div>
       ) : (
         <ol className="tl">

@@ -99,7 +99,7 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
             <dl className="facts">
               {s.programs.map((x) => (
                 <div key={x.programId} className="facts__card" data-tilt>
-                  <dt className="label mono">{x.label}</dt>
+                  <dt className="label">{x.label}</dt>
                   <dd className="facts__rows">
                     <span>Program</span>
                     <Addr v={x.programId} network={net} full />
@@ -118,7 +118,7 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
               ))}
               {s.multisigs.map((m) => (
                 <div key={m.address} className="facts__card">
-                  <dt className="label mono">
+                  <dt className="label">
                     <Term t="multisig">Squads v4 multisig</Term> · {m.role.replace("_", " ")}
                   </dt>
                   <dd className="facts__rows">
@@ -178,7 +178,7 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
               ))}
               {!!s.mints.length && (
                 <div className="facts__card">
-                  <dt className="label mono">Collateral tokens</dt>
+                  <dt className="label">Collateral tokens</dt>
                   {s.mints.map((m) => (
                     <dd key={m.address} className="facts__mint">
                       <Addr v={m.address} network={net} />
@@ -194,7 +194,7 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
               )}
               {!!s.oracles.length && (
                 <div className="facts__card">
-                  <dt className="label mono">
+                  <dt className="label">
                     <Term t="oracle">Oracles</Term>
                   </dt>
                   {s.oracles.map((o) => (
@@ -207,7 +207,7 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
                 </div>
               )}
               <div className={`facts__card${s.admin.length ? "" : " is-dashed"}`}>
-                <dt className="label mono">Admin config</dt>
+                <dt className="label">Admin config</dt>
                 {s.admin.length ? (
                   s.admin.map((a) => {
                     const vaultMatch = s.multisigs.some((m) => a.admin && findVaultIndex(m.address, a.admin) !== null);
@@ -247,7 +247,7 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
                   })
                 ) : (
                   <dd className="dim">
-                    Admin config: <span className="warn">not yet mapped</span>. Coming soon: this protocol&apos;s admin, listing authority and withdraw limits, decoded from its IDL.
+                    Admin config isn&apos;t mapped for this protocol yet. Admin keys, listing authority and withdraw limits appear once its IDL adapter lands.
                   </dd>
                 )}
               </div>
@@ -255,7 +255,7 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
           ) : (
             <dl className="facts">
               <div className="facts__card">
-                <dt className="label mono">From the {SNAPSHOT_LABEL}</dt>
+                <dt className="label">From the {SNAPSHOT_LABEL}</dt>
                 <dd className="facts__rows">
                   <span>
                     <Term t="upgrade authority">Upgrade authority</Term>
@@ -274,7 +274,7 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
                 </dd>
               </div>
               <div className="facts__card is-dashed">
-                <dd className="dim">Raw accounts, signers, nonce accounts, collateral and oracles load from the live database, which is not connected here.</dd>
+                <dd className="dim">Raw accounts, signers, nonce accounts, collateral and oracles appear when the live database is connected.</dd>
               </div>
             </dl>
           )}
@@ -294,16 +294,16 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
                   <span className="mono bad">−{b.points}</span>
                 </div>
               ))}
-              {!p.breakdown.length && <div className="breakdown__row dim">{live ? "No deductions." : "Deductions load with live data. The grade below is from the snapshot."}</div>}
+              {!p.breakdown.length && <div className="breakdown__row dim">{live ? "No deductions." : "Itemised deductions need the live database. This grade is from the snapshot."}</div>}
               <div className="breakdown__row breakdown__total">
-                <span className="label mono">Score</span>
+                <span className="label">Score</span>
                 <span className="mono">
                   {p.score ?? "—"} · {p.grade}
                 </span>
               </div>
             </div>
-            <p className="page-note mono">
-              flags: [{p.flags.join(", ") || "none"}] · <Link href="/methodology">methodology →</Link>
+            <p className="page-note">
+              Flags: <span className="mono">{p.flags.join(", ") || "none"}</span>. <Link href="/methodology">How grades work →</Link>
             </p>
           </div>
 
@@ -331,7 +331,7 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
             ) : (
               <p className="page-note">Not published to the devnet registry yet. The indexer pushes a RiskRecord after the first live score.</p>
             )}
-            <p className="page-note mono">
+            <p className="page-note">
               Any Solana program can read this account (owner and <Term t="pda">PDA</Term> check) and act on it. <Link href="/vault">See the protected vault →</Link>
             </p>
           </div>
@@ -343,13 +343,9 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
                 <a href={`https://t.me/${bot}?start=watch_${slug}`} className="btn btn--glow btn--sm" data-cursor="Telegram">
                   <span>Telegram: watch {p.name}</span>
                 </a>
-              ) : (
-                <span className="btn btn--ghost btn--sm is-disabled" title="Set TELEGRAM_BOT_USERNAME">
-                  <span>Telegram bot: coming soon</span>
-                </span>
-              )}
+              ) : null}
               <Link href={`/alerts?protocol=${slug}`} className="btn btn--ghost btn--sm" data-cursor="Alerts">
-                <span>Webhook / email</span>
+                <span>Webhook or email</span>
               </Link>
             </div>
           </div>
@@ -361,7 +357,7 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
         <Timeline
           events={events}
           network={net}
-          empty={live ? undefined : "The governance timeline loads from the live database (backfill + live events), which is not connected here."}
+          empty={live ? undefined : "The governance timeline (backfill and live events) appears when the live database is connected."}
         />
       </section>
     </>

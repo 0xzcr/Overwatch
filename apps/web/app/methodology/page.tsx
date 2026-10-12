@@ -53,7 +53,7 @@ export default function Methodology() {
     <>
       <PageHero
         dock="Methodology"
-        lines={["Facts first,", <span key="s" className="serif hero__accent">opinions second.</span>]}
+        lines={["Methodology"]}
         lede={
           <>
             Every grade is a deterministic function of facts shown on the protocol page, and each fact links to its raw account. The code is{" "}

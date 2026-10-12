@@ -17,7 +17,8 @@
     "backfill": "tsx scripts/backfill.ts",
     "db:migrate": "pnpm --filter @overwatch/db migrate",
     "demo:setup": "tsx scripts/demo/setup.ts",
-    "stats": "tsx scripts/headline-stats.ts"
+    "stats": "tsx scripts/headline-stats.ts",
+    "smoke:pipeline": "tsx scripts/dev/pipeline-smoke.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

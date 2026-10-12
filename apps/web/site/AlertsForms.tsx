@@ -7,7 +7,9 @@ type Out = { text: string; ok: boolean } | null;
 async function post(url: string, body: unknown): Promise<{ data?: Record<string, unknown>; error?: string }> {
   try {
     const r = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-    return (await r.json()) as { data?: Record<string, unknown>; error?: string };
+    const j = (await r.json()) as { data?: Record<string, unknown>; error?: string };
+    if (r.status === 503) return { error: "Subscriptions need the live database, which isn't connected on this deployment." };
+    return j;
   } catch (e) {
     return { error: (e as Error).message };
   }
@@ -53,7 +55,6 @@ export function AlertsForms({ protocols, preselect, bot, emailEnabled }: { proto
     <div className="alerts">
       <div className="paths alerts__channels">
         <div className="path" style={{ ["--c" as string]: "#7CF3FF" }}>
-          <span className="path__num mono">01</span>
           <h3>Telegram</h3>
           <p>
             Open the bot and send <span className="mono">/watch drift</span>, <span className="mono">/list</span> or <span className="mono">/status kamino-lend</span>.{" "}
@@ -64,21 +65,19 @@ export function AlertsForms({ protocols, preselect, bot, emailEnabled }: { proto
               <span>Open @{bot}</span>
             </a>
           ) : (
-            <span className="path__cta mono warn">Coming soon: bot username not configured</span>
+            <span className="path__cta dim">The bot isn&apos;t connected on this deployment.</span>
           )}
         </div>
         <div className="path" style={{ ["--c" as string]: "#2BFFB0" }}>
-          <span className="path__num mono">02</span>
           <h3>Webhook</h3>
           <p>
             Signed with HMAC-SHA256 in <span className="mono">x-overwatch-signature</span>. Failed deliveries retry up to 6 times with exponential backoff.
           </p>
-          <a href="#webhook" className="path__cta mono">
+          <a href="#webhook" className="path__cta">
             Create one below →
           </a>
         </div>
         <div className="path" style={{ ["--c" as string]: "#FFB547" }}>
-          <span className="path__num mono">03</span>
           <h3>Email</h3>
           {emailEnabled ? (
             <div className="field-row">
@@ -90,7 +89,7 @@ export function AlertsForms({ protocols, preselect, bot, emailEnabled }: { proto
           ) : (
             <>
               <p>The same plain-English alerts in your inbox.</p>
-              <span className="path__cta mono warn">Coming soon: email delivery not configured</span>
+              <span className="path__cta dim">Email delivery isn&apos;t configured on this deployment.</span>
             </>
           )}
         </div>
@@ -98,11 +97,11 @@ export function AlertsForms({ protocols, preselect, bot, emailEnabled }: { proto
 
       <div className="form-card" id="webhook">
         <h3 className="form-card__title">Create a webhook</h3>
-        <label className="field-label mono" htmlFor="wh-url">
+        <label className="field-label" htmlFor="wh-url">
           Endpoint URL
         </label>
         <input id="wh-url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://your-server.example/overwatch" className="field mono" />
-        <p className="field-label mono">Minimum severity</p>
+        <p className="field-label">Minimum severity</p>
         <div className="chips">
           {SEV.map((s) => (
             <button key={s} className={`chip chip--tag${sev === s ? " is-on" : ""}`} aria-pressed={sev === s} onClick={() => setSev(s)}>
@@ -110,7 +109,7 @@ export function AlertsForms({ protocols, preselect, bot, emailEnabled }: { proto
             </button>
           ))}
         </div>
-        <p className="field-label mono">Protocols (none selected = all)</p>
+        <p className="field-label">Protocols (none selected = all)</p>
         <div className="chips">
           {protocols.map((p) => (
             <button key={p.slug} className={`chip${sel.includes(p.slug) ? " is-on" : ""}`} aria-pressed={sel.includes(p.slug)} onClick={() => toggle(p.slug)}>
