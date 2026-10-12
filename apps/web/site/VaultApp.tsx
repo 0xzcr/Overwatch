@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { ConnectionProvider, WalletProvider, useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { WalletModalProvider, WalletMultiButton } from "@solana/wallet-adapter-react-ui";
@@ -131,9 +132,9 @@ function VaultApp({ registryId, vaultId, initialShields }: { registryId?: string
   return (
     <div className="vault">
       {notReady && (
-        <p className="notice mono">
-          {offline ? "The vault backend isn't reachable from this deployment." : "The devnet demo vault isn't deployed yet."} Coming soon here: run{" "}
-          <b>pnpm demo:setup</b> to deploy the demo mint, vault and position.
+        <p className="notice">
+          {offline ? "The vault backend isn't reachable from this deployment." : "The demo vault isn't deployed on this deployment."} Run <b>pnpm demo:setup</b> to deploy the
+          devnet mint, vault and position. Until then, the <Link href="/demo">demo console</Link> shows the vault exit in rehearsal.
         </p>
       )}
       <div className="vault__grid">
@@ -145,20 +146,20 @@ function VaultApp({ registryId, vaultId, initialShields }: { registryId?: string
           <div className="kpis">
             {(
               [
-                ["your demo USDC", bal.tokens],
-                ["your vault shares", bal.shares],
-                ["vault idle", s?.vault?.idle ?? "—"],
-                ["min score to stay", s?.vault ? String(s.vault.minScore) : "—"],
+                ["Your demo USDC", bal.tokens],
+                ["Your vault shares", bal.shares],
+                ["Vault idle", s?.vault?.idle ?? "—"],
+                ["Minimum score to stay", s?.vault ? String(s.vault.minScore) : "—"],
               ] as const
             ).map(([k, v]) => (
               <div key={k} className="kpi">
-                <span className="mono">{k}</span>
+                <span>{k}</span>
                 <b className="mono">{v}</b>
               </div>
             ))}
           </div>
           <div className="form-card">
-            <label className="field-label mono" htmlFor="vault-amount">
+            <label className="field-label" htmlFor="vault-amount">
               Amount
             </label>
             <input
@@ -198,7 +199,7 @@ function VaultApp({ registryId, vaultId, initialShields }: { registryId?: string
           <div className={`position${shielded ? " is-shielded" : s?.risk?.red ? " is-red" : ""}`} data-tilt>
             <div className="position__top">
               <div>
-                <p className="label mono">Demo strategy (simulated allocation)</p>
+                <p className="label">Demo strategy (simulated allocation)</p>
                 <h3>Overwatch Demo Protocol</h3>
               </div>
               {shielded ? (
@@ -211,15 +212,15 @@ function VaultApp({ registryId, vaultId, initialShields }: { registryId?: string
             </div>
             <div className="position__stats mono">
               <div>
-                <span>allocated</span>
+                <span>Allocated</span>
                 <b>{s?.position ? (Number(s.position.allocated) / 1e6).toLocaleString() : "—"}</b>
               </div>
               <div>
-                <span>registry</span>
+                <span>Registry</span>
                 <b className={s?.risk?.red ? "bad" : "ok"}>{s?.risk ? `${s.risk.grade} ${s.risk.score}` : "—"}</b>
               </div>
               <div>
-                <span>exit rule</span>
+                <span>Exit rule</span>
                 <b className="dim">red flags or score &lt; {s?.vault?.minScore ?? 40}</b>
               </div>
             </div>
@@ -229,7 +230,7 @@ function VaultApp({ registryId, vaultId, initialShields }: { registryId?: string
             </p>
           </div>
           <div className="log">
-            <div className="log__head mono">ShieldTriggered log</div>
+            <div className="log__head mono">Shield log</div>
             <ul>
               {shields.length ? (
                 shields.map((x, i) => (

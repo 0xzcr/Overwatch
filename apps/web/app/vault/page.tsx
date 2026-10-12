@@ -11,7 +11,7 @@ export default async function VaultPage() {
     <>
       <PageHero
         dock="Vault"
-        lines={["A vault that", <span key="s" className="serif hero__accent">leaves first.</span>]}
+        lines={["Protected vault"]}
         lede={
           <>
             Deposit demo USDC and the vault allocates it to a simulated strategy. When Overwatch publishes a red score for that protocol to the onchain registry, anyone (our keeper,

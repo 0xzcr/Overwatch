@@ -142,13 +142,13 @@ export function diffSnapshots(prev: ControlSnapshot | null, next: ControlSnapsho
       if (prevNonces.has(n.address)) continue;
       const crit = exposed.size >= minThreshold;
       drafts.push(ev("SIGNER_NONCE_ACCOUNT_CREATED", crit ? "CRITICAL" : "HIGH", true,
-        crit ? `Enough ${name} signers to pass a vote now hold never-expiring transactions` : `A ${name} signer created a never-expiring transaction account`,
+        crit ? `Enough ${name} signers to pass a vote now hold never-expiring transactions` : `A signer of ${name} created a never-expiring transaction account`,
         `Signer ${short(n.authority)} controls a durable nonce account (${short(n.address)}). Transactions signed with it never expire and can be executed later, as happened in the Drift hack. ${exposed.size} signer(s) now have one; ${minThreshold === Infinity ? "?" : minThreshold} are needed to approve changes.`,
         null, { nonce: n.address, authority: n.authority, exposedSigners: exposed.size }));
     }
     for (const a of prevNonces) {
       if (!nextNonces.has(a))
-        drafts.push(ev("SIGNER_NONCE_ACCOUNT_CLOSED", "INFO", false, `A ${name} signer closed a durable nonce account`, `Nonce account ${short(a)} no longer exists.`, { nonce: a }, null));
+        drafts.push(ev("SIGNER_NONCE_ACCOUNT_CLOSED", "INFO", false, `A signer of ${name} closed a durable nonce account`, `Nonce account ${short(a)} no longer exists.`, { nonce: a }, null));
     }
   }
 

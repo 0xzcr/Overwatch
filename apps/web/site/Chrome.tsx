@@ -74,20 +74,18 @@ export function Chrome() {
             </button>
           </div>
           <ol className="menu__list">
-            {pages.map((p, i) => (
+            {pages.map((p) => (
               <li key={p.href} style={cssVars({ "--c": p.color })}>
                 <Link href={p.href} data-shape={p.shape} data-color={p.color} data-cursor="Go">
-                  <span className="mono menu__num">{String(i).padStart(2, "0")}</span>
                   <span className="menu__name">{p.name}</span>
-                  <span className="menu__kicker mono">{p.kicker}</span>
+                  <span className="menu__kicker">{p.kicker}</span>
                   <span className="menu__count mono">→</span>
                 </Link>
               </li>
             ))}
           </ol>
-          <div className="menu__foot mono">
-            <span>Hover a page to preview it on the stage</span>
-            <span>Mainnet: read-only · Devnet: demo</span>
+          <div className="menu__foot">
+            <span>Mainnet data is read-only. The registry, vault and demo run on devnet.</span>
           </div>
         </div>
       </div>
@@ -119,11 +117,13 @@ export function Chrome() {
             <stop offset="0" stopColor="#2BFFB0" />
             <stop offset="1" stopColor="#7CF3FF" />
           </linearGradient>
-          <symbol id="ow-mark" viewBox="0 0 64 64">
-            <path d="M4 32 C 16 12, 48 12, 60 32 C 48 52, 16 52, 4 32 Z" fill="none" stroke="url(#owGrad)" strokeWidth="3.2" strokeLinejoin="round" />
-            <circle cx="32" cy="32" r="10.5" fill="none" stroke="url(#owGrad)" strokeWidth="3.2" />
-            <circle cx="32" cy="32" r="3.6" fill="#2BFFB0" />
-            <path d="M32 6 V14 M32 50 V58" stroke="url(#owGrad)" strokeWidth="3.2" strokeLinecap="round" />
+          <symbol id="ow-mark" viewBox="0 0 48 48">
+            <g stroke="url(#owGrad)" strokeLinejoin="round">
+              <path d="M15.6 15 L12 1.5 L20.6 12 Z M32.4 15 L36 1.5 L27.4 12 Z" fill="#0b1d18" strokeWidth="2" />
+              <path d="M16 11.5 L32 11.5 L37.5 19.5 L31.5 30 L28.5 40 L19.5 40 L16.5 30 L10.5 19.5 Z" fill="#07120f" strokeWidth="2.4" />
+            </g>
+            <path d="M16.4 21.8 L21.4 22.9 L17.4 24.2 Z M31.6 21.8 L26.6 22.9 L30.6 24.2 Z" fill="#2BFFB0" />
+            <path d="M21.4 30.2 L26.6 30.2 L24 33.1 Z" fill="#7CF3FF" />
           </symbol>
         </defs>
       </svg>
@@ -141,28 +141,25 @@ export function Footer() {
         </div>
         <div className="footer__cols">
           <div>
-            <h4 className="mono">Watch</h4>
+            <h4>Watch</h4>
             <Link href="/protocols">Control map</Link>
             <Link href="/events">Live events</Link>
             <Link href="/case-study">Case study</Link>
           </div>
           <div>
-            <h4 className="mono">Act</h4>
+            <h4>Act</h4>
             <Link href="/alerts">Alerts</Link>
             <Link href="/vault">Protected vault</Link>
             <Link href="/demo">Demo console</Link>
           </div>
           <div>
-            <h4 className="mono">Learn</h4>
+            <h4>Learn</h4>
             <Link href="/methodology">Methodology</Link>
             <Link href="/docs/api">API reference</Link>
           </div>
         </div>
       </div>
-      <div className="footer__word" aria-hidden="true">
-        OVERWATCH
-      </div>
-      <div className="footer__base mono">
+      <div className="footer__base">
         <span>© 2026 Overwatch</span>
         <span>Mainnet reads are read-only. The registry, vault and demo run on devnet.</span>
         <a href="#top" data-cursor="Top">

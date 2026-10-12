@@ -20,15 +20,15 @@ export interface Capability {
 export const promise = "Know who can move your money.";
 
 export const pages = [
-  { href: "/", name: "Overview", kicker: "What Overwatch watches", shape: "orb", color: "#2BFFB0" },
+  { href: "/", name: "Overview", kicker: "What Overwatch does", shape: "orb", color: "#2BFFB0" },
   { href: "/protocols", name: "Control map", kicker: "Grades for the top Solana protocols", shape: "globe", color: "#2BFFB0" },
-  { href: "/events", name: "Live events", kicker: "Every change, as it happens", shape: "radar", color: "#7CF3FF" },
-  { href: "/case-study", name: "Case study", kicker: "Why Overwatch exists", shape: "knot", color: "#FF5A3D" },
-  { href: "/alerts", name: "Alerts", kicker: "Telegram · webhooks · email", shape: "burst", color: "#FFB547" },
+  { href: "/events", name: "Live events", kicker: "Governance changes in real time", shape: "radar", color: "#7CF3FF" },
+  { href: "/case-study", name: "Case study", kicker: "The Drift exploit, replayed", shape: "knot", color: "#FF5A3D" },
+  { href: "/alerts", name: "Alerts", kicker: "Telegram, webhooks, email", shape: "burst", color: "#FFB547" },
   { href: "/vault", name: "Protected vault", kicker: "Devnet demo", shape: "lock", color: "#B6FF3B" },
-  { href: "/demo", name: "Demo console", kicker: "Weaken the locks on devnet", shape: "lattice", color: "#D27DFF" },
+  { href: "/demo", name: "Demo console", kicker: "Run the devnet demo", shape: "lattice", color: "#D27DFF" },
   { href: "/methodology", name: "Methodology", kicker: "How grades are computed", shape: "shield", color: "#8B7CFF" },
-  { href: "/docs/api", name: "API", kicker: "REST · SSE · webhooks · SDK", shape: "terrain", color: "#5AA8FF" },
+  { href: "/docs/api", name: "API", kicker: "REST, SSE, webhooks, SDK", shape: "terrain", color: "#5AA8FF" },
 ] as const;
 
 export const steps = [

@@ -24,3 +24,20 @@ export async function guard(req: NextRequest): Promise<NextResponse | { tier: st
 export const ok = (data: unknown, extra: Record<string, unknown> = {}) =>
   NextResponse.json({ version: API_VERSION, ...extra, data }, { headers: { "cache-control": "no-store" } });
 export const err = (status: number, error: string) => NextResponse.json({ version: API_VERSION, error }, { status });
+
+const dbDown = (e: unknown) => {
+  const x = e as { code?: string; message?: string } | null;
+  return /ECONNREFUSED|ENOTFOUND|ETIMEDOUT|ECONNRESET|CONNECT_TIMEOUT|CONNECTION_/i.test(`${x?.code ?? ""} ${x?.message ?? ""}`);
+};
+
+/** Wraps a route handler so an unreachable database answers 503 with a JSON error instead of a bare 500. */
+export function withDb<A extends unknown[]>(handler: (...args: A) => Promise<Response>) {
+  return async (...args: A): Promise<Response> => {
+    try {
+      return await handler(...args);
+    } catch (e) {
+      if (dbDown(e)) return err(503, "database unavailable");
+      throw e;
+    }
+  };
+}

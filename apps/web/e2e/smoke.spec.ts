@@ -11,7 +11,7 @@ test("leaderboard lists protocols and links to the detail page", async ({ page }
   await page.getByRole("link", { name: /Drift Protocol/ }).first().click();
   await expect(page).toHaveURL(/\/protocols\/drift$/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Drift Protocol");
-  await expect(page.getByText("Who can move your money")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Who can move your money" })).toBeVisible();
 });
 
 test("case study replays alerts from the rules engine", async ({ page }) => {
@@ -24,14 +24,29 @@ test("case study replays alerts from the rules engine", async ({ page }) => {
 
 test("methodology, API docs, events and alerts pages render", async ({ page }) => {
   for (const [url, text] of [
-    ["/methodology", "Facts first,"],
-    ["/docs/api", "Read the watch"],
-    ["/events", "Every change,"],
-    ["/alerts", "Get the alarm"],
+    ["/methodology", "Methodology"],
+    ["/docs/api", "API"],
+    ["/events", "Live events"],
+    ["/alerts", "Alerts"],
+    ["/vault", "Protected vault"],
   ] as const) {
     await page.goto(url);
     await expect(page.getByRole("heading", { level: 1 })).toContainText(text);
   }
+});
+
+test("demo console rehearsal: weaken the demo protocol → CRITICAL alert, red registry, vault shield, reset", async ({ page }) => {
+  test.skip(process.env.E2E_DEVNET === "true", "the devnet test below covers the live console");
+  await page.goto("/demo");
+  await expect(page.locator("body")).not.toHaveClass(/is-loading/);
+  await page.getByRole("button", { name: /Remove timelock/ }).click();
+  await expect(page.getByText(/removed its 2 days safety delay/).first()).toBeVisible();
+  await expect(page.getByText("Registry updated").first()).toBeVisible();
+  await expect(page.getByText("Vault shield fired").first()).toBeVisible();
+  await page.getByRole("button", { name: /Create nonce account/ }).click();
+  await expect(page.getByText("Drift pattern").first()).toBeVisible();
+  await page.getByRole("button", { name: /Reset demo/ }).click();
+  await expect(page.getByText("Vault re-armed").first()).toBeVisible();
 });
 
 // Real devnet transactions: only when explicitly enabled.
@@ -41,7 +56,7 @@ test("demo console: remove timelock → CRITICAL alert, registry update, vault s
   await expect(page.getByRole("button", { name: /Remove timelock/ })).toBeEnabled({ timeout: 30_000 });
   await page.getByRole("button", { name: /Remove timelock/ }).click();
   await expect(page.getByText(/removed its 2 days safety delay/).first()).toBeVisible({ timeout: 60_000 });
-  await expect(page.getByText("REGISTRY UPDATED · devnet").first()).toBeVisible({ timeout: 60_000 });
-  await expect(page.getByText("VAULT SHIELD TRIGGERED").first()).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByText("Registry updated · devnet").first()).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByText("Vault shield fired").first()).toBeVisible({ timeout: 60_000 });
   await page.getByRole("button", { name: /Reset demo/ }).click();
 });

@@ -11,7 +11,7 @@ export default async function Protocols() {
     <>
       <PageHero
         dock="Control map"
-        lines={["Who can move", <span key="s" className="serif hero__accent">the money.</span>]}
+        lines={["Control map"]}
         lede={
           <>
             <b className="mono">
@@ -24,10 +24,10 @@ export default async function Protocols() {
       />
       <section className="page-block" data-dock="Leaderboard" {...stage("globe", { colorA: "#2BFFB0", colorB: "#1d6bff", opacity: 0.3, x: 0, scale: 1.4, arcs: true, autoRotate: 0.04, tiltX: 0.3 })}>
         <Leaderboard rows={cards} />
-        <p className="page-note mono">
+        <p className="page-note">
           {live
             ? "Read straight from mainnet. TVL comes from DefiLlama and is shown for context only; it never affects a grade."
-            : "Snapshot of the mainnet watch list from Oct 11 2026. The live database is not connected here, so TVL, nonce exposure and last-change columns are empty."}
+            : "Snapshot of the mainnet watch list from Oct 11 2026. TVL, nonce exposure and change history appear when the live database is connected."}
         </p>
       </section>
     </>

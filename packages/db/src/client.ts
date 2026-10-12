@@ -6,7 +6,7 @@ import * as schema from "./schema";
 const url = () => process.env.DATABASE_URL ?? "postgres://overwatch:overwatch@localhost:5433/overwatch";
 let _sql: postgres.Sql | undefined;
 export function sql() {
-  _sql ??= postgres(url(), { max: 10, idle_timeout: 30 });
+  _sql ??= postgres(url(), { max: 10, idle_timeout: 30, connect_timeout: 10 });
   return _sql;
 }
 export function db() {

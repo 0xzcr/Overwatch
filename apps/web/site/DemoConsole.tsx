@@ -38,11 +38,26 @@ const ACTIONS = [
 ] as const;
 
 const t = (iso: string) => new Date(iso).toISOString().slice(11, 19);
+const now = () => new Date().toISOString();
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+interface Rehearsal {
+  log: string[];
+  events: { severity: string; title: string; explanation: string; labels: string[] }[];
+  registry: { score: number; grade: string; red: boolean };
+  shield: "fired" | "rearmed" | null;
+  state: DemoState;
+}
 const devnetTx = (sig: string) => `https://explorer.solana.com/tx/${sig}?cluster=devnet`;
 
-/** Split screen: devnet action log on the left, Overwatch alerts, registry updates and vault shields arriving live on the right. */
-export function DemoConsole({ enabled }: { enabled: boolean }) {
-  const [log, setLog] = useState<LogLine[]>([{ line: "overwatch demo console · devnet · real transactions", at: new Date().toISOString() }]);
+/**
+ * Split screen: action log on the left; Overwatch alerts, registry updates and vault shields on the right.
+ * "live" sends real devnet transactions and listens to the event stream. "rehearsal" runs the same actions through
+ * the rules engine and scoring on the server without sending anything.
+ */
+export function DemoConsole({ mode }: { mode: "live" | "rehearsal" }) {
+  const live = mode === "live";
+  const [log, setLog] = useState<LogLine[]>([{ line: live ? "overwatch demo console · devnet · real transactions" : "overwatch demo console · rehearsal · no transactions are sent", at: now() }]);
   const [feed, setFeed] = useState<Feed[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [st, setSt] = useState<DemoState | null>(null);
@@ -50,6 +65,7 @@ export function DemoConsole({ enabled }: { enabled: boolean }) {
   const clickAt = useRef<number | null>(null);
   const [latency, setLatency] = useState<string | null>(null);
   const logRef = useRef<HTMLDivElement>(null);
+  const done = useRef<string[]>([]);
 
   const refresh = useCallback(
     () =>
@@ -63,16 +79,23 @@ export function DemoConsole({ enabled }: { enabled: boolean }) {
     [],
   );
   useEffect(() => {
-    if (!enabled) return;
+    if (live) return;
+    fetch("/api/demo/rehearse")
+      .then((r) => r.json())
+      .then((j: { state: Omit<DemoState, "ready" | "demoMode"> }) => setSt({ ...j.state, ready: true, demoMode: false }))
+      .catch(() => setOffline(true));
+  }, [live]);
+  useEffect(() => {
+    if (!live) return;
     void refresh();
     const i = window.setInterval(refresh, 5000);
     return () => window.clearInterval(i);
-  }, [refresh, enabled]);
+  }, [refresh, live]);
   useEffect(() => {
     logRef.current?.scrollTo({ top: 1e9, behavior: "smooth" });
   }, [log]);
   useEffect(() => {
-    if (!enabled) return;
+    if (!live) return;
     const es = new EventSource("/api/v1/stream");
     const push = (kind: string) => (e: Event) => {
       const d = JSON.parse((e as MessageEvent).data) as Feed;
@@ -86,14 +109,40 @@ export function DemoConsole({ enabled }: { enabled: boolean }) {
     };
     for (const k of ["event", "registry", "shield", "rearm"]) es.addEventListener(k, push(k));
     return () => es.close();
-  }, [refresh, enabled]);
+  }, [refresh, live]);
+
+  const rehearse = async (id: string) => {
+    const r = await fetch("/api/demo/rehearse", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ done: done.current, action: id }) });
+    const j = (await r.json()) as Rehearsal & { error?: string };
+    if (!r.ok) throw new Error(j.error ?? "rehearsal failed");
+    done.current = id === "reset" ? [] : [...done.current, id];
+    for (const line of j.log) {
+      setLog((l) => [...l, { line: `✔ ${line}`, at: now() }]);
+      await wait(350);
+    }
+    setLog((l) => [...l, { line: "rehearsal: no transaction sent", at: now(), kind: "ok" }]);
+    const items: Feed[] = [
+      ...j.events.map((e) => ({ kind: "event", at: now(), ...e })),
+      { kind: "registry", at: now(), score: j.registry.score, grade: j.registry.grade, red: j.registry.red },
+      ...(j.shield ? [{ kind: j.shield === "fired" ? "shield" : "rearm", at: now() }] : []),
+    ];
+    for (const it of items) {
+      await wait(450);
+      setFeed((f) => [{ ...it, at: now() }, ...f].slice(0, 60));
+    }
+    setSt({ ...j.state, ready: true, demoMode: false });
+  };
 
   const run = async (id: string, label: string) => {
     setBusy(id);
     setLatency(null);
     clickAt.current = Date.now();
-    setLog((l) => [...l, { line: `$ overwatch-demo ${id}   # ${label}`, at: new Date().toISOString(), kind: "cmd" }]);
+    setLog((l) => [...l, { line: `$ overwatch-demo ${id}   # ${label}`, at: now(), kind: "cmd" }]);
     try {
+      if (!live) {
+        await rehearse(id);
+        return;
+      }
       const r = await fetch(`/api/demo/${id}`, { method: "POST" });
       const j = (await r.json()) as { ok?: boolean; ms?: number; error?: string; log?: LogLine[] };
       setLog((l) => [
@@ -105,16 +154,16 @@ export function DemoConsole({ enabled }: { enabled: boolean }) {
       setLog((l) => [...l, { line: `✘ ${(e as Error).message}`, at: new Date().toISOString(), kind: "err" }]);
     } finally {
       setBusy(null);
-      void refresh();
+      if (live) void refresh();
     }
   };
 
-  const blocked = !enabled ? "disabled" : offline ? "offline" : st && !st.demoMode ? "disabled" : st && !st.ready ? "setup" : null;
+  const blocked = offline ? "offline" : live && st && !st.demoMode ? "disabled" : live && st && !st.ready ? "setup" : null;
 
   return (
     <div className="demo">
       {blocked && (
-        <p className="notice mono">
+        <p className="notice">
           {blocked === "disabled" && (
             <>
               The demo console is disabled. Set <b>DEMO_MODE=true</b> to enable it (devnet only).
@@ -131,11 +180,11 @@ export function DemoConsole({ enabled }: { enabled: boolean }) {
       <div className="kpis kpis--5">
         {(
           [
-            ["multisig", st?.multisig ? `${st.multisig.threshold}-of-${st.multisig.members}` : "—", !!st?.multisig && st.multisig.threshold <= 1],
-            ["timelock", st?.multisig ? (st.multisig.timeLock ? `${st.multisig.timeLock / 3600}h` : "none") : "—", st?.multisig?.timeLock === 0],
-            ["upgrade auth", st?.ready ? (st.authorityIsVault ? "multisig vault" : "SINGLE KEY") : "—", !!st?.ready && !st.authorityIsVault],
-            ["registry", st?.risk ? `${st.risk.grade} ${st.risk.score} · v${st.risk.version}` : "—", !!st?.risk?.red],
-            ["vault position", st?.position ? (st.position.shielded ? "SHIELDED" : `${Number(st.position.allocated) / 1e6} allocated`) : "—", !!st?.position?.shielded],
+            ["Multisig", st?.multisig ? `${st.multisig.threshold}-of-${st.multisig.members}` : "—", !!st?.multisig && st.multisig.threshold <= 1],
+            ["Timelock", st?.multisig ? (st.multisig.timeLock ? `${st.multisig.timeLock / 3600}h` : "none") : "—", st?.multisig?.timeLock === 0],
+            ["Upgrade authority", st?.ready ? (st.authorityIsVault ? "multisig vault" : "single key") : "—", !!st?.ready && !st.authorityIsVault],
+            ["Registry", st?.risk ? `${st.risk.grade} ${st.risk.score} · v${st.risk.version}` : "—", !!st?.risk?.red],
+            ["Vault position", st?.position ? (st.position.shielded ? "exited to idle" : `${(Number(st.position.allocated) / 1e6).toLocaleString()} allocated`) : "—", !!st?.position?.shielded],
           ] as const
         ).map(([k, v, bad]) => (
           <div key={k} className="kpi">
@@ -153,13 +202,13 @@ export function DemoConsole({ enabled }: { enabled: boolean }) {
           </button>
         ))}
       </div>
-      {latency && <p className="demo__latency mono">⏱ {latency}</p>}
+      {latency && <p className="demo__latency mono">{latency}</p>}
 
       <div className="demo__split">
         <div className="log log--term">
           <div className="log__head mono">
-            <span>action log · devnet</span>
-            <span className="dim">every signature links to the explorer</span>
+            <span>Action log · {live ? "devnet" : "rehearsal"}</span>
+            <span className="dim">{live ? "Every signature links to the explorer" : "Same rules and scoring code, no transactions"}</span>
           </div>
           <div ref={logRef} className="log__body mono" data-lenis-prevent>
             {log.map((l, i) => (
@@ -177,19 +226,19 @@ export function DemoConsole({ enabled }: { enabled: boolean }) {
         </div>
         <div className="log">
           <div className="log__head mono">
-            <span>overwatch · live</span>
-            <span className="dim">alerts · registry · vault shield</span>
+            <span>Overwatch</span>
+            <span className="dim">Alerts, registry, vault</span>
           </div>
           <div className="log__body" data-lenis-prevent>
-            {!feed.length && <p className="mono dim">Listening. Press an action on the left.</p>}
+            {!feed.length && <p className="dim">Listening. Run an action to weaken the demo protocol.</p>}
             {feed.map((f, i) => (
               <div key={i} className={`demo__evt is-${f.kind}${f.severity === "CRITICAL" ? " is-crit" : ""}`}>
                 <div className="mono demo__evt-meta">
                   <span>{t(f.at)}</span>
                   {f.kind === "event" && f.severity && <span className={`badge badge--${f.severity === "CRITICAL" ? "bad" : "warn"} mono`}>{f.severity}</span>}
-                  {f.kind === "registry" && <span className="violet">REGISTRY UPDATED · devnet</span>}
-                  {f.kind === "shield" && <span className="ok">VAULT SHIELD TRIGGERED</span>}
-                  {f.kind === "rearm" && <span className="ok">VAULT RE-ARMED</span>}
+                  {f.kind === "registry" && <span className="violet">Registry updated{live ? " · devnet" : ""}</span>}
+                  {f.kind === "shield" && <span className="ok">Vault shield fired</span>}
+                  {f.kind === "rearm" && <span className="ok">Vault re-armed</span>}
                   {f.labels?.map((l) => (
                     <span key={l} className="bad">
                       {l}
@@ -204,10 +253,11 @@ export function DemoConsole({ enabled }: { enabled: boolean }) {
                 )}
                 {f.kind === "registry" && (
                   <p>
-                    upsert_risk → score <span className="mono">{f.score}</span> grade <span className="mono">{f.grade}</span> {f.red ? <span className="bad">RED</span> : <span className="ok">green</span>}
+                    upsert_risk → score <span className="mono">{f.score}</span> grade <span className="mono">{f.grade}</span> {f.red ? <span className="bad">red</span> : <span className="ok">green</span>}
                   </p>
                 )}
                 {f.kind === "shield" && <p>check_and_exit moved the demo strategy&apos;s funds back to idle.</p>}
+                {f.kind === "rearm" && <p>The score is green again, so the keeper re-allocated the position.</p>}
                 {f.txSignature && (
                   <a className="mono" href={devnetTx(f.txSignature)} target="_blank" rel="noreferrer">
                     {f.txSignature} ↗

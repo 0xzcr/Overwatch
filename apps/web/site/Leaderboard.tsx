@@ -40,6 +40,7 @@ export function Leaderboard({ rows }: { rows: ProtoCard[] }) {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("all");
   const data = useMemo(() => rows.filter((r) => cat === "all" || r.category === cat), [rows, cat]);
+  const live = rows.some((r) => r.source !== "snapshot");
   const cats = useMemo(() => ["all", ...new Set(rows.map((r) => r.category))], [rows]);
 
   const cols = useMemo(
@@ -107,7 +108,8 @@ export function Leaderboard({ rows }: { rows: ProtoCard[] }) {
   const table = useReactTable({
     data,
     columns: cols,
-    state: { sorting, globalFilter: q },
+    // The snapshot has no TVL, nonce or change history; hide those columns rather than show a wall of dashes.
+    state: { sorting, globalFilter: q, columnVisibility: live ? {} : { tvlUsd: false, nonceSigners: false, lastChange: false } },
     onSortingChange: setSorting,
     onGlobalFilterChange: setQ,
     getCoreRowModel: getCoreRowModel(),

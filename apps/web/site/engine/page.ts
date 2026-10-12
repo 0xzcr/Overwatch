@@ -108,6 +108,8 @@ export function initPage(rt: Runtime): () => void {
     // ------------------------------------------------------------ dock stops
     const stops = $$("[data-dock]");
     const dock = $("#dock");
+    // The section pager belongs to the long story pages; on reference pages it would sit on top of tables and code.
+    dock?.classList.toggle("is-off", !["/", "/case-study"].includes(location.pathname));
     const dockNum = $("#dockNum");
     const dockName = $("#dockName");
     let dockIdx = -1;
@@ -151,7 +153,6 @@ export function initPage(rt: Runtime): () => void {
         gsap.from(list.children, { x: -30, opacity: 0, duration: 0.9, ease: "expo.out", stagger: 0.035, scrollTrigger: { trigger: list, start: "top 88%" } }),
       );
       $$(".chapter__name").forEach((el) => gsap.from(el, { clipPath: "inset(0 100% 0 0)", duration: 1.6, ease: "expo.inOut", scrollTrigger: { trigger: el, start: "top 88%" } }));
-      gsap.from(".footer__word", { yPercent: 60, opacity: 0, duration: 1.4, ease: "expo.out", scrollTrigger: { trigger: ".footer", start: "top 90%" } });
     }
 
     // count-ups
