@@ -6,6 +6,7 @@ import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { gsap } from "gsap";
 import { buildShapes, SHAPE_NAMES, globeLand, GLOBE_R, type ShapeName } from "./shapes";
 import { mulberry } from "./rand";
+import { tone } from "../nightfall";
 
 const TEX_W = 256;
 
@@ -151,8 +152,9 @@ const arcFrag = /* glsl */ `
   }
 `;
 
+// Every colour goes through tone(), so the night palette reaches the particles too.
 const toVec3 = (hex: string) => {
-  const c = new THREE.Color(hex);
+  const c = new THREE.Color(tone(hex));
   return new THREE.Vector3(c.r, c.g, c.b);
 };
 
@@ -385,12 +387,14 @@ export class Stage {
       }
       const geo = new THREE.BufferGeometry().setFromPoints(pts);
       geo.setAttribute("aT", new THREE.BufferAttribute(new Float32Array(pts.map((_, k) => k / segs)), 1));
+      const hex = r() < 0.35 ? "#FF5A3D" : "#2BFFB0";
       const mat = new THREE.ShaderMaterial({
+        userData: { hex },
         uniforms: {
           uTime: { value: 0 },
           uOffset: { value: r() },
           uSpeed: { value: 0.18 + r() * 0.25 },
-          uColor: { value: toVec3(r() < 0.35 ? "#FF5A3D" : "#2BFFB0") },
+          uColor: { value: toVec3(hex) },
           uOpacity: { value: 0 },
         },
         vertexShader: arcVert,
@@ -474,6 +478,11 @@ export class Stage {
     }
     this.snapshotData = out;
     this.shapeTex.needsUpdate = true;
+  }
+
+  /** Re-applies the palette to colours set once at start-up (the globe arcs) after day/night flips. */
+  retone() {
+    for (const m of this.arcMats) (m.uniforms.uColor as U<THREE.Vector3>).value.copy(toVec3(m.userData.hex as string));
   }
 
   morph(name: ShapeName, opts: MorphOptions = {}) {

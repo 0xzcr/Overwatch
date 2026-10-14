@@ -49,6 +49,37 @@ test("demo console rehearsal: weaken the demo protocol → CRITICAL alert, red r
   await expect(page.getByText("Vault re-armed").first()).toBeVisible();
 });
 
+/** An Etc/GMT zone whose local hour is `hour` right now, so the real clock logic decides the palette. */
+function zoneAt(hour: number) {
+  let off = (hour - new Date().getUTCHours() + 24) % 24;
+  if (off > 12) off -= 24;
+  return off === 0 ? "Etc/GMT" : `Etc/GMT${off > 0 ? "-" : "+"}${Math.abs(off)}`; // Etc/GMT signs are inverted
+}
+
+test.describe("nightfall after 18:00 local time", () => {
+  test.use({ timezoneId: zoneAt(20) });
+  test("turns the accent red", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveAttribute("data-time", "night");
+    expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--mint").trim())).toBe("#ff1f3d");
+    await expect(page.locator('link[rel="icon"]').last()).toHaveAttribute("href", "/favicon-night.svg");
+  });
+});
+
+test.describe("daytime palette", () => {
+  test.use({ timezoneId: zoneAt(12) });
+  test("keeps the mint accent, and ?time=night forces night for the tab", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveAttribute("data-time", "day");
+    await page.goto("/?time=night");
+    await expect(page.locator("html")).toHaveAttribute("data-time", "night");
+    await page.goto("/methodology");
+    await expect(page.locator("html")).toHaveAttribute("data-time", "night");
+    await page.goto("/?time=auto");
+    await expect(page.locator("html")).toHaveAttribute("data-time", "day");
+  });
+});
+
 // Real devnet transactions: only when explicitly enabled.
 test("demo console: remove timelock → CRITICAL alert, registry update, vault shield", async ({ page }) => {
   test.skip(process.env.E2E_DEVNET !== "true", "set E2E_DEVNET=true (needs DEMO_MODE, indexer running, demo set up)");
