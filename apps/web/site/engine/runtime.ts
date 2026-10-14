@@ -6,6 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import { Stage, type MorphOptions } from "./stage";
 import type { ShapeName } from "./shapes";
+import { watchNightfall } from "../nightfall";
 
 export interface StageCfg {
   shape: ShapeName;
@@ -68,6 +69,11 @@ function createRuntime(): Runtime {
   }
   lenis.on("scroll", (l: Lenis) => stage?.setScrollVelocity(l.velocity));
   const morph = (shape: ShapeName, o: MorphOptions) => stage?.morph(shape, o);
+  // CSS follows html[data-time] by itself; the stage needs its colours re-applied.
+  watchNightfall(() => {
+    stage?.retone();
+    if (rt.lastStage) morph(rt.lastStage.shape, rt.lastStage.opts);
+  });
 
   // ---------------------------------------------------------------- ready queue (after the boot sequence)
   let ready = false;

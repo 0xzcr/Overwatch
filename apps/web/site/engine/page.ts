@@ -6,6 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type { MorphOptions } from "./stage";
 import type { ShapeName } from "./shapes";
 import { $, $$, esc, magnetic, type Runtime, type StageCfg } from "./runtime";
+import { tone } from "../nightfall";
 
 interface ReplayStep {
   date: string;
@@ -120,7 +121,7 @@ export function initPage(rt: Runtime): () => void {
       gsap.fromTo([dockNum, dockName], { yPercent: 60, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.5, ease: "power3.out", stagger: 0.04 });
       dockNum.textContent = String(i).padStart(2, "0");
       dockName.textContent = el.dataset.dock ?? "";
-      dock?.style.setProperty("--c", el.dataset.dockColor ?? "#2BFFB0");
+      dock?.style.setProperty("--c", tone(el.dataset.dockColor ?? "#2BFFB0"));
     };
     stops.forEach((el, i) => ScrollTrigger.create({ trigger: el, start: "top 50%", end: "bottom 50%", onToggle: (self) => self.isActive && setDock(i) }));
     setDock(0);

@@ -213,7 +213,9 @@ export function DemoConsole({ mode }: { mode: "live" | "rehearsal" }) {
           <div ref={logRef} className="log__body mono" data-lenis-prevent>
             {log.map((l, i) => (
               <div key={i} className={`log__line is-${l.kind ?? "info"}`}>
-                <span className="dim">{t(l.at)}</span> {l.line}
+                <span className="dim" suppressHydrationWarning>
+                  {t(l.at)}
+                </span> {l.line}
                 {l.sig && (
                   <a href={devnetTx(l.sig)} target="_blank" rel="noreferrer">
                     {l.sig} ↗
