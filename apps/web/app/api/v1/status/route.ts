@@ -8,7 +8,9 @@ let cache: { at: number; slot: number | null } = { at: 0, slot: null };
 /** Health and headline counts. Always answers; `database` says whether the counts are available. */
 export async function GET() {
   if (Date.now() - cache.at > 2500) {
-    cache = { at: Date.now(), slot: await mainnetRpc().getSlot().catch(() => cache.slot) };
+    // Capped so a slow public RPC can't hold the function past the host's time limit.
+    const slot = await Promise.race([mainnetRpc().getSlot(), new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 2500))]).catch(() => cache.slot);
+    cache = { at: Date.now(), slot };
   }
   const ps = await getProtocols().catch(() => null);
   if (!ps) return ok({ slot: cache.slot, database: "unavailable", protocols: null, red: null, lastEvent: null });
