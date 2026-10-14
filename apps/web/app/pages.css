@@ -890,7 +890,7 @@ a.addr:hover {
 .position__top {
   display: flex;
   justify-content: space-between;
-  align-items: start;
+  align-items: flex-start;
   gap: 12px;
 }
 .position__top h3 {
