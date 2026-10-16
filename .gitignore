@@ -18,3 +18,5 @@ keys/
 playwright-report
 test-results
 apps/web/test-results
+.vercel
+.env*
