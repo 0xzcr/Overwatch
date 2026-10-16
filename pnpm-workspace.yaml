@@ -13,3 +13,8 @@ allowBuilds:
   blake-hash: set this to true or false
   tiny-secp256k1: set this to true or false
   usb: set this to true or false
+
+# rpc-websockets 9.3.9 ships a CommonJS bundle that require()s uuid@14, which is ESM-only.
+# That throws ERR_REQUIRE_ESM in serverless runtimes without require(esm). 9.3.10 drops the uuid dep.
+overrides:
+  rpc-websockets: ^9.3.10
