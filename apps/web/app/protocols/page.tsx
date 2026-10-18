@@ -19,6 +19,7 @@ export default async function Protocols() {
             </b>{" "}
             Solana protocols can be changed by ≤2 people with no delay. {h.noTimelock} multisigs have no timelock at
             all.
+            [Click on each protocol to know more]
           </>
         }
         stageAttrs={stage("globe", {
