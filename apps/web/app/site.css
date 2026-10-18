@@ -30,8 +30,6 @@
   --raise-rgb: 17, 17, 17;
   --raise-2-rgb: 28, 28, 28;
   --on-accent: #1a0306;
-  --logo-fill: #120708;
-  --logo-fill-2: #1d0b0d;
   --warn: #ffb547;
   --bad: #ff5a3d;
   --sans: "IBM Plex Sans Variable", "Helvetica Neue", Arial, sans-serif;
@@ -2850,25 +2848,4 @@ html[data-time="night"] [style*="--c: #1b2340" i] {
 html[data-time="night"] [style*="--c:#2a2f5a" i],
 html[data-time="night"] [style*="--c: #2a2f5a" i] {
   --c: #3a0c12 !important;
-}
-/* SVG gradients and fills that are attributes in the markup */
-html[data-time="night"] #owDogGrad stop:first-child,
-html[data-time="night"] #owGrad stop:first-child {
-  stop-color: var(--mint);
-}
-html[data-time="night"] #owDogGrad stop:last-child,
-html[data-time="night"] #owGrad stop:last-child {
-  stop-color: var(--cyan);
-}
-html[data-time="night"] #ow-mark [fill="#2BFFB0"] {
-  fill: var(--mint);
-}
-html[data-time="night"] #ow-mark [fill="#7CF3FF"] {
-  fill: var(--cyan);
-}
-html[data-time="night"] #ow-mark [fill="#0b1d18"] {
-  fill: var(--logo-fill-2);
-}
-html[data-time="night"] #ow-mark [fill="#07120f"] {
-  fill: var(--logo-fill);
 }

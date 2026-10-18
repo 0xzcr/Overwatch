@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { pages } from "./content";
 import { cssVars } from "./ui";
-import { Logo } from "./Logo";
+import { Logo, LogoMark } from "./Logo";
 import { NavLinks } from "./NavLinks";
 import { NavClock } from "./NavClock";
 
@@ -16,7 +16,7 @@ export function Chrome() {
       <div className="boot" id="boot" aria-hidden="true">
         <div className="boot__grid" />
         <div className="boot__inner">
-          <Logo className="logo logo--boot" />
+          <Logo className="logo logo--boot" id="logo-boot" />
           <ol className="boot__log" id="bootLog" />
         </div>
         <div className="boot__foot">
@@ -48,7 +48,7 @@ export function Chrome() {
 
       <header className="nav" id="nav">
         <Link href="/" className="nav__brand" data-cursor="Home" aria-label="Overwatch home">
-          <Logo />
+          <Logo id="logo-nav" />
           <span className="nav__word" aria-hidden="true">
             Overwatch
           </span>
@@ -124,21 +124,9 @@ export function Chrome() {
 
       <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true">
         <defs>
-          <linearGradient id="owGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#2BFFB0" />
-            <stop offset="1" stopColor="#7CF3FF" />
-          </linearGradient>
+          {/* static copy of the mark for <use href="#ow-mark"> (the bot avatar in the landing mock-ups) */}
           <symbol id="ow-mark" viewBox="0 0 48 48">
-            <g stroke="url(#owGrad)" strokeLinejoin="round">
-              <path d="M15.6 15 L12 1.5 L20.6 12 Z M32.4 15 L36 1.5 L27.4 12 Z" fill="#0b1d18" strokeWidth="2" />
-              <path
-                d="M16 11.5 L32 11.5 L37.5 19.5 L31.5 30 L28.5 40 L19.5 40 L16.5 30 L10.5 19.5 Z"
-                fill="#07120f"
-                strokeWidth="2.4"
-              />
-            </g>
-            <path d="M16.4 21.8 L21.4 22.9 L17.4 24.2 Z M31.6 21.8 L26.6 22.9 L30.6 24.2 Z" fill="#2BFFB0" />
-            <path d="M21.4 30.2 L26.6 30.2 L24 33.1 Z" fill="#7CF3FF" />
+            <LogoMark />
           </symbol>
         </defs>
       </svg>
@@ -151,7 +139,7 @@ export function Footer() {
     <footer className="footer">
       <div className="footer__top">
         <div className="footer__brand">
-          <Logo className="logo logo--footer" />
+          <Logo className="logo logo--footer" id="logo-footer" />
           <p>
             Overwatch reads who can change the Solana protocols holding your deposits and alerts you after those
             controls weaken onchain. It watches authority, not prices or code.
