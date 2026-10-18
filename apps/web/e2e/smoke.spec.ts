@@ -3,6 +3,7 @@ import { test, expect } from "@playwright/test";
 test("landing renders the title and the navbar reaches the docs", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName("The Protocol Watchdog");
+  await expect(page.getByText("// control-plane monitor for solana defi")).toBeVisible();
   await page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Documentation" }).click();
   await expect(page).toHaveURL(/\/docs$/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Documentation");

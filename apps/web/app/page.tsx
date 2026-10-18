@@ -26,7 +26,7 @@ export default function Home() {
           <AsciiEye />
         </div>
         <div className="hero__title-wrap wd__text">
-          <p className="wd__kicker mono"></p>
+          <p className="wd__kicker mono">{"// control-plane monitor for solana defi"}</p>
           <h1 className="hero__title hero__title--watchdog wd__title" aria-label="The Protocol Watchdog">
             <span className="hero__line">
               <span>{chars("The Protocol")}</span>
