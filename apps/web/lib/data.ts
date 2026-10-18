@@ -1,7 +1,7 @@
 import "server-only";
 import { listProtocols, listEvents, scoreHistory, recentPublishes } from "@overwatch/db";
 import type { ControlSnapshot, Deduction, ProtocolConfig } from "@overwatch/core";
-import { flagNames, AUTHORITY_LABEL } from "@overwatch/core";
+import { flagNames, isRed, AUTHORITY_LABEL } from "@overwatch/core";
 
 export interface ProtocolView {
   id: number; slug: string; name: string; category: string; website: string | null; network: "mainnet" | "devnet"; source: string;
@@ -10,8 +10,6 @@ export interface ProtocolView {
   snapshot: ControlSnapshot | null; snapshotAt: string | null; lastChange: string | null;
   authorityKind: string; authorityLabel: string; threshold: string; timelockSec: number | null; nonceSigners: number; controlled: boolean;
 }
-
-const RED = (1n << 0n) | (1n << 4n) | (1n << 10n) | (1n << 11n);
 
 export async function getProtocols(): Promise<ProtocolView[]> {
   const rows = await listProtocols();
@@ -25,7 +23,7 @@ export async function getProtocols(): Promise<ProtocolView[]> {
     return {
       id: r.id, slug: r.slug, name: r.name, category: r.category, website: r.website, network: r.network as "mainnet" | "devnet", source: r.source,
       verified: r.verified, problems: ((r.verification as { problems?: string[] } | null)?.problems ?? []), tvlUsd: r.tvlUsd, config: r.config as ProtocolConfig,
-      score: r.score?.score ?? null, grade: r.score?.grade ?? null, flags: flags.toString(), flagNames: flagNames(flags), red: (flags & RED) !== 0n,
+      score: r.score?.score ?? null, grade: r.score?.grade ?? null, flags: flags.toString(), flagNames: flagNames(flags), red: isRed(flags),
       breakdown: (r.score?.breakdown as Deduction[]) ?? [], computedAt: r.score?.computed_at ? new Date(r.score.computed_at).toISOString() : null,
       snapshot: snap, snapshotAt: r.snapshotAt ? new Date(r.snapshotAt).toISOString() : null, lastChange: r.lastChange ? new Date(r.lastChange).toISOString() : null,
       authorityKind: kinds.join(" + ") || "—", authorityLabel: kinds.map((k) => AUTHORITY_LABEL[k]).join(" + ") || "—",
@@ -57,13 +55,4 @@ export async function getScoreHistory(id: number) {
 
 export async function getPublishes(limit = 30) {
   return (await recentPublishes(limit)).map(({ p, slug }) => ({ slug, kind: p.kind, tx: p.txSignature, score: p.score, flags: p.flags.toString(), at: p.createdAt.toISOString() }));
-}
-
-export async function headline() {
-  const ps = (await getProtocols()).filter((p) => p.source !== "demo");
-  const weak = ps.filter((p) => p.snapshot?.programs.some((x) => x.authorityKind === "SINGLE_KEY") || (p.snapshot?.multisigs.some((m) => m.timeLockSec === 0) ?? false));
-  // "changeable by ≤2 people with no delay": a single upgrade key, or a multisig with threshold ≤2 and no timelock
-  const lowNoDelay = ps.filter((p) => p.snapshot?.programs.some((x) => x.authorityKind === "SINGLE_KEY") || (p.snapshot?.multisigs.some((m) => m.timeLockSec === 0 && m.threshold <= 2) ?? false));
-  const unmapped = ps.filter((p) => p.flagNames.includes("UNVERIFIED"));
-  return { total: ps.length, weak: weak.length, lowNoDelay: lowNoDelay.length, unmapped: unmapped.length, at: new Date().toISOString() };
 }

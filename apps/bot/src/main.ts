@@ -94,6 +94,19 @@ if (bot) {
     await ctx.reply(`${lst.length ? `Found positions in: ${lst.map((p) => p.name).join(", ")}. Subscribed ✅` : "No positions detected in watched liquid-staking tokens."}\n\nLimitation: lending and perps positions live in protocol-specific accounts. Detecting those needs per-protocol adapters, which are coming soon. Use /watch for now.`);
   });
   bot.catch((e) => log(`bot error: ${e.message}`));
+  // The "/" menu and the text shown before a user presses Start. Idempotent, so it runs on every boot.
+  void Promise.all([
+    bot.api.setMyCommands([
+      { command: "watch", description: "Watch a protocol, e.g. /watch drift" },
+      { command: "unwatch", description: "Stop watching a protocol" },
+      { command: "list", description: "Protocols you watch" },
+      { command: "severity", description: "Minimum alert level: low, medium, high, critical" },
+      { command: "status", description: "Grade and controls of a protocol" },
+      { command: "wallet", description: "Watch the liquid-staking protocols a wallet holds" },
+    ]),
+    bot.api.setMyShortDescription("Alerts when the controls over a Solana DeFi protocol get weaker."),
+    bot.api.setMyDescription("Overwatch reads who can change the Solana protocols holding your deposits. Watch a protocol and you get a message after its controls weaken onchain: a removed timelock, a lowered threshold, a new single key."),
+  ]).catch((e) => log(`bot profile: ${(e as Error).message}`));
   void bot.start({ onStart: (me) => log(`telegram bot @${me.username} running`) });
 } else {
   log("TELEGRAM_BOT_TOKEN not set: bot disabled; delivery worker still sends webhooks/email");

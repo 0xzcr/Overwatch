@@ -1,40 +1,38 @@
 import Link from "next/link";
 import { layers, steps } from "@/site/content";
-import { loadProtocols } from "@/site/data";
 import { visual } from "@/site/visuals";
 import { Glyph } from "@/site/Glyph";
-import { Grade, Vis, cssVars, stage } from "@/site/ui";
-import { ProtoRow } from "@/site/ProtoRow";
+import { Vis, cssVars, stage } from "@/site/ui";
 
-export const dynamic = "force-dynamic";
+/** One span per character, so scrolling can select the title a letter at a time (see `.ch` in engine/page.ts). */
+const chars = (word: string) => [...word].map((c, i) => <span key={i} className="ch">{c}</span>);
 
-export default async function Home() {
-  const { cards, headline: h } = await loadProtocols();
-
+export default function Home() {
   return (
     <>
       {/* HERO */}
-      <section className="hero hero--solo" id="top" data-dock="Intro" {...stage("orb", { colorA: "#2BFFB0", colorB: "#3a5cff", hud: true, y: 0.45, yNarrow: 0.9, front: true, sway: 0.18 })}>
+      <section className="hero hero--solo" id="top" data-dock="Intro" {...stage("orb", { colorA: "#2BFFB0", colorB: "#3a5cff", hud: true, scale: 0.55, narrowScale: 0.65, y: 0.2, yNarrow: 0.6, front: true, sway: 0 })}>
         <div className="hero__title-wrap">
           <p className="hero__eyebrow mono">
             <span data-scramble>OVERWATCH</span>
           </p>
           <h1 className="hero__title hero__title--watchdog" aria-label="The Protocol Watchdog">
             <span className="hero__line">
-              <span className="hero__the">The</span>
+              <span className="hero__the">{chars("The")}</span>
             </span>
             <span className="hero__line">
-              <span className="hero__edition">Protocol</span>
+              <span className="hero__edition">{chars("Protocol")}</span>
             </span>
             <span className="hero__line">
-              <span className="hero__vigil hero__watchdog">Watchdog</span>
+              <span className="hero__vigil hero__watchdog">{chars("Watchdog")}</span>
             </span>
           </h1>
         </div>
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="tiles" id="how" data-dock="How it works" {...stage("scatter", { colorA: "#2BFFB0", colorB: "#1b2340", opacity: 0.5 })}>
+      <section className="tiles sec sec--1" id="how" data-dock="How it works" {...stage("scatter", { colorA: "#2BFFB0", colorB: "#1b2340", opacity: 0.5 })}>
+        <p className="sec-label mono">01 · How it works</p>
         <header className="section-head">
           <h2 className="h2">
             How it works
@@ -55,12 +53,13 @@ export default async function Home() {
 
       {/* PRODUCT LAYERS */}
       <section
-        className="headliners"
+        className="headliners sec sec--2"
         id="product"
         data-dock="Product"
         {...stage("terrain", { colorA: "#5AA8FF", colorB: "#2BFFB0", opacity: 0.45, y: -1.2, scale: 1.3, autoRotate: 0.02 })}
       >
         <div className="headliners__pin">
+          <p className="sec-label mono">02 · The product</p>
           <header className="headliners__head">
             <h2 className="h2">
               What you get
@@ -84,61 +83,33 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* CONTROL MAP PREVIEW */}
-      <section
-        className="cmap"
-        id="control-map"
-        data-dock="Control map"
-        {...stage("globe", { colorA: "#2BFFB0", colorB: "#1d6bff", opacity: 1, x: 2.9, y: 1.05, scale: 0.78, arcs: true, autoRotate: 0.07, tiltX: 0.3 })}
-      >
-        <header className="section-head">
-          <h2 className="h2">
-            Control map
-          </h2>
-          <p className="section-head__lede">
-            Graded A to F on who can change them. <Grade grade="A" score={85} size="sm" /> means strong controls; red means a vault reading the Overwatch registry should
-            exit.
-          </p>
-        </header>
-        <ol className="protos">
-          {cards.slice(0, 6).map((p) => (
-            <ProtoRow key={p.slug} p={p} />
-          ))}
-        </ol>
-        <div className="cmap__more">
-          <Link href="/protocols" className="btn btn--ghost" data-cursor="Open">
-            <span>All {h.total} protocols</span>
-            <span>→</span>
-          </Link>
-        </div>
-      </section>
-
       {/* CTA */}
       <section
-        className="cta"
+        className="cta sec sec--4"
         id="cta"
         data-dock="Get started"
         {...stage("wordmark", { colorA: "#2BFFB0", colorB: "#7CF3FF", y: 1.55, yNarrow: 1.9, scale: 0.95, narrowScale: 0.5, opacity: 1, front: true, sway: 0.12 })}
       >
+        <p className="sec-label mono">03 · Next steps</p>
         <div className="cta__head">
           <h2 className="cta__title">
-            Start watching
+            Get started
           </h2>
         </div>
         <div className="paths">
           <Link className="path" href="/alerts" data-cursor="Alerts" style={cssVars({ "--c": "#FF5A3D" })}>
-            <h3>Protect your deposits</h3>
-            <p>Watch the protocols you use and get a plain-English alert the moment their locks get weaker.</p>
+            <h3>Get alerts for your protocols</h3>
+            <p>Pick the protocols you use. You get a message when their controls get weaker.</p>
             <span className="path__cta">Set up alerts →</span>
           </Link>
-          <Link className="path" href="/methodology" data-cursor="Read" style={cssVars({ "--c": "#8B7CFF" })}>
-            <h3>Raise your grade</h3>
-            <p>Run a protocol? Every deduction is public and fixable: add a timelock, raise the threshold, retire the single key.</p>
-            <span className="path__cta">Read the methodology →</span>
+          <Link className="path" href="/docs#scoring" data-cursor="Read" style={cssVars({ "--c": "#8B7CFF" })}>
+            <h3>Check a protocol's grade</h3>
+            <p>Every deduction is listed with its reason. Most fixes are a timelock, a higher threshold, or removing a single key.</p>
+            <span className="path__cta">Read the documentation →</span>
           </Link>
           <Link className="path" href="/docs/api" data-cursor="Build" style={cssVars({ "--c": "#5AA8FF" })}>
-            <h3>Build on the watch</h3>
-            <p>Read RiskRecords from your program, stream events into your risk desk, or verify webhooks in one call.</p>
+            <h3>Use the data</h3>
+            <p>Read risk records from your program, stream events into your own system, or verify webhook signatures.</p>
             <span className="path__cta">API &amp; SDK →</span>
           </Link>
         </div>

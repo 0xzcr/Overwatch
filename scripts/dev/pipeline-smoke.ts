@@ -12,7 +12,7 @@ import { createHmac } from "node:crypto";
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import { DEMO_BASELINE, demoSnapshot, applyDemoAction } from "@overwatch/core";
-import { db, sql, protocols, subscriptions, deliveries, ingestSnapshot, eq, CHANNEL } from "@overwatch/db";
+import { db, sql, direct, protocols, subscriptions, deliveries, ingestSnapshot, eq, CHANNEL } from "@overwatch/db";
 import { deliverPending } from "../../apps/bot/src/deliver";
 
 const SLUG = "pipeline-smoke";
@@ -37,7 +37,8 @@ const url = `http://127.0.0.1:${(server.address() as AddressInfo).port}/hook`;
 
 const d = db();
 const notified: string[] = [];
-const listener = await sql().listen(CHANNEL, (payload) => notified.push(payload));
+// LISTEN needs a session connection; a transaction pooler (DATABASE_URL on port 6543) drops it silently.
+const listener = await direct().listen(CHANNEL, (payload) => notified.push(payload));
 
 try {
   await d.delete(protocols).where(eq(protocols.slug, SLUG));
@@ -68,7 +69,7 @@ try {
   console.log(`webhook: delivered, signature ok, severity ${payload.event?.severity ?? payload.severity}`);
 
   // 4. NOTIFY is what the SSE stream forwards to browsers.
-  await new Promise((res) => setTimeout(res, 300));
+  await new Promise((res) => setTimeout(res, 1500)); // a distant database region can take a few round trips
   const kinds = notified.map((n) => (JSON.parse(n) as { kind: string }).kind);
   if (!kinds.includes("event") || !kinds.includes("score")) fail(`expected event and score notifications, got [${kinds.join(", ")}]`);
   console.log(`notify: ${kinds.join(", ")}`);
@@ -77,6 +78,6 @@ try {
   await d.delete(subscriptions).where(eq(subscriptions.secret, SECRET));
   await d.delete(protocols).where(eq(protocols.slug, SLUG));
   await listener.unlisten();
-  await sql().end();
+  await Promise.all([sql().end(), direct().end()]);
   server.close();
 }

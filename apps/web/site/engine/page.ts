@@ -7,24 +7,16 @@ import type { MorphOptions } from "./stage";
 import type { ShapeName } from "./shapes";
 import { $, $$, esc, magnetic, type Runtime, type StageCfg } from "./runtime";
 import { tone } from "../nightfall";
+import type { ReplayStep } from "../data";
+import { GRADE_WORD } from "@/lib/format";
 
-interface ReplayStep {
-  date: string;
-  headline: string;
-  detail: string;
-  level: "ok" | "warn" | "bad" | "dead";
-  alerts: { severity: string; title: string; explanation: string; labels: string[] }[];
-  score: number;
-  grade: string;
-  red: boolean;
-}
-
-const GRADE_WORD: Record<string, string> = { A: "Strong", B: "Good", C: "Caution", D: "Weak", F: "Dangerous" };
 const DRAIN = Date.parse("2026-04-01T16:05:00Z");
 const DAY = 86_400_000;
 
 export function initPage(rt: Runtime): () => void {
   const { reduced, finePointer, morph } = rt;
+  // Only the landing page performs; every other page shows its data without intros, reveals or tilt.
+  const calm = reduced || location.pathname !== "/";
   const cleanups: (() => void)[] = [];
   const listen = <K extends keyof WindowEventMap>(ev: K, fn: (e: WindowEventMap[K]) => void) => {
     window.addEventListener(ev, fn);
@@ -99,7 +91,7 @@ export function initPage(rt: Runtime): () => void {
       const i = triggers.findIndex((t) => t.isActive);
       const first = sections[i >= 0 ? i : 0];
       if (first) apply(first.cfg, true);
-      if (reduced) return;
+      if (calm) return;
       gsap.from(".hero__line > span", { yPercent: 110, rotate: 4, duration: 1.4, ease: "expo.out", stagger: 0.09 });
       gsap.from(".hero__eyebrow, .hero__aside > *, .hero .hud, .hero__scroll", { opacity: 0, y: 16, duration: 1, ease: "power2.out", stagger: 0.06, delay: 0.3 });
       $$("[data-scramble]").forEach((el, k) => gsap.delayedCall(0.4 + k * 0.15, () => rt.scramble(el)));
@@ -136,9 +128,24 @@ export function initPage(rt: Runtime): () => void {
     });
 
     // ------------------------------------------------------------ reveals
-    if (!reduced) {
+    if (!calm) {
       if ($(".hero")) {
-        gsap.to(".hero__title-wrap", { yPercent: -30, opacity: 0.1, ease: "none", scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: true } });
+        // Scrolling out of the landing hero selects its title one character at a time; it completes while the whole title is
+        // still on screen (hero bottom at 60% of the viewport, title clear of the navbar). Scrolling back unselects.
+        const chs = $$(".hero__title--watchdog .ch");
+        let selected = -1;
+        if (chs.length)
+          ScrollTrigger.create({
+            trigger: ".hero",
+            start: "top top",
+            end: "bottom 60%",
+            onUpdate: ({ progress }) => {
+              const n = Math.round(progress * chs.length);
+              if (n === selected) return;
+              selected = n;
+              chs.forEach((c, i) => c.classList.toggle("is-sel", i < n));
+            },
+          });
         gsap.to(".hero__aside, .hero .hud", { y: -80, opacity: 0, ease: "none", scrollTrigger: { trigger: ".hero", start: "20% top", end: "80% top", scrub: true } });
       }
       const words = $$(".manifesto__text .w");
@@ -149,9 +156,6 @@ export function initPage(rt: Runtime): () => void {
       );
       $$(".tiles__grid, .paths, .stats__grid, .cards, [data-reveal]").forEach((grid) =>
         gsap.from(grid.children, { y: 50, opacity: 0, duration: 1, ease: "expo.out", stagger: 0.06, scrollTrigger: { trigger: grid, start: "top 88%" } }),
-      );
-      $$(".protos").forEach((list) =>
-        gsap.from(list.children, { x: -30, opacity: 0, duration: 0.9, ease: "expo.out", stagger: 0.035, scrollTrigger: { trigger: list, start: "top 88%" } }),
       );
       $$(".chapter__name").forEach((el) => gsap.from(el, { clipPath: "inset(0 100% 0 0)", duration: 1.6, ease: "expo.inOut", scrollTrigger: { trigger: el, start: "top 88%" } }));
     }
@@ -164,12 +168,12 @@ export function initPage(rt: Runtime): () => void {
         trigger: el,
         start: "top 90%",
         once: true,
-        onEnter: () => gsap.to(o, { v: end, duration: reduced ? 0 : 1.6, ease: "power3.out", onUpdate: () => (el.textContent = String(Math.round(o.v))) }),
+        onEnter: () => gsap.to(o, { v: end, duration: calm ? 0 : 1.6, ease: "power3.out", onUpdate: () => (el.textContent = String(Math.round(o.v))) }),
       });
     });
 
     // ------------------------------------------------------------ pointer niceties
-    if (finePointer && !reduced) {
+    if (finePointer && !calm) {
       $$("main .btn").forEach(magnetic);
       $$(".tile, .card, .path, .hl, [data-tilt]").forEach((el) => {
         const strength = el.classList.contains("hl") ? 3 : el.hasAttribute("data-tilt") ? 4 : 7;

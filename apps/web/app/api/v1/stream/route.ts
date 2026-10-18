@@ -1,4 +1,4 @@
-import { sql, CHANNEL } from "@overwatch/db";
+import { direct, CHANNEL } from "@overwatch/db";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -12,7 +12,7 @@ export async function GET(req: Request) {
     async start(ctrl) {
       const send = (event: string, data: string) => { try { ctrl.enqueue(enc.encode(`event: ${event}\ndata: ${data}\n\n`)); } catch {} };
       send("hello", JSON.stringify({ at: new Date().toISOString() }));
-      const l = await sql().listen(CHANNEL, (payload) => {
+      const l = await direct().listen(CHANNEL, (payload) => {
         try { const d = JSON.parse(payload) as { kind: string }; send(d.kind, payload); } catch {}
       });
       unlisten = () => l.unlisten();

@@ -8,6 +8,8 @@ const engine = () => Promise.all([import("./engine/runtime"), import("./engine/p
 export function Experience() {
   const pathname = usePathname();
   useEffect(() => {
+    // CSS dims the particle stage on every page except the landing page.
+    document.documentElement.dataset.page = pathname === "/" ? "home" : "inner";
     let dispose: (() => void) | undefined;
     let cancelled = false;
     void engine().then(([{ getRuntime }, { initPage }]) => {

@@ -41,10 +41,10 @@ export interface ReplayStep {
 
 export const SNAPSHOT_LABEL = "mainnet snapshot · Oct 11 2026";
 
-export const usd = (n: number | null | undefined) =>
+const usd = (n: number | null | undefined) =>
   n == null ? "—" : n >= 1e9 ? `$${(n / 1e9).toFixed(2)}B` : n >= 1e6 ? `$${(n / 1e6).toFixed(1)}M` : `$${Math.round(n).toLocaleString()}`;
 
-export const AUTH: Record<string, string> = {
+const AUTH:Record<string, string> = {
   SQUADS_V4_VAULT: "Squads v4 multisig",
   SINGLE_KEY: "Single private key",
   OTHER_PROGRAM_PDA: "Program-owned (unmapped)",
@@ -116,7 +116,9 @@ function fromView(p: ProtocolView): ProtoCard {
   };
 }
 
-const withTimeout = <T,>(p: Promise<T>, ms = 2500) =>
+// Long enough for a fresh TLS connection to a distant database region (~3.5s measured), short enough that a dead one
+// falls back to the snapshot before the page feels hung.
+const withTimeout = <T,>(p: Promise<T>, ms = 5000) =>
   Promise.race([p, new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
 
 /** Live protocol views, or null when the database is unreachable. */

@@ -6,7 +6,7 @@ const LINKS = [
   ["/protocols", "Control map"],
   ["/events", "Live events"],
   ["/case-study", "Case study"],
-  ["/methodology", "Methodology"],
+  ["/docs", "Documentation"],
 ] as const;
 
 export function NavLinks() {

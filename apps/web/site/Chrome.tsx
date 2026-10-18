@@ -3,6 +3,7 @@ import { pages } from "./content";
 import { cssVars } from "./ui";
 import { Logo } from "./Logo";
 import { NavLinks } from "./NavLinks";
+import { NavClock } from "./NavClock";
 
 /** Persistent chrome: boot sequence, WebGL canvas, cursor, nav, menu and dock. Rendered once in the root layout. */
 export function Chrome() {
@@ -48,10 +49,14 @@ export function Chrome() {
       <header className="nav" id="nav">
         <Link href="/" className="nav__brand" data-cursor="Home" aria-label="Overwatch home">
           <Logo />
+          <span className="nav__word" aria-hidden="true">
+            Overwatch
+          </span>
         </Link>
         <NavLinks />
         <div className="nav__actions">
-          <button className="nav__link" id="menuOpen" data-cursor="Menu" aria-expanded="false" aria-controls="menu">
+          <NavClock />
+          <button className="nav__link nav__menu" id="menuOpen" data-cursor="Menu" aria-expanded="false" aria-controls="menu">
             <span>Menu</span>
             <span className="nav__burger">
               <i />
@@ -137,7 +142,7 @@ export function Footer() {
       <div className="footer__top">
         <div className="footer__brand">
           <Logo className="logo logo--footer" />
-          <p>A smoke detector for Solana DeFi. We map who can move your money, and we tell you the moment those controls get weaker.</p>
+          <p>Overwatch reads who can change the Solana protocols holding your deposits and alerts you after those controls weaken onchain. It watches authority, not prices or code.</p>
         </div>
         <div className="footer__cols">
           <div>
@@ -154,7 +159,7 @@ export function Footer() {
           </div>
           <div>
             <h4>Learn</h4>
-            <Link href="/methodology">Methodology</Link>
+            <Link href="/docs">Documentation</Link>
             <Link href="/docs/api">API reference</Link>
           </div>
         </div>

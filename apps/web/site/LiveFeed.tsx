@@ -81,7 +81,7 @@ export function LiveFeed({ initial, protocols, live }: { initial: FeedItem[]; pr
             <b>{items.length ? "No events at this severity." : live ? "No events recorded yet." : "No event history on this deployment."}</b>
           </p>
           {live || items.length ? (
-            <p>Events appear here within seconds of a change onchain. Weakening changes are amber or red; changes that strengthen controls are green.</p>
+            <p>Events appear here seconds after a change confirms onchain; durable nonce accounts are scanned hourly. Weakening changes are amber or red; changes that strengthen controls are green.</p>
           ) : (
             <p>
               The live database isn&apos;t connected here, so there is nothing to stream. To see an alert fire, use the <Link href="/demo">demo console</Link> or step through the{" "}

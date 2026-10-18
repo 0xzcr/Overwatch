@@ -12,10 +12,15 @@ type Row = typeof protocols.$inferSelect;
 const lastPush = new Map<string, { at: number; score: number; flags: bigint }>();
 const pending = new Map<string, NodeJS.Timeout>();
 
-let publisher: Keypair | null = null;
+// undefined = not tried yet; null = keypairs missing, so publishing stays off until restart (and the log says so once).
+let publisher: Keypair | null | undefined;
 function getPublisher() {
-  if (publisher) return publisher;
-  try { publisher = keys().publisher; } catch { log("publisher", "no PUBLISHER_KEYPAIR_PATH — onchain publishing disabled"); }
+  if (publisher === undefined) {
+    try { publisher = keys().publisher; } catch (e) {
+      publisher = null;
+      log("publisher", `demo keypairs not loaded (${(e as Error).message.split("\n")[0]}): onchain publishing disabled`);
+    }
+  }
   return publisher;
 }
 

@@ -7,7 +7,7 @@ const sevTone = (s: string) => (s === "CRITICAL" ? "bad" : s === "HIGH" ? "warn"
 /** Governance timeline: weakening changes in amber/red, strengthening changes in green. */
 export function Timeline({ events, network, showProtocol = false, empty }: { events: FeedItem[]; network: "mainnet" | "devnet"; showProtocol?: boolean; empty?: string }) {
   if (!events.length)
-    return <p className="page-note">{empty ?? "No governance changes recorded yet. The current state is the baseline; the next change appears here within seconds."}</p>;
+    return <p className="page-note">{empty ?? "No governance changes recorded yet. The current state is the baseline; the next change appears here after it confirms onchain."}</p>;
   return (
     <ol className="tl">
       {events.map((e) => (

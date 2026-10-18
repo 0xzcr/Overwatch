@@ -16,7 +16,8 @@
     "seed": "tsx scripts/seed-protocols.ts",
     "backfill": "tsx scripts/backfill.ts",
     "db:migrate": "pnpm --filter @overwatch/db migrate",
-    "demo:setup": "tsx scripts/demo/setup.ts",
+    "demo": "tsx scripts/demo.ts",
+    "demo:setup": "tsx scripts/demo.ts setup",
     "stats": "tsx scripts/headline-stats.ts",
     "smoke:pipeline": "tsx scripts/dev/pipeline-smoke.ts"
   },
@@ -35,7 +36,6 @@
   },
   "dependencies": {
     "@noble/curves": "^1.9.7",
-    "@noble/hashes": "^1.8.0",
     "@overwatch/core": "workspace:*",
     "@overwatch/db": "workspace:*",
     "@overwatch/demo": "workspace:*",

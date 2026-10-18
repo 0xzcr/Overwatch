@@ -14,7 +14,7 @@ export function connection() {
   return new Connection(url, { commitment: "confirmed", wsEndpoint: process.env.SOLANA_DEVNET_WS_URL || undefined });
 }
 
-export function loadKeypair(path: string): Keypair {
+function loadKeypair(path: string): Keypair {
   return Keypair.fromSecretKey(Uint8Array.from(JSON.parse(readFileSync(p(path), "utf8"))));
 }
 

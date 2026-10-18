@@ -2,7 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 import type { MorphOptions } from "./engine/stage";
 import type { ShapeName } from "./engine/shapes";
 import { GLOSSARY } from "./content";
-import { explorer } from "@/lib/format";
+import { explorer, GRADE_WORD } from "@/lib/format";
 
 export const cssVars = (v: Record<string, string>) => v as CSSProperties;
 
@@ -10,8 +10,6 @@ export const cssVars = (v: Record<string, string>) => v as CSSProperties;
 export function stage(shape: ShapeName | "drift", opts: MorphOptions = {}, pulse = false) {
   return { "data-stage": shape, "data-stage-opts": JSON.stringify(opts), ...(pulse ? { "data-stage-pulse": "1" } : {}) };
 }
-
-export const GRADE_WORD: Record<string, string> = { A: "Strong", B: "Good", C: "Caution", D: "Weak", F: "Dangerous" };
 
 export function Vis({ html, className }: { html: string; className?: string }) {
   return <div className={className} dangerouslySetInnerHTML={{ __html: html }} />;

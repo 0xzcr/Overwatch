@@ -6,7 +6,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import { Stage, type MorphOptions } from "./stage";
 import type { ShapeName } from "./shapes";
-import { watchNightfall } from "../nightfall";
 
 export interface StageCfg {
   shape: ShapeName;
@@ -69,11 +68,6 @@ function createRuntime(): Runtime {
   }
   lenis.on("scroll", (l: Lenis) => stage?.setScrollVelocity(l.velocity));
   const morph = (shape: ShapeName, o: MorphOptions) => stage?.morph(shape, o);
-  // CSS follows html[data-time] by itself; the stage needs its colours re-applied.
-  watchNightfall(() => {
-    stage?.retone();
-    if (rt.lastStage) morph(rt.lastStage.shape, rt.lastStage.opts);
-  });
 
   // ---------------------------------------------------------------- ready queue (after the boot sequence)
   let ready = false;
@@ -94,7 +88,8 @@ function createRuntime(): Runtime {
   } catch {
     /* storage unavailable: show the boot every time */
   }
-  if (reduced || !bootEl || seen) {
+  // The boot sequence belongs to the landing page; deep links to data pages are usable at once.
+  if (reduced || !bootEl || seen || location.pathname !== "/") {
     bootEl?.remove();
     markReady();
     if (!reduced) gsap.from(".nav", { opacity: 0, y: -20, duration: 1, ease: "power2.out" });
@@ -102,14 +97,8 @@ function createRuntime(): Runtime {
     const bootLog = $("#bootLog");
     const bootPct = $("#bootPct");
     const bootBar = $("#bootBar");
-    const lines = [
-      "establishing read-only link · solana mainnet-beta",
-      "loading control snapshots",
-      "decoding upgrade authorities · squads v4 · durable nonces",
-      "rules engine armed",
-      "alert channels online",
-      "overwatch online",
-    ];
+    // Boot copy only states what the page itself does; it never claims live infrastructure.
+    const lines = ["overwatch · control-plane monitor for solana defi", "loading control map", "ready"];
     const prog = { v: 0 };
     gsap
       .timeline({
@@ -121,7 +110,7 @@ function createRuntime(): Runtime {
       })
       .to(prog, {
         v: 100,
-        duration: 2.4,
+        duration: 1.2,
         ease: "power2.inOut",
         onUpdate: () => {
           if (bootPct) bootPct.textContent = String(Math.round(prog.v)).padStart(3, "0");

@@ -16,7 +16,7 @@ const KIND_LABEL: Record<GNode["kind"], string> = {
   admin: "Admin",
 };
 
-/** "Who can move your money": Program → upgrade authority → multisig → signers (→ nonce accounts), plus collateral and oracles. */
+/** "Who can move your money": Program → upgrade authority -> multisig -> signers (-> nonce accounts), plus collateral and oracles. */
 export function ControlGraph({ nodes, edges, network, summary }: { nodes: GNode[]; edges: GEdge[]; network: "mainnet" | "devnet"; summary?: boolean }) {
   const [sel, setSel] = useState<GNode | null>(null);
   const { rfNodes, rfEdges } = useMemo(() => {

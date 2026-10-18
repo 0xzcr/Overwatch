@@ -21,7 +21,7 @@ export default async function CaseStudy() {
           "Drift lost $285M.",
           `${days} days of warning.`,
         ]}
-        lede="The warning signs were onchain and public. No smart-contract bug was involved. The attacker collected pre-signed durable-nonce transactions from Security Council signers, waited, and used them to take admin. Reconstructed from public incident reports."
+        lede="The warning signs were onchain and public. No smart-contract bug was involved. The attacker collected pre-signed durable-nonce transactions from Security Council signers, waited, and used them to take admin. This replay is a backtest: Overwatch's current rules applied to the public record, reconstructed from incident reports. It is not a live catch."
         stageAttrs={stage("knot", { colorA: "#FFB547", colorB: "#1b2340", x: 3, y: 0.6, yNarrow: 1.5, scale: 0.85, autoRotate: 0.16, jitter: 0.02, opacity: 0.95 })}
       />
 
@@ -29,7 +29,7 @@ export default async function CaseStudy() {
         <div className="manifesto__pin">
           <p className="manifesto__text">
             {manifesto.split(" ").map((w, i) => (
-              <span className={`w${/\$285M|nine|Nobody|locks\./.test(w) ? " w--hot" : ""}`} key={i}>
+              <span className={`w${/\$285M|nine|nobody/.test(w) ? " w--hot" : ""}`} key={i}>
                 {w}{" "}
               </span>
             ))}
@@ -88,7 +88,7 @@ export default async function CaseStudy() {
       <section className="drift page-block" id="replay" data-dock="Replay" data-dock-color="#FF5A3D" data-stage="drift">
         <div className="drift__board">
           <div className="drift__clock">
-            <p className="mono label">days of warning</p>
+            <p className="mono label">days of warning · backtest</p>
             <p className="drift__days mono" id="driftDays">
               0.0
             </p>

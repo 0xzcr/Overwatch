@@ -3,9 +3,9 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { createColumnHelper, flexRender, getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable, type SortingState } from "@tanstack/react-table";
 import type { ProtoCard } from "./data";
+import { GRADE_WORD } from "@/lib/format";
 
 const h = createColumnHelper<ProtoCard>();
-const WORD: Record<string, string> = { A: "Strong", B: "Good", C: "Caution", D: "Weak", F: "Dangerous" };
 
 const ago = (iso: string | null) => {
   if (!iso) return "—";
@@ -64,7 +64,7 @@ export function Leaderboard({ rows }: { rows: ProtoCard[] }) {
           <span className={`grade grade--sm g-${c.row.original.grade}`}>
             <b>{c.row.original.grade}</b>
             <span className="mono">
-              {c.getValue() ?? "—"} · {WORD[c.row.original.grade] ?? "Unscored"}
+              {c.getValue() ?? "—"} · {GRADE_WORD[c.row.original.grade] ?? "Unscored"}
             </span>
           </span>
         ),

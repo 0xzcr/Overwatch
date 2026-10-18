@@ -36,7 +36,7 @@ function spherePoint(r: Rand, rad: number): V3 {
 }
 
 /** Classic 3D gradient noise, seeded. */
-export function makeNoise(seed: number) {
+function makeNoise(seed: number) {
   const r = mulberry(seed);
   const p = Array.from({ length: 256 }, (_, i) => i);
   for (let i = 255; i > 0; i--) {
@@ -402,7 +402,7 @@ function wordmark(count: number, r: Rand) {
   const ctx = cv.getContext("2d");
   if (ctx) {
     ctx.fillStyle = "#fff";
-    ctx.font = '700 220px "Geist Variable", "Helvetica Neue", Arial, sans-serif';
+    ctx.font = '700 220px "IBM Plex Sans Variable", "Helvetica Neue", Arial, sans-serif';
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText("OVERWATCH", W / 2, H / 2 + 8);

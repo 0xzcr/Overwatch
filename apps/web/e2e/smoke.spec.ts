@@ -1,9 +1,11 @@
 import { test, expect } from "@playwright/test";
 
-test("landing renders the title and the control map preview", async ({ page }) => {
+test("landing renders the title and the navbar reaches the docs", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName("The Protocol Watchdog");
-  await expect(page.getByRole("link", { name: /All \d+ protocols/ })).toBeVisible();
+  await page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Documentation" }).click();
+  await expect(page).toHaveURL(/\/docs$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Documentation");
 });
 
 test("leaderboard lists protocols and links to the detail page", async ({ page }) => {
@@ -22,9 +24,9 @@ test("case study replays alerts from the rules engine", async ({ page }) => {
   await expect(page.getByText(/never-expiring/).first()).toBeVisible();
 });
 
-test("methodology, API docs, events and alerts pages render", async ({ page }) => {
+test("documentation, API docs, events and alerts pages render", async ({ page }) => {
   for (const [url, text] of [
-    ["/methodology", "Methodology"],
+    ["/docs", "Documentation"],
     ["/docs/api", "API"],
     ["/events", "Live events"],
     ["/alerts", "Alerts"],
@@ -49,34 +51,19 @@ test("demo console rehearsal: weaken the demo protocol → CRITICAL alert, red r
   await expect(page.getByText("Vault re-armed").first()).toBeVisible();
 });
 
-/** An Etc/GMT zone whose local hour is `hour` right now, so the real clock logic decides the palette. */
-function zoneAt(hour: number) {
-  let off = (hour - new Date().getUTCHours() + 24) % 24;
-  if (off > 12) off -= 24;
-  return off === 0 ? "Etc/GMT" : `Etc/GMT${off > 0 ? "-" : "+"}${Math.abs(off)}`; // Etc/GMT signs are inverted
-}
-
-test.describe("nightfall after 18:00 local time", () => {
-  test.use({ timezoneId: zoneAt(20) });
-  test("turns the accent red", async ({ page }) => {
+test.describe("red palette", () => {
+  test.use({ timezoneId: "Etc/GMT" });
+  test("is red regardless of the clock, and the navbar shows a ticking GMT clock", async ({ page }) => {
     await page.goto("/");
     await expect(page.locator("html")).toHaveAttribute("data-time", "night");
     expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--mint").trim())).toBe("#ff1f3d");
     await expect(page.locator('link[rel="icon"]').last()).toHaveAttribute("href", "/favicon-night.svg");
-  });
-});
-
-test.describe("daytime palette", () => {
-  test.use({ timezoneId: zoneAt(12) });
-  test("keeps the mint accent, and ?time=night forces night for the tab", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.locator("html")).toHaveAttribute("data-time", "day");
-    await page.goto("/?time=night");
-    await expect(page.locator("html")).toHaveAttribute("data-time", "night");
-    await page.goto("/methodology");
-    await expect(page.locator("html")).toHaveAttribute("data-time", "night");
-    await page.goto("/?time=auto");
-    await expect(page.locator("html")).toHaveAttribute("data-time", "day");
+    // WebGL start-up can hold the main thread (and the clock's timer) for seconds in a software-rendered CI browser.
+    await expect(page.locator("body")).not.toHaveClass(/is-loading/, { timeout: 15_000 });
+    const clock = page.locator(".nav__status time");
+    await expect(clock).toHaveText(/^\d{2}:\d{2}:\d{2}$/);
+    const first = await clock.textContent();
+    await expect(clock).not.toHaveText(first!, { timeout: 3000 });
   });
 });
 

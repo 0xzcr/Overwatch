@@ -7,12 +7,15 @@ export const severitiesAtLeast = (s: string) => SEV.slice(Math.max(0, SEV.indexO
 
 export async function listProtocols() {
   const d = db();
-  const rows = await d.select().from(protocols).orderBy(protocols.name);
-  const latestScores = await d.execute<{ protocol_id: number; score: number; grade: string; flags: string; breakdown: unknown; computed_at: string }>(dsql`
-    select distinct on (protocol_id) protocol_id, score, grade, flags::text, breakdown, computed_at from scores order by protocol_id, computed_at desc`);
-  const latestSnaps = await d.execute<{ protocol_id: number; data: unknown; created_at: string }>(dsql`
-    select distinct on (protocol_id) protocol_id, data, created_at from snapshots order by protocol_id, created_at desc`);
-  const lastEvents = await d.execute<{ protocol_id: number; last: string }>(dsql`select protocol_id, max(coalesce(block_time, detected_at)) as last from events where severity <> 'INFO' group by protocol_id`);
+  // Independent reads, so they share one round trip of latency instead of four.
+  const [rows, latestScores, latestSnaps, lastEvents] = await Promise.all([
+    d.select().from(protocols).orderBy(protocols.name),
+    d.execute<{ protocol_id: number; score: number; grade: string; flags: string; breakdown: unknown; computed_at: string }>(dsql`
+      select distinct on (protocol_id) protocol_id, score, grade, flags::text, breakdown, computed_at from scores order by protocol_id, computed_at desc`),
+    d.execute<{ protocol_id: number; data: unknown; created_at: string }>(dsql`
+      select distinct on (protocol_id) protocol_id, data, created_at from snapshots order by protocol_id, created_at desc`),
+    d.execute<{ protocol_id: number; last: string }>(dsql`select protocol_id, max(coalesce(block_time, detected_at)) as last from events where severity <> 'INFO' group by protocol_id`),
+  ]);
   const sm = new Map(latestScores.map((r) => [r.protocol_id, r]));
   const nm = new Map(latestSnaps.map((r) => [r.protocol_id, r]));
   const em = new Map(lastEvents.map((r) => [r.protocol_id, r.last]));

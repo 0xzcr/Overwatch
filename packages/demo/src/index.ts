@@ -85,7 +85,7 @@ function deployDemoProgram(log: Log, upgradeAuthority: PublicKey): PublicKey {
 export function demoConfig(s: DemoState): ProtocolConfig {
   return {
     slug: DEMO_SLUG, name: "Overwatch Demo Protocol", category: "demo", defillama_slug: null, website: "https://explorer.solana.com/?cluster=devnet",
-    docs_sources: ["scripts/demo/setup.ts"], programs: [{ id: s.demoProgram, label: "Demo program" }],
+    docs_sources: ["scripts/demo.ts"], programs: [{ id: s.demoProgram, label: "Demo program" }],
     multisigs: [{ address: s.multisig, vault_index: 0, role: "upgrade_authority" }], admin_accounts: [], collateral_mints: [], oracles: [],
     verified: true, source: "demo", network: "devnet", notes: "DEMO on devnet. Controlled multisig by design.",
   };

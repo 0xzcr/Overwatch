@@ -480,11 +480,6 @@ export class Stage {
     this.shapeTex.needsUpdate = true;
   }
 
-  /** Re-applies the palette to colours set once at start-up (the globe arcs) after day/night flips. */
-  retone() {
-    for (const m of this.arcMats) (m.uniforms.uColor as U<THREE.Vector3>).value.copy(toVec3(m.userData.hex as string));
-  }
-
   morph(name: ShapeName, opts: MorphOptions = {}) {
     const idx = SHAPE_NAMES.indexOf(name);
     if (idx < 0) return;

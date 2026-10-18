@@ -1,42 +1,44 @@
 /* Overwatch site styles. Tokens first. */
 
 :root {
-  --bg: #030407;
-  --bg-2: #070a11;
-  --bg-3: #0b0f19;
-  --panel: rgba(9, 12, 20, 0.72);
-  --glass: rgba(10, 14, 24, 0.55);
-  --line-rgb: 150, 180, 255;
+  --bg: #000000;
+  --bg-2: #0a0a0a;
+  --bg-3: #111111;
+  --panel: rgba(10, 10, 10, 0.72);
+  --glass: rgba(10, 10, 10, 0.55);
+  --line-rgb: 255, 96, 96;
   --line: rgba(var(--line-rgb), 0.09);
   --line-2: rgba(var(--line-rgb), 0.18);
-  --ink: #eef1f7;
-  --chrome: #9aa3b5;
-  --dim: #5d6476;
-  --mint: #2bffb0;
-  --cyan: #7cf3ff;
-  --violet: #8b7cff;
+  --ink: #f7efef;
+  --chrome: #b8a3a3;
+  --dim: #6f5a5a;
+  --mint: #ff1f3d;
+  --cyan: #ff7a45;
+  --violet: #ff4d6d;
   --red: #ff5a3d;
   --amber: #ffb547;
-  --lime: #b6ff3b;
-  --blue: #5aa8ff;
-  --ok: #2bffb0;
-  --ok-2: #8dffd0;
-  --mint-rgb: 43, 255, 176;
-  --deep-rgb: 58, 92, 255;
-  --panel-rgb: 6, 9, 16;
-  --bg-rgb: 3, 4, 7;
-  --shade-rgb: 5, 7, 12;
-  --raise-rgb: 10, 14, 24;
-  --raise-2-rgb: 20, 26, 40;
-  --on-accent: #02130c;
-  --logo-fill: #07120f;
-  --logo-fill-2: #0b1d18;
+  --lime: #ff9a3d;
+  --blue: #c2183a;
+  /* "good" is bone white so it never reads as red; amber (warn) and red-orange (bad) keep their meaning */
+  --ok: #f3e9e1;
+  --ok-2: #d8c4b8;
+  --mint-rgb: 255, 31, 61;
+  --deep-rgb: 122, 12, 28;
+  --panel-rgb: 10, 10, 10;
+  --bg-rgb: 0, 0, 0;
+  --shade-rgb: 5, 5, 5;
+  --raise-rgb: 17, 17, 17;
+  --raise-2-rgb: 28, 28, 28;
+  --on-accent: #1a0306;
+  --logo-fill: #120708;
+  --logo-fill-2: #1d0b0d;
   --warn: #ffb547;
   --bad: #ff5a3d;
-  --sans: "Geist Variable", "Helvetica Neue", Arial, sans-serif;
-  --mono: "Geist Mono Variable", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --sans: "IBM Plex Sans Variable", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
   --gutter: clamp(16px, 4vw, 56px);
-  --radius: 18px;
+  --radius: 6px;
+  --radius-sm: 3px;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   color-scheme: dark;
 }
@@ -394,7 +396,7 @@ main,
   gap: 10px;
   height: 52px;
   padding: 0 24px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   font-weight: 500;
   font-size: 15px;
   letter-spacing: -0.01em;
@@ -473,19 +475,12 @@ section {
   right: 0;
   z-index: 60;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 16px var(--gutter);
-  transition: background 0.5s, backdrop-filter 0.5s, border-color 0.5s, padding 0.5s var(--ease);
-  border-bottom: 1px solid transparent;
-}
-.nav.is-scrolled {
-  padding-top: 10px;
-  padding-bottom: 10px;
-  background: rgba(var(--bg-rgb), 0.6);
-  backdrop-filter: blur(16px) saturate(1.4);
-  border-color: var(--line);
+  align-items: stretch;
+  gap: 0;
+  height: 60px;
+  padding: 0 var(--gutter);
+  background: var(--bg);
+  border-bottom: 1px solid #8a0f14;
 }
 .nav__brand {
   display: flex;
@@ -503,7 +498,7 @@ section {
   gap: 10px;
   height: 40px;
   padding: 0 14px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   font-size: 14px;
   color: var(--chrome);
   transition: color 0.3s, background 0.3s;
@@ -540,8 +535,8 @@ section {
 .menu__bg {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(var(--bg-rgb), 0.99) 0%, rgba(var(--bg-rgb), 0.95) 52%, rgba(var(--bg-rgb), 0.55) 64%, rgba(var(--bg-rgb), 0.15) 100%);
-  clip-path: inset(0 0 100% 0);
+  background: linear-gradient(270deg, rgba(var(--bg-rgb), 0.99) 0%, rgba(var(--bg-rgb), 0.95) 52%, rgba(var(--bg-rgb), 0.55) 64%, rgba(var(--bg-rgb), 0.15) 100%);
+  clip-path: inset(0 0 0 100%);
   transition: clip-path 0.8s var(--ease);
 }
 .menu.is-open .menu__bg {
@@ -553,7 +548,9 @@ section {
   display: flex;
   flex-direction: column;
   padding: 96px var(--gutter) 32px;
+  width: 100%;
   max-width: 900px;
+  margin-left: auto;
 }
 .menu__head,
 .menu__foot {
@@ -626,7 +623,7 @@ section {
   align-items: center;
   gap: 4px;
   padding: 5px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--line-2);
   background: rgba(var(--panel-rgb), 0.7);
   backdrop-filter: blur(16px) saturate(1.4);
@@ -1025,7 +1022,7 @@ section {
   min-height: 400px;
   display: grid;
   grid-template-columns: 0.9fr 1.1fr;
-  border-radius: 26px;
+  border-radius: var(--radius);
   border: 1px solid var(--line-2);
   background:
     radial-gradient(600px circle at var(--mx) var(--my), color-mix(in srgb, var(--c) 14%, transparent), transparent 55%),
@@ -1143,7 +1140,7 @@ section {
 .vz {
   position: relative;
   color: var(--ink);
-  border-radius: 12px;
+  border-radius: var(--radius);
   border: 1px solid var(--line-2);
   background: rgba(var(--shade-rgb), 0.92);
   box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
@@ -1564,7 +1561,7 @@ section {
   gap: 12px;
   align-items: start;
   padding: 12px 14px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   border: 1px solid var(--line-2);
   background: rgba(var(--panel-rgb), 0.94);
   box-shadow: 0 18px 30px -18px rgba(0, 0, 0, 0.9);
@@ -1712,7 +1709,7 @@ section {
   position: relative;
   width: 34px;
   height: 19px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   background: var(--line-2);
   flex: none;
 }
@@ -1856,7 +1853,7 @@ section {
 .vz-chat__msgs p {
   max-width: 82%;
   padding: 8px 12px;
-  border-radius: 14px 14px 14px 4px;
+  border-radius: var(--radius) 14px 14px 4px;
   background: #121a2b;
   color: var(--chrome);
   animation: chatIn 9s calc(var(--i) * 0.9s) infinite both;
@@ -1866,7 +1863,7 @@ section {
 }
 .vz-chat__msgs p.me {
   justify-self: end;
-  border-radius: 14px 14px 4px 14px;
+  border-radius: var(--radius) 14px 4px 14px;
   background: color-mix(in srgb, var(--c) 22%, rgb(var(--raise-rgb)));
   color: var(--ink);
   font-family: var(--mono);
@@ -1924,7 +1921,7 @@ section {
     "controls detail";
   gap: 14px 28px;
   border: 1px solid var(--line-2);
-  border-radius: 26px;
+  border-radius: var(--radius);
   padding: clamp(18px, 2.4vw, 32px);
   background: linear-gradient(160deg, rgba(var(--raise-rgb), 0.85), rgba(var(--shade-rgb), 0.9));
   backdrop-filter: blur(14px);
@@ -1936,7 +1933,7 @@ section {
   gap: 8px;
   align-content: start;
   padding: 22px;
-  border-radius: 18px;
+  border-radius: var(--radius);
   border: 1px solid var(--line);
   background: rgba(var(--bg-rgb), 0.6);
 }
@@ -2000,7 +1997,7 @@ section {
   gap: 6px;
   text-align: left;
   padding: 14px 12px 12px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   border: 1px solid var(--line);
   border-top: 3px solid var(--line-2);
   color: var(--dim);
@@ -2064,7 +2061,7 @@ section {
   display: grid;
   gap: 6px;
   padding: 14px 16px;
-  border-radius: 14px;
+  border-radius: var(--radius);
   border: 1px solid var(--line-2);
   background: rgba(var(--bg-rgb), 0.7);
   border-left: 3px solid var(--chrome);
@@ -2100,7 +2097,7 @@ section {
 .drift__controls button {
   flex: 1;
   height: 42px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid var(--line-2);
   font-size: 11px;
   letter-spacing: 0.06em;
@@ -2112,127 +2109,11 @@ section {
   color: var(--mint);
 }
 
-/* ------------------------------------------------------------ control map */
-.cmap .filters {
-  margin-bottom: 18px;
-}
-.cmap .section-head--row {
-  grid-template-columns: 1fr;
-  max-width: 760px;
-}
-.protos {
-  display: grid;
-  gap: 6px;
-  max-width: 1280px;
-}
-.proto__link {
-  display: grid;
-  grid-template-columns: 76px 1.4fr 1.2fr 0.8fr 0.8fr 1.3fr 28px;
-  align-items: center;
-  gap: 16px;
-  padding: 12px 18px 12px 12px;
-  border-radius: 14px;
-}
-.proto {
-  border-radius: 14px;
-  border: 1px solid var(--line);
-  background: rgba(var(--panel-rgb), 0.78);
-  backdrop-filter: blur(10px);
-  cursor: pointer;
-  transition: border-color 0.4s, background 0.4s, translate 0.5s var(--ease);
-  --g: var(--mint);
-}
-.proto.g-C { --g: var(--amber); }
-.proto.g-D,
-.proto.g-F { --g: var(--bad); }
-.proto.g-B { --g: #8dffd0; }
-.proto:hover {
-  border-color: color-mix(in srgb, var(--g) 50%, transparent);
-  background: rgba(var(--raise-rgb), 0.9);
-  translate: 6px 0;
-}
-.proto.is-hidden,
-.row.is-hidden {
-  display: none;
-}
-.proto__grade {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--g) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--g) 35%, transparent);
-}
-.proto__grade b {
-  font-size: 26px;
-  line-height: 1;
-  font-weight: 500;
-  color: var(--g);
-}
-.proto__grade span {
-  font-size: 11px;
-  color: var(--chrome);
-}
-.proto.is-red .proto__grade {
-  animation: redPulse 1.6s infinite;
-}
-.proto__name b {
-  display: block;
-  font-weight: 500;
-  font-size: 17px;
-  letter-spacing: -0.015em;
-}
-.proto__name span {
-  font-size: 12.5px;
-  color: var(--dim);
-  font-family: var(--sans);
-}
-.proto__fact {
-  display: grid;
-  gap: 2px;
-  font-size: 12.5px;
-  color: var(--ink);
-}
-.proto__fact span {
-  font-size: 12.5px;
-  color: var(--dim);
-  font-family: var(--sans);
-}
-.proto__fact.bad {
-  color: var(--bad);
-}
-.proto__flags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-.proto__flags i {
-  font-style: normal;
-  font-size: 9.5px;
-  letter-spacing: 0.06em;
-  padding: 3px 7px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 90, 61, 0.4);
-  color: #ff8a73;
-}
-.proto__flags i.ok {
-  border-color: rgba(var(--mint-rgb), 0.3);
-  color: var(--mint);
-}
-.proto__go {
-  color: var(--dim);
-  transition: color 0.3s, transform 0.4s var(--ease);
-}
-.proto:hover .proto__go {
-  color: var(--g);
-  transform: translate(3px, -3px);
-}
 .feed {
   max-width: 1280px;
   margin-top: 28px;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: var(--radius);
   background: rgba(var(--panel-rgb), 0.78);
   overflow: hidden;
 }
@@ -2254,7 +2135,7 @@ section {
   gap: 8px;
   height: 36px;
   padding: 0 14px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--line-2);
   background: rgba(var(--panel-rgb), 0.6);
   font-size: 13.5px;
@@ -2286,7 +2167,7 @@ section {
   gap: 12px;
   height: 58px;
   padding: 0 18px;
-  border-radius: 16px;
+  border-radius: var(--radius);
   border: 1px solid var(--line-2);
   background: rgba(var(--panel-rgb), 0.75);
   backdrop-filter: blur(10px);
@@ -2505,7 +2386,7 @@ section {
   transform: translate(-50%, 20px);
   opacity: 0;
   padding: 10px 16px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   background: var(--ink);
   color: rgb(var(--shade-rgb));
   font-size: 12px;
@@ -2520,12 +2401,6 @@ section {
 
 /* ------------------------------------------------------------ responsive */
 @media (max-width: 1200px) {
-  .proto__link {
-    grid-template-columns: 70px 1.4fr 1.2fr 0.8fr 0.8fr 28px;
-  }
-  .proto__flags {
-    display: none;
-  }
   .row {
     grid-template-columns: 80px 1fr 1.4fr 100px 24px;
   }
@@ -2634,20 +2509,6 @@ section {
   .hl__title {
     margin-top: 0;
   }
-  .proto__link {
-    grid-template-columns: 64px 1fr 28px;
-    grid-template-areas: "g n go" "g f1 go";
-    row-gap: 6px;
-  }
-  .proto__grade { grid-area: g; flex-direction: column; align-items: center; gap: 2px; }
-  .proto__name { grid-area: n; }
-  .proto__fact { display: none; }
-  .proto__fact:nth-of-type(3) {
-    display: flex;
-    gap: 8px;
-    grid-area: f1;
-  }
-  .proto__go { grid-area: go; }
   .footer__top {
     grid-template-columns: 1fr;
   }
@@ -2767,39 +2628,10 @@ section {
   }
 }
 
-/* ------------------------------------------------------------ nightfall
-   18:00–06:00 in the visitor's local time (site/nightfall.ts sets html[data-time]).
-   The accent turns red and black; amber (warn) and red-orange (bad) keep their meaning,
-   and "good" grades move to bone white so they never read as red. */
-html[data-time="night"] {
-  --bg: #050203;
-  --bg-2: #0b0405;
-  --bg-3: #12070a;
-  --panel: rgba(16, 6, 8, 0.72);
-  --glass: rgba(18, 7, 9, 0.55);
-  --line-rgb: 255, 96, 96;
-  --mint-rgb: 255, 31, 61;
-  --deep-rgb: 122, 12, 28;
-  --panel-rgb: 12, 5, 6;
-  --bg-rgb: 5, 2, 3;
-  --shade-rgb: 8, 3, 4;
-  --raise-rgb: 20, 8, 10;
-  --raise-2-rgb: 36, 12, 15;
-  --on-accent: #1a0306;
-  --logo-fill: #120708;
-  --logo-fill-2: #1d0b0d;
-  --ink: #f7efef;
-  --chrome: #b8a3a3;
-  --dim: #6f5a5a;
-  --mint: #ff1f3d;
-  --cyan: #ff7a45;
-  --violet: #ff4d6d;
-  --lime: #ff9a3d;
-  --blue: #c2183a;
-  --ok: #f3e9e1;
-  --ok-2: #d8c4b8;
-}
-/* inline --c accents written as day hexes in the markup */
+/* ------------------------------------------------------------ red palette
+   Markup still carries the original accent hexes; these rules (and tone() in site/nightfall.ts for WebGL)
+   map them to red. html[data-time="night"] is set statically in the root layout. */
+/* inline --c accents */
 html[data-time="night"] [style*="--c:#2bffb0" i],
 html[data-time="night"] [style*="--c: #2bffb0" i] {
   --c: #ff1f3d !important;

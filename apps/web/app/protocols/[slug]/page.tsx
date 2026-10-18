@@ -303,7 +303,7 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
               </div>
             </div>
             <p className="page-note">
-              Flags: <span className="mono">{p.flags.join(", ") || "none"}</span>. <Link href="/methodology">How grades work →</Link>
+              Flags: <span className="mono">{p.flags.join(", ") || "none"}</span>. <Link href="/docs#scoring">How grades work →</Link>
             </p>
           </div>
 

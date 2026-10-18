@@ -4,6 +4,7 @@
 
 import { mulberry, hash, type Rand } from "./engine/rand";
 import { flagBits, type Capability, type TermLine } from "./content";
+import { GRADE_WORD } from "@/lib/format";
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string);
 
@@ -69,8 +70,6 @@ function code(u: Capability) {
     </ol>
   </div>`;
 }
-
-const GRADE_WORD: Record<string, string> = { A: "Strong", B: "Good", C: "Caution", D: "Weak", F: "Dangerous" };
 
 function gauge(u: Capability) {
   const score = u.chapter === "map" ? 70 : u.chapter === "build" ? 85 : 85;
