@@ -12,14 +12,19 @@ export const directUrl = () => process.env.DIRECT_URL || databaseUrl();
 function connect(url: string, max: number) {
   const { hostname, port, searchParams } = new URL(url);
   const local = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
+  const txPooler = port === "6543";
   return postgres(url, {
     max,
     idle_timeout: 30,
     connect_timeout: 10,
     // Hosted Postgres needs TLS; an explicit ?sslmode= in the URL wins.
     ...(!local && !searchParams.has("sslmode") && { ssl: "require" as const }),
-    // A transaction pooler hands each transaction a different backend, so prepared statements can't persist.
-    prepare: port !== "6543",
+    // A transaction pooler hands each transaction a different backend, so prepared statements can't persist. It also
+    // loses responses when queries are pipelined down one connection, which postgres.js does for parameterless queries
+    // (they skip the describe round trip) whenever there are more queries than connections; the stuck query never
+    // returns. 0 turns pipelining off entirely (1 still allows two in flight).
+    prepare: !txPooler,
+    ...(txPooler && { max_pipeline: 0 }),
   });
 }
 
