@@ -116,15 +116,18 @@ function fromView(p: ProtocolView): ProtoCard {
   };
 }
 
+// A production deploy without DATABASE_URL has no database to try (the localhost default is for development), so it
+// goes straight to the snapshot instead of waiting out the timeout on every page.
+const NO_DB = process.env.NODE_ENV === "production" && !process.env.DATABASE_URL;
 // Long enough for a fresh TLS connection to a distant database region (~3.5s measured), short enough that a dead one
 // falls back to the snapshot before the page feels hung.
-const withTimeout = <T,>(p: Promise<T>, ms = 5000) =>
-  Promise.race([p, new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
+const withTimeout = <T,>(run: () => Promise<T>, ms = 5000): Promise<T> =>
+  NO_DB ? Promise.reject(new Error("no database configured")) : Promise.race([run(), new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
 
 /** Live protocol views, or null when the database is unreachable. */
 async function liveViews(): Promise<ProtocolView[] | null> {
   try {
-    const views = await withTimeout(getProtocols());
+    const views = await withTimeout(() => getProtocols());
     return views.length ? views : null;
   } catch {
     return null;
@@ -178,7 +181,7 @@ export type FeedItem = Pick<EventView, "id" | "slug" | "name" | "type" | "severi
 
 export async function loadEvents(limit = 200, minSeverity?: string): Promise<{ live: boolean; events: FeedItem[] }> {
   try {
-    const events = await withTimeout(getEvents({ limit, ...(minSeverity ? { minSeverity } : {}) }));
+    const events = await withTimeout(() => getEvents({ limit, ...(minSeverity ? { minSeverity } : {}) }));
     return { live: true, events };
   } catch {
     return { live: false, events: [] };
@@ -191,7 +194,7 @@ export async function loadProtocol(slug: string) {
   if (view) {
     let events: FeedItem[] = [];
     try {
-      events = await withTimeout(getEvents({ protocolId: view.id, limit: 100 }));
+      events = await withTimeout(() => getEvents({ protocolId: view.id, limit: 100 }));
     } catch {
       /* timeline unavailable */
     }
@@ -204,7 +207,7 @@ export async function loadProtocol(slug: string) {
 
 export async function loadShields() {
   try {
-    const pubs = await withTimeout(getPublishes(100));
+    const pubs = await withTimeout(() => getPublishes(100));
     return pubs.filter((p) => p.kind === "shield").map((p) => ({ tx: p.tx, at: p.at, slug: p.slug }));
   } catch {
     return [];
