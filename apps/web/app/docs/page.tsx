@@ -2,7 +2,7 @@ import Link from "next/link";
 import { FLAG, RED_MASK, ORACLE_PROGRAMS } from "@overwatch/core";
 import { PageHero, Term, stage } from "@/site/ui";
 
-export const metadata = { title: "Documentation" };
+export const metadata = { title: "Documentation", alternates: { canonical: "/docs" } };
 
 // The scoring, event and flag tables below are the published methodology: the source of truth that
 // packages/core/src/scoring.ts and rules.ts must match.

@@ -12,8 +12,14 @@ import { Addr, Badge, Grade, PageHero, SectionHead, Term, stage } from "@/site/u
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
-  const d = await loadProtocol((await params).slug);
-  return { title: d ? `${d.card.name} controls` : "Not found" };
+  const slug = (await params).slug;
+  const d = await loadProtocol(slug);
+  if (!d) return { title: "Not found" };
+  return {
+    title: `${d.card.name} controls`,
+    description: `Who can change ${d.card.name} on Solana: grade ${d.card.grade}, upgrade authority, multisig threshold, timelock and every control change, read from the chain.`,
+    alternates: { canonical: `/protocols/${slug}` },
+  };
 }
 
 const PERMS = (m: number) => [m & 1 && "initiate", m & 2 && "vote", m & 4 && "execute"].filter(Boolean).join(" · ");

@@ -3,7 +3,7 @@ import { AlertsForms } from "@/site/AlertsForms";
 import { PageHero, stage } from "@/site/ui";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Alerts" };
+export const metadata = { title: "Alerts", alternates: { canonical: "/alerts" } };
 
 export default async function Alerts({ searchParams }: { searchParams: Promise<{ protocol?: string }> }) {
   const [{ cards }, sp] = await Promise.all([loadProtocols(), searchParams]);

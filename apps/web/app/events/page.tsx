@@ -3,7 +3,7 @@ import { LiveFeed } from "@/site/LiveFeed";
 import { PageHero, stage } from "@/site/ui";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Live events" };
+export const metadata = { title: "Live events", alternates: { canonical: "/events" } };
 
 export default async function Events() {
   const [{ live, events }, { cards }] = await Promise.all([loadEvents(200), loadProtocols()]);

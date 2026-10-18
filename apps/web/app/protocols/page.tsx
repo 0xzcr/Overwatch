@@ -3,7 +3,10 @@ import { Leaderboard } from "@/site/Leaderboard";
 import { PageHero, stage } from "@/site/ui";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Control map" };
+export const metadata = {
+  title: "Control map",
+  alternates: { canonical: "/protocols" },
+};
 
 export default async function Protocols() {
   const { live, cards, headline: h } = await loadProtocols();
@@ -18,8 +21,7 @@ export default async function Protocols() {
               {h.lowNoDelay} of the top {h.total}
             </b>{" "}
             Solana protocols can be changed by ≤2 people with no delay. {h.noTimelock} multisigs have no timelock at
-            all.
-            [Click on each protocol to know more]
+            all. [Click on each protocol to know more]
           </>
         }
         stageAttrs={stage("globe", {

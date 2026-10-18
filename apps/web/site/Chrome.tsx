@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { pages } from "./content";
+import { pages, REPO_URL } from "./content";
 import { cssVars } from "./ui";
 import { Logo, LogoMark } from "./Logo";
 import { NavLinks } from "./NavLinks";
@@ -161,6 +161,18 @@ export function Footer() {
             <h4>Learn</h4>
             <Link href="/docs">Documentation</Link>
             <Link href="/docs/api">API reference</Link>
+          </div>
+          <div>
+            <h4>Contact</h4>
+            <a href={`${REPO_URL}/issues`} target="_blank" rel="noreferrer">
+              Support · GitHub issues
+            </a>
+            <a href={`${REPO_URL}/security`} target="_blank" rel="noreferrer">
+              Report a vulnerability
+            </a>
+            <a href={REPO_URL} target="_blank" rel="noreferrer">
+              Source code
+            </a>
           </div>
         </div>
       </div>

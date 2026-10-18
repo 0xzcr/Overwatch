@@ -1,5 +1,9 @@
 // Site copy. Everything describes what Overwatch does; nothing here is presented as live data.
 
+/** Public origin for canonical URLs, social cards and structured data. */
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://overwatch-chi.vercel.app").replace(/\/$/, "");
+export const REPO_URL = "https://github.com/0xzcr/Overwatch";
+
 export type Vis =
   | "terminal"
   | "radar"

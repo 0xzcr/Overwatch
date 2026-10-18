@@ -3,7 +3,10 @@ import { driftReplay, driftSources, loadProtocols, warningDays } from "@/site/da
 import { PageHero, Term, cssVars, stage } from "@/site/ui";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Case study" };
+export const metadata = {
+  title: "Case study",
+  alternates: { canonical: "/case-study" },
+};
 
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });

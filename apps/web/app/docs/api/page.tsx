@@ -1,6 +1,9 @@
 import { PageHero, SectionHead, stage } from "@/site/ui";
 
-export const metadata = { title: "API reference" };
+export const metadata = {
+  title: "API reference",
+  alternates: { canonical: "/docs/api" },
+};
 
 const EP: [string, string, string][] = [
   ["GET", "/api/v1/protocols", "All watched protocols with grade, score, flags and key facts."],
