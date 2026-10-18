@@ -12,10 +12,10 @@ export default async function Events() {
       <PageHero
         dock="Live events"
         lines={["Live events"]}
-        lede="Timelocks, thresholds, upgrade keys, signers, durable nonces, pending votes, collateral and oracles. Weakening changes in amber or red, strengthening changes in green."
-        stageAttrs={stage("radar", { colorA: "#7CF3FF", colorB: "#3b4dff", x: 2.6, y: 0.3, yNarrow: 1.4, opacity: 1, autoRotate: 0.12 })}
+        lede="Every change to who controls a watched protocol: caught live, or found in the last 180 days of onchain history. Open a row for what it means and the transaction."
+        stageAttrs={stage("radar", { colorA: "#7CF3FF", colorB: "#3b4dff", x: 2.6, y: 0.3, yNarrow: 1.4, opacity: 0.3, autoRotate: 0.06 })}
       />
-      <section className="page-block" data-dock="Feed" {...stage("radar", { colorA: "#7CF3FF", colorB: "#1b2340", opacity: 0.25, scale: 1.4, autoRotate: 0.05 })}>
+      <section className="page-block" data-dock="Feed" {...stage("radar", { colorA: "#7CF3FF", colorB: "#1b2340", opacity: 0.1, scale: 1.4, autoRotate: 0.03 })}>
         <LiveFeed initial={events} live={live} protocols={cards.map((p) => ({ slug: p.slug, name: p.name }))} />
       </section>
     </>

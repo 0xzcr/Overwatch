@@ -3,16 +3,26 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { FeedItem } from "./data";
 
-const SEVS = ["INFO", "MEDIUM", "HIGH", "CRITICAL"];
-const tone = (s: string) => (s === "CRITICAL" ? "bad" : s === "HIGH" ? "warn" : s === "INFO" ? "ok" : "dim");
-// "12 Oct 2026, 17:58 UTC": fixed locale and zone, so the server and browser render the same text.
-const when = (iso: string) => `${new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} UTC`;
+const LEVELS = [
+  { min: "INFO", label: "All" },
+  { min: "MEDIUM", label: "Medium+" },
+  { min: "HIGH", label: "High+" },
+  { min: "CRITICAL", label: "Critical" },
+];
+const RANK: Record<string, number> = { INFO: 0, LOW: 1, MEDIUM: 2, HIGH: 3, CRITICAL: 4 };
+const at = (e: FeedItem) => e.blockTime ?? e.detectedAt;
+// Fixed locale and zone, so the server and the browser render the same text.
+const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+const clock = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
+/** "marginfi has a pending vote…" reads as "has a pending vote…" next to the protocol column. */
+const rest = (e: FeedItem) => (e.name && e.title.startsWith(`${e.name} `) ? e.title.slice(e.name.length + 1) : e.title);
 
-/** Live feed over Server-Sent Events (/api/v1/stream), filterable by severity and protocol. */
+/** Event log over Server-Sent Events (/api/v1/stream): grouped by UTC day, filterable, one line per change. */
 export function LiveFeed({ initial, protocols, live }: { initial: FeedItem[]; protocols: { slug: string; name: string }[]; live: boolean }) {
   const [items, setItems] = useState(initial);
   const [min, setMin] = useState("INFO");
   const [proto, setProto] = useState("all");
+  const [deploys, setDeploys] = useState(true);
   const [status, setStatus] = useState<"connecting" | "live" | "offline">("connecting");
   const [flash, setFlash] = useState<number | null>(null);
 
@@ -40,99 +50,135 @@ export function LiveFeed({ initial, protocols, live }: { initial: FeedItem[]; pr
       };
       setItems((x) => [e, ...x.filter((y) => y.id !== e.id)].slice(0, 300));
       setFlash(e.id);
-      window.setTimeout(() => setFlash(null), 2500);
+      window.setTimeout(() => setFlash(null), 4000);
     });
     return () => es.close();
   }, []);
 
   const shown = useMemo(
-    () => items.filter((e) => SEVS.indexOf(e.severity) >= SEVS.indexOf(min) || min === "INFO").filter((e) => proto === "all" || e.slug === proto),
-    [items, min, proto],
+    () => items.filter((e) => (RANK[e.severity] ?? 0) >= RANK[min]! && (proto === "all" || e.slug === proto) && (deploys || e.type !== "PROGRAM_UPGRADED")),
+    [items, min, proto, deploys],
   );
+  // Consecutive runs of the same UTC day; the list is already newest-first.
+  const days = useMemo(() => {
+    const out: { key: string; label: string; rows: FeedItem[] }[] = [];
+    for (const e of shown) {
+      const key = at(e).slice(0, 10);
+      if (out.at(-1)?.key !== key) out.push({ key, label: day(at(e)), rows: [] });
+      out.at(-1)!.rows.push(e);
+    }
+    return out;
+  }, [shown]);
+  const serious = shown.filter((e) => RANK[e.severity]! >= RANK.HIGH!).length;
 
   return (
-    <div className="feedx">
-      <div className="filters feedx__filters">
-        <span className={`feedx__status mono is-${status}`}>
-          <span className={`dot ${status === "live" ? "dot--live" : status === "offline" ? "dot--alert" : ""}`} />
-          {status === "live" ? "streaming (SSE)" : status === "offline" ? "stream offline · retrying" : "connecting…"}
+    <div className="evlog">
+      <div className="evlog__bar">
+        <span className={`evlog__status mono is-${status}`}>
+          <i aria-hidden="true" />
+          {status === "live" ? "Live" : status === "offline" ? "Offline · retrying" : "Connecting"}
         </span>
-        <div className="chips" role="group" aria-label="Minimum severity">
-          {SEVS.map((s) => (
-            <button key={s} className={`chip chip--tag${min === s ? " is-on" : ""}`} aria-pressed={min === s} onClick={() => setMin(s)}>
-              ≥ {s.toLowerCase()}
-            </button>
-          ))}
-        </div>
-        <label className="select mono">
-          <span className="sr-only">Protocol</span>
-          <select value={proto} onChange={(e) => setProto(e.target.value)}>
-            <option value="all">all protocols</option>
-            {protocols.map((p) => (
-              <option key={p.slug} value={p.slug}>
-                {p.name}
-              </option>
+        <span className="evlog__count mono">
+          {shown.length} {shown.length === 1 ? "event" : "events"}
+          {serious > 0 && <> · <b>{serious} high or critical</b></>}
+        </span>
+        <div className="evlog__filters">
+          <div className="chips" role="group" aria-label="Minimum severity">
+            {LEVELS.map((l) => (
+              <button key={l.min} className={`chip chip--tag${min === l.min ? " is-on" : ""}`} aria-pressed={min === l.min} onClick={() => setMin(l.min)}>
+                {l.label}
+              </button>
             ))}
-          </select>
-        </label>
+          </div>
+          <button className={`chip chip--tag${deploys ? "" : " is-on"}`} aria-pressed={!deploys} onClick={() => setDeploys((x) => !x)}>
+            Hide code deploys
+          </button>
+          <label className="select mono">
+            <span className="sr-only">Protocol</span>
+            <select value={proto} onChange={(e) => setProto(e.target.value)}>
+              <option value="all">All protocols</option>
+              {protocols.map((p) => (
+                <option key={p.slug} value={p.slug}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </div>
 
       {!shown.length ? (
-        <div className="feedx__empty">
-          <p>
-            <b>{items.length ? "No events at this severity." : live ? "No events recorded yet." : "No event history on this deployment."}</b>
-          </p>
+        <div className="evlog__empty">
+          <b>{items.length ? "Nothing matches these filters." : live ? "No events recorded yet." : "No event history on this deployment."}</b>
           {live || items.length ? (
-            <p>Events appear here seconds after a change confirms onchain; durable nonce accounts are scanned hourly. Weakening changes are amber or red; changes that strengthen controls are green.</p>
+            <p>New changes appear here within seconds of confirming onchain. Durable nonce accounts are scanned hourly.</p>
           ) : (
             <p>
-              The live database isn&apos;t connected here, so there is nothing to stream. To see an alert fire, use the <Link href="/demo">demo console</Link> or step through the{" "}
+              The live database isn&apos;t connected here. To see an alert fire, use the <Link href="/demo">demo console</Link> or step through the{" "}
               <Link href="/case-study">Drift replay</Link>.
             </p>
           )}
         </div>
       ) : (
-        <ol className="tl">
-          {shown.map((e) => (
-            <li key={e.id} className={`tl__item sev-${e.severity.toLowerCase()}${e.weakening ? "" : " is-good"}${flash === e.id ? " is-new" : ""}`}>
-              <span className="tl__dot" aria-hidden="true" />
-              <div className="tl__meta mono">
-                {e.slug && (
-                  <Link href={`/protocols/${e.slug}`} className="tl__proto">
-                    {e.name}
-                  </Link>
-                )}
-                <span className={`badge badge--${tone(e.severity)} mono`}>{e.severity}</span>
-                {e.source === "demo" ? (
-                  <span className="badge badge--accent mono">demo</span>
-                ) : (
-                  e.source !== "live" && (
-                    <span className="badge badge--dim mono" title="Found by scanning past onchain transactions, not caught live">
-                      history
-                    </span>
-                  )
-                )}
-                {e.labels.map((l) => (
-                  <span key={l} className="badge badge--bad mono">
-                    {l}
-                  </span>
+        <div className="evlog__list">
+          <div className="evlog__head mono" aria-hidden="true">
+            <span>UTC</span>
+            <span>Severity</span>
+            <span>Protocol</span>
+            <span>Change</span>
+          </div>
+          {days.map((g) => (
+            // div, not section: the site styles and docks every <section> as a page section.
+            <div key={g.key} role="group" aria-label={g.label}>
+              <h2 className="evlog__day mono">
+                {g.label} <span>{g.rows.length}</span>
+              </h2>
+              <ul>
+                {g.rows.map((e) => (
+                  <li key={e.id} className={`evlog__row sev-${e.severity.toLowerCase()}${flash === e.id ? " is-new" : ""}`}>
+                    <details>
+                      <summary>
+                        <time className="mono" dateTime={at(e)}>
+                          {clock(at(e))}
+                        </time>
+                        <span className="evlog__sev mono">{e.severity}</span>
+                        <span className="evlog__proto">{e.name}</span>
+                        <span className="evlog__title">
+                          {rest(e)}
+                          {!e.weakening && e.severity === "INFO" && <span className="evlog__tag is-good mono">stronger</span>}
+                          {e.labels.map((l) => (
+                            <span key={l} className="evlog__tag is-bad mono">
+                              {l}
+                            </span>
+                          ))}
+                          {/* Most rows come from scanning past transactions, so the rarer live catches carry the tag. */}
+                          {e.source === "demo" && <span className="evlog__tag mono">demo</span>}
+                          {e.source === "live" && (
+                            <span className="evlog__tag is-live mono" title="Caught by live monitoring as it happened">
+                              live
+                            </span>
+                          )}
+                        </span>
+                      </summary>
+                      <div className="evlog__more">
+                        <p>{e.explanation}</p>
+                        <p className="mono">
+                          {e.slot != null && <span>slot {e.slot.toLocaleString("en-US")}</span>}
+                          {e.txSignature && (
+                            <a href={`https://explorer.solana.com/tx/${e.txSignature}${e.source === "demo" ? "?cluster=devnet" : ""}`} target="_blank" rel="noreferrer">
+                              transaction ↗
+                            </a>
+                          )}
+                          {e.slug && <Link href={`/protocols/${e.slug}`}>{e.name} controls →</Link>}
+                        </p>
+                      </div>
+                    </details>
+                  </li>
                 ))}
-                <time dateTime={e.blockTime ?? e.detectedAt}>{when(e.blockTime ?? e.detectedAt)}</time>
-              </div>
-              <b className="tl__title">{e.title}</b>
-              <p className="tl__text">{e.explanation}</p>
-              <p className="tl__foot mono">
-                {e.slot != null && <>slot {e.slot.toLocaleString("en-US")}</>}
-                {e.slot != null && e.txSignature && " · "}
-                {e.txSignature && (
-                  <a className="addr" href={`https://explorer.solana.com/tx/${e.txSignature}${e.source === "demo" ? "?cluster=devnet" : ""}`} target="_blank" rel="noreferrer">
-                    view transaction ↗
-                  </a>
-                )}
-              </p>
-            </li>
+              </ul>
+            </div>
           ))}
-        </ol>
+        </div>
       )}
     </div>
   );
