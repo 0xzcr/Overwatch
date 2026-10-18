@@ -708,7 +708,8 @@ a.addr:hover {
   color: var(--dim);
 }
 .tl__proto {
-  color: var(--chrome);
+  color: var(--ink);
+  font-weight: 600;
 }
 .tl__proto:hover {
   color: var(--mint);

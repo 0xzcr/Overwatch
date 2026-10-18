@@ -8,7 +8,7 @@
 import bs58 from "bs58";
 import { z } from "zod";
 import { mainnetRpc, devnetRpc, type Rpc } from "@overwatch/solana";
-import { decodeConfigTransaction, fmtDuration, short, BPF_UPGRADEABLE_LOADER, SQUADS_V4, type ControlSnapshot, type ConfigActionLite } from "@overwatch/core";
+import { decodeConfigTransaction, classifyConfigActions, short, BPF_UPGRADEABLE_LOADER, SQUADS_V4, type ControlSnapshot, type ConfigActionLite, type ReplayState } from "@overwatch/core";
 import { db, sql, protocols, events, latestSnapshot } from "@overwatch/db";
 
 const args = process.argv.slice(2);
@@ -30,15 +30,13 @@ const txSchema = z.object({
   transaction: z.object({ signatures: z.array(z.string()), message: z.object({ accountKeys: z.array(z.string()), instructions: z.array(ix) }) }),
 });
 
-interface Found { type: string; severity: string; weakening: boolean; title: string; explanation: string; after: unknown }
+/**
+ * `config` marks a change to a multisig's settings. Decoded ones (actions) are graded later, once the multisig's history
+ * is in order; undecodable ones (actions: null) keep their text and make the replay forget what it knew.
+ */
+interface Found { type: string; severity: string; weakening: boolean; title: string; explanation: string; after: unknown; config?: { multisig: string; actions: ConfigActionLite[] | null } }
 
 const startsWith = (d: Uint8Array, p: number[]) => p.every((b, i) => d[i] === b);
-
-function describeActions(name: string, actions: ConfigActionLite[]): Found {
-  const parts = actions.map((a) => a.kind === "SetTimeLock" ? `set timelock to ${fmtDuration(a.newTimeLock)}` : a.kind === "ChangeThreshold" ? `set threshold to ${a.newThreshold}` : a.kind === "AddMember" ? `added signer ${short(a.key)}` : a.kind === "RemoveMember" ? `removed signer ${short(a.key)}` : a.kind === "SetRentCollector" ? "changed rent collector" : a.name);
-  const risky = actions.some((a) => (a.kind === "SetTimeLock" && a.newTimeLock === 0) || (a.kind === "ChangeThreshold" && a.newThreshold <= 2));
-  return { type: "MULTISIG_CONFIG_EXECUTED", severity: risky ? "HIGH" : "MEDIUM", weakening: risky, title: `${name} multisig config change: ${parts.join(", ")}`, explanation: `A Squads configuration transaction executed: ${parts.join("; ")}. Historical event, reconstructed from onchain data.`, after: { actions } };
-}
 
 async function parseTx(rpc: Rpc, sig: string, name: string, watched: Set<string>): Promise<{ found: Found[]; slot: number; blockTime: number | null }> {
   const raw = await rpc.call("getTransaction", [sig, { encoding: "json", maxSupportedTransactionVersion: 0, commitment: "confirmed" }]);
@@ -54,21 +52,32 @@ async function parseTx(rpc: Rpc, sig: string, name: string, watched: Set<string>
     const acc = (n: number) => keys[i.accounts[n]!]!;
     if (program === BPF_UPGRADEABLE_LOADER && data.length >= 4) {
       const tag = new DataView(data.buffer, data.byteOffset).getUint32(0, true);
-      if (tag === 3 && watched.has(acc(0))) found.push({ type: "PROGRAM_UPGRADED", severity: "MEDIUM", weakening: false, title: `${name} deployed new program code`, explanation: `ProgramData ${short(acc(0))} was upgraded. Historical event from chain data.`, after: { programData: acc(0) } });
+      if (tag === 3 && watched.has(acc(0)))
+        found.push({ type: "PROGRAM_UPGRADED", severity: "MEDIUM", weakening: false, title: `${name} deployed new program code`, explanation: `The upgrade authority replaced the program's code (program data ${short(acc(0))}). A routine release looks exactly like this, and so would a malicious one, so check that the team announced it.`, after: { programData: acc(0) } });
       if ((tag === 4 || tag === 7) && watched.has(acc(0))) {
         const next = i.accounts.length > 2 ? acc(2) : null;
-        found.push({ type: "UPGRADE_AUTHORITY_CHANGED", severity: "CRITICAL", weakening: true, title: next ? `${name}'s upgrade authority moved to ${short(next)}` : `${name}'s program was made immutable`, explanation: `SetAuthority on ProgramData ${short(acc(0))}: ${short(acc(1))} → ${next ? short(next) : "none"}.`, after: { from: acc(1), to: next } });
+        found.push(next
+          ? { type: "UPGRADE_AUTHORITY_CHANGED", severity: "CRITICAL", weakening: true, title: `${name} handed control of its program to ${short(next)}`, explanation: `The key allowed to replace this program's code changed from ${short(acc(1))} to ${short(next)}. Check that the team announced the handover; an unannounced one is how takeovers start.`, after: { programData: acc(0), from: acc(1), to: next } }
+          : { type: "PROGRAM_MADE_IMMUTABLE", severity: "INFO", weakening: false, title: `${name} locked its program code for good`, explanation: `The upgrade authority was removed, so nobody, including the team, can change this program's code anymore (program data ${short(acc(0))}).`, after: { programData: acc(0), from: acc(1), to: null } });
       }
     }
     if (program === SQUADS_V4 && watched.has(acc(0))) {
       if (startsWith(data, SQ.configExecute)) {
         const cfgTx = acc(3);
         const a = await rpc.getAccount(cfgTx).catch(() => null);
-        if (a) { try { found.push(describeActions(name, decodeConfigTransaction(a.data).actions)); continue; } catch { /* closed or reused */ } }
-        found.push({ type: "MULTISIG_CONFIG_EXECUTED", severity: "MEDIUM", weakening: false, title: `${name} executed a multisig config change`, explanation: `Squads configTransactionExecute (config transaction ${short(cfgTx)}, since closed, so details are unavailable).`, after: { configTransaction: cfgTx } });
+        if (a) {
+          try {
+            const { actions } = decodeConfigTransaction(a.data);
+            found.push({ type: "MULTISIG_CONFIG_EXECUTED", severity: "MEDIUM", weakening: false, title: "", explanation: "", after: { actions }, config: { multisig: acc(0), actions } });
+            continue;
+          } catch { /* closed or reused */ }
+        }
+        found.push({ type: "MULTISIG_CONFIG_EXECUTED", severity: "MEDIUM", weakening: false, title: `${name} changed its multisig settings`, explanation: `Squads has since deleted the record of this change (${short(cfgTx)}), so we can't tell what moved. Its current settings are on the protocol page.`, after: { configTransaction: cfgTx }, config: { multisig: acc(0), actions: null } });
       }
-      const direct: [number[], string][] = [[SQ.setTimeLock, "set timelock"], [SQ.changeThreshold, "changed threshold"], [SQ.addMember, "added a member"], [SQ.removeMember, "removed a member"], [SQ.setConfigAuthority, "changed config authority"]];
-      for (const [d, label] of direct) if (startsWith(data, d)) found.push({ type: "MULTISIG_CONFIG_EXECUTED", severity: "HIGH", weakening: true, title: `${name}'s config authority ${label} without a vote`, explanation: `A controlled-multisig instruction (${label}) executed directly by the config authority.`, after: { instruction: label } });
+      const direct: [number[], string][] = [[SQ.setTimeLock, "changed the safety delay"], [SQ.changeThreshold, "changed how many approvals are needed"], [SQ.addMember, "added a signer"], [SQ.removeMember, "removed a signer"], [SQ.setConfigAuthority, "handed control of the multisig to another key"]];
+      for (const [d, label] of direct)
+        if (startsWith(data, d))
+          found.push({ type: "MULTISIG_CONFIG_EXECUTED", severity: "HIGH", weakening: true, title: `One key ${label} on ${name}'s multisig, without a vote`, explanation: `The multisig's config authority acted alone; the other signers did not approve. While one key can rewrite the multisig, the multisig protects nothing.`, after: { instruction: label }, config: { multisig: acc(0), actions: null } });
     }
   }
   return { found, slot: tx.slot, blockTime: tx.blockTime };
@@ -83,6 +92,9 @@ for (const p of rows) {
   const targets = [...snap.multisigs.map((m) => m.address), ...snap.programs.map((x) => x.programDataAddress)];
   const watched = new Set(targets);
   let n = 0, written = 0;
+  // A transaction can touch several watched accounts; parse it once so a config change is not replayed twice.
+  const seen = new Set<string>();
+  const hits: { f: Found; slot: number; blockTime: number | null; sig: string }[] = [];
   for (const t of targets) {
     let before: string | undefined;
     let done = false;
@@ -91,17 +103,38 @@ for (const p of rows) {
       if (!sigs.length) break;
       for (const s of sigs) {
         if ((s.blockTime ?? 0) < cutoff || n >= MAX) { done = true; break; }
-        if (s.err) continue;
+        if (s.err || seen.has(s.signature)) continue;
+        seen.add(s.signature);
         n++;
         const r = await parseTx(rpc, s.signature, p.name, watched).catch(() => ({ found: [] as Found[], slot: 0, blockTime: null }));
-        for (const f of r.found) {
-          const ins = await db().insert(events).values({ protocolId: p.id, type: f.type, severity: f.severity, weakening: f.weakening, title: f.title, explanation: f.explanation, labels: [], after: f.after, slot: r.slot, blockTime: r.blockTime ? new Date(r.blockTime * 1000) : null, txSignature: s.signature, source: "backfill", detectedAt: r.blockTime ? new Date(r.blockTime * 1000) : new Date() }).onConflictDoNothing().returning({ id: events.id });
-          written += ins.length;
-        }
+        for (const f of r.found) hits.push({ f, slot: r.slot, blockTime: r.blockTime, sig: s.signature });
       }
       before = sigs.at(-1)!.signature;
       if (sigs.length < 1000) break;
     }
+  }
+  // Oldest first, so each config change is graded against the multisig's previous settings.
+  hits.sort((a, b) => a.slot - b.slot);
+  // Signer count when the scanned history starts: today's count minus the net change since. Only exact when every change
+  // to that multisig in the window was decoded, so otherwise titles skip the "of N".
+  const startMembers = new Map<string, number>();
+  for (const m of snap.multisigs) {
+    const mine = hits.flatMap((h) => (h.f.config?.multisig === m.address ? [h.f.config.actions] : []));
+    if (mine.some((a) => !a)) continue;
+    const net = mine.flat().reduce((s, a) => s + (a!.kind === "AddMember" ? 1 : a!.kind === "RemoveMember" ? -1 : 0), 0);
+    startMembers.set(m.address, m.members.length - net);
+  }
+  const state = new Map<string, ReplayState>();
+  for (const { f, slot, blockTime, sig } of hits) {
+    if (f.config && !f.config.actions) state.set(f.config.multisig, {}); // unknown change: forget what we knew
+    else if (f.config?.actions) {
+      const st = state.get(f.config.multisig) ?? { members: startMembers.get(f.config.multisig) };
+      state.set(f.config.multisig, st);
+      Object.assign(f, classifyConfigActions(p.name, f.config.actions, st));
+    }
+    const at = blockTime ? new Date(blockTime * 1000) : null;
+    const ins = await db().insert(events).values({ protocolId: p.id, type: f.type, severity: f.severity, weakening: f.weakening, title: f.title, explanation: f.explanation, labels: [], after: f.after, slot, blockTime: at, txSignature: sig, source: "backfill", detectedAt: at ?? new Date() }).onConflictDoNothing().returning({ id: events.id });
+    written += ins.length;
   }
   console.log(`${p.slug.padEnd(20)} scanned ${String(n).padStart(4)} txs → ${written} historical events`);
 }

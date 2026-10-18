@@ -5,6 +5,12 @@ import { events, protocols, scores, snapshots, onchainPublishes } from "./schema
 const SEV = ["INFO", "LOW", "MEDIUM", "HIGH", "CRITICAL"];
 export const severitiesAtLeast = (s: string) => SEV.slice(Math.max(0, SEV.indexOf(s.toUpperCase())));
 
+/** Protocol ids for subscription slugs, plus any slug that matched nothing (an empty id list would mean "all protocols"). */
+export async function protocolIdsForSlugs(slugs: string[]) {
+  const rows = await db().select({ id: protocols.id, slug: protocols.slug }).from(protocols).where(inArray(protocols.slug, slugs));
+  return { ids: rows.map((r) => r.id), unknown: slugs.filter((s) => !rows.some((r) => r.slug === s)) };
+}
+
 export async function listProtocols() {
   const d = db();
   // Independent reads, so they share one round trip of latency instead of four.

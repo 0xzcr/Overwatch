@@ -15,6 +15,9 @@ import { DEMO_BASELINE, demoSnapshot, applyDemoAction } from "@overwatch/core";
 import { db, sql, direct, protocols, subscriptions, deliveries, ingestSnapshot, eq, CHANNEL } from "@overwatch/db";
 import { deliverPending } from "../../apps/bot/src/deliver";
 
+// The receiver below is http://127.0.0.1, which production webhook delivery refuses.
+process.env.WEBHOOK_ALLOW_PRIVATE_URLS = "true";
+
 const SLUG = "pipeline-smoke";
 const SECRET = "whsec_pipeline_smoke";
 const fail = (m: string): never => {

@@ -1,6 +1,7 @@
 import { createHmac } from "node:crypto";
 import { db, deliveries, subscriptions, events, protocols, eq, and, dsql } from "@overwatch/db";
 import type { Bot } from "grammy";
+import { webhookUrlProblem } from "@overwatch/core/net";
 import { telegramHtml, emailHtml, webhookPayload, backoffMs, MAX_ATTEMPTS, type AlertInput } from "./format";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -22,9 +23,13 @@ export async function deliverPending(bot: Bot | null, log: (m: string) => void) 
         if (!bot) throw new Error("telegram bot not configured");
         await bot.api.sendMessage(sub.target, telegramHtml(a, SITE), { parse_mode: "HTML", link_preview_options: { is_disabled: true } });
       } else if (sub.channel === "webhook") {
+        // Checked on every send, not just at signup: the host's DNS can point somewhere internal later.
+        const bad = await webhookUrlProblem(sub.target);
+        if (bad) throw new Error(`refused: url ${bad}`);
         const body = JSON.stringify(webhookPayload({ ...a, id: ev.id, detectedAt: ev.detectedAt.toISOString(), slot: ev.slot }));
         const sig = createHmac("sha256", sub.secret ?? "").update(body).digest("hex");
-        const r = await fetch(sub.target, { method: "POST", headers: { "content-type": "application/json", "x-overwatch-signature": sig, "user-agent": "Overwatch-Webhook/1" }, body, signal: AbortSignal.timeout(10_000) });
+        // No redirects: a public URL must not bounce the request to an internal one.
+        const r = await fetch(sub.target, { method: "POST", headers: { "content-type": "application/json", "x-overwatch-signature": sig, "user-agent": "Overwatch-Webhook/1" }, body, redirect: "manual", signal: AbortSignal.timeout(10_000) });
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
       } else if (sub.channel === "email") {
         if (!process.env.RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");

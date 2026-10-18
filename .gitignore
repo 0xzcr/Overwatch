@@ -1,22 +1,49 @@
+# dependencies
 node_modules
+.pnpm-store
+
+# build output and caches
 .next
+out
 dist
-coverage
+build
 .turbo
+.vercel
+.eslintcache
+*.tsbuildinfo
+
+# tests
+coverage
+playwright-report
+test-results
+blob-report
+
+# Solana / Anchor
 target
 test-ledger
 .anchor
-.env
-.env.*
+
+# secrets: env files (the template stays tracked), keypairs, certificates
+.env*
 !.env.example
-# keypairs: never commit
 *keypair*.json
 id.json
 keys/
+*.pem
+
+# Supabase CLI link state (the project ref and temp files are machine-local)
+supabase/.temp
+supabase/.branches
+
+# logs
+*.log
+logs
+
+# editors, OS and local agent settings
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.swp
 .DS_Store
-*.tsbuildinfo
-playwright-report
-test-results
-apps/web/test-results
-.vercel
-.env*
+Thumbs.db
+.claude/

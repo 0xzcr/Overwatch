@@ -41,7 +41,7 @@ export async function ingestSnapshot(p: ProtocolRow, snap: ControlSnapshot, o: {
     await d.insert(scores).values({ protocolId: p.id, score: score.score, grade: score.grade, flags: score.flags, breakdown: score.breakdown });
   }
   for (const e of inserted) {
-    await sql().notify(CHANNEL, JSON.stringify({ kind: "event", id: e.id, slug: p.slug, name: p.name, type: e.type, severity: e.severity, title: e.title, explanation: e.explanation, txSignature: e.txSignature, labels: e.labels, at: e.detectedAt }));
+    await sql().notify(CHANNEL, JSON.stringify({ kind: "event", id: e.id, slug: p.slug, name: p.name, type: e.type, severity: e.severity, weakening: e.weakening, slot: e.slot, source: o.source, title: e.title, explanation: e.explanation, txSignature: e.txSignature, labels: e.labels, at: e.detectedAt }));
     await enqueueDeliveries(p.id, e.id, e.severity);
   }
   if (inserted.length || changed) await sql().notify(CHANNEL, JSON.stringify({ kind: "score", slug: p.slug, score: score.score, grade: score.grade, flags: score.flags.toString(), red: score.red }));

@@ -73,6 +73,90 @@ export function diffMultisig(name: string, a: MultisigFacts, b: MultisigFacts): 
   return out;
 }
 
+/** One multisig's settings while replaying its executed config transactions oldest-first. undefined = not known yet. */
+export interface ReplayState { timeLockSec?: number; threshold?: number; members?: number }
+
+const andJoin = (xs: string[]) => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs.at(-1)}`);
+const plural = (n: number, one: string) => (n === 1 ? `a ${one}` : `${n} ${one}s`);
+const UNKNOWN_BEFORE = "The earlier setting is older than the history we scanned.";
+
+/**
+ * One executed Squads config transaction (historical backfill) → one event, graded the same way as the live rules.
+ * Direction needs the value before the change, so callers replay a multisig's transactions oldest-first; the first change
+ * of each kind has no known prior value and stays neutral rather than guessing. Mutates `st`; a known `st.members`
+ * lets thresholds read as "4 of 7".
+ */
+export function classifyConfigActions(name: string, actions: ConfigActionLite[], st: ReplayState): Pick<OverwatchEvent, "type" | "severity" | "weakening" | "title" | "explanation"> {
+  const parts: string[] = []; // short phrases for the title
+  const why: string[] = []; // one plain sentence per change
+  const types = new Set<EventType>();
+  let severity: Severity = "INFO";
+  let weakening = false;
+  const mark = (t: EventType, s: Severity, weak: boolean) => {
+    types.add(t);
+    if (SEVERITY_ORDER[s] > SEVERITY_ORDER[severity]) severity = s;
+    weakening ||= weak;
+  };
+
+  // Signer changes first, so a threshold in the same transaction reads against the new signer count.
+  const added = actions.flatMap((a) => (a.kind === "AddMember" ? [short(a.key)] : []));
+  const removed = actions.flatMap((a) => (a.kind === "RemoveMember" ? [short(a.key)] : []));
+  if (st.members !== undefined) st.members += added.length - removed.length;
+  const of = (v: number) => (st.members !== undefined ? `${v} of ${st.members}` : `${v}`);
+  if (added.length || removed.length) {
+    if (added.length) { parts.push(`added ${plural(added.length, "signer")}`); why.push(`${added.join(", ")} can now approve changes.`); }
+    if (removed.length) { parts.push(`removed ${plural(removed.length, "signer")}`); why.push(`${removed.join(", ")} can no longer approve changes.`); }
+    if (st.members !== undefined) why.push(`The multisig now has ${st.members} signers.`);
+    mark("MEMBERS_CHANGED", "MEDIUM", true);
+  }
+
+  for (const a of actions) {
+    if (a.kind === "SetTimeLock") {
+      const was = st.timeLockSec, v = a.newTimeLock;
+      st.timeLockSec = v;
+      if (was === undefined) {
+        parts.push(v === 0 ? "set no safety delay" : `set its safety delay to ${fmtDuration(v)}`);
+        why.push(v === 0 ? `Approved changes take effect immediately, with no time for depositors to react. ${UNKNOWN_BEFORE}` : `Approved changes wait ${fmtDuration(v)} before they take effect. ${UNKNOWN_BEFORE}`);
+        mark("MULTISIG_CONFIG_EXECUTED", v === 0 ? "HIGH" : "MEDIUM", v === 0);
+      } else if (v > was) {
+        parts.push(`lengthened its safety delay from ${fmtDuration(was)} to ${fmtDuration(v)}`);
+        why.push(`Approved changes now wait ${fmtDuration(v)} before they take effect, which gives depositors more time to react.`);
+        mark("TIMELOCK_INCREASED", "INFO", false);
+      } else if (v < was) {
+        parts.push(v === 0 ? `removed its ${fmtDuration(was)} safety delay` : `cut its safety delay from ${fmtDuration(was)} to ${fmtDuration(v)}`);
+        why.push(v === 0 ? "Approved changes now take effect immediately. Depositors get no warning before they land." : `Approved changes now take effect after only ${fmtDuration(v)}, so depositors have less time to withdraw if a bad one passes.`);
+        mark(v === 0 ? "TIMELOCK_REMOVED" : "TIMELOCK_REDUCED", v === 0 ? "CRITICAL" : "HIGH", true);
+      }
+    } else if (a.kind === "ChangeThreshold") {
+      const was = st.threshold, v = a.newThreshold;
+      st.threshold = v;
+      if (was === undefined) {
+        parts.push(`set approvals needed to ${of(v)}`);
+        why.push(`Every change now needs ${of(v)} signers to approve it. ${UNKNOWN_BEFORE}`);
+        mark("MULTISIG_CONFIG_EXECUTED", v <= 2 ? "HIGH" : "MEDIUM", v <= 2);
+      } else if (v > was) {
+        parts.push(`raised approvals needed from ${was} to ${of(v)}`);
+        why.push("More signers must approve each change, so more keys would have to be stolen or collude to push one through.");
+        mark("THRESHOLD_RAISED", "INFO", false);
+      } else if (v < was) {
+        parts.push(`lowered approvals needed from ${was} to ${of(v)}`);
+        why.push("Fewer signers must approve each change, so fewer keys would have to be stolen or collude to push one through.");
+        mark("THRESHOLD_LOWERED", v <= 2 ? "CRITICAL" : "HIGH", true);
+      }
+    } else if (a.kind === "SetRentCollector") {
+      parts.push("changed where its rent refunds go");
+      why.push("This doesn't change who controls the protocol.");
+      mark("MULTISIG_CONFIG_EXECUTED", "INFO", false);
+    } else if (a.kind === "Other") {
+      parts.push(`ran "${a.name}"`);
+      mark("MULTISIG_CONFIG_EXECUTED", "INFO", false);
+    }
+  }
+  if (!parts.length) { parts.push("re-applied its existing multisig settings"); why.push("Nothing about who controls the protocol changed."); }
+  const type = types.size === 1 ? [...types][0]! : "MULTISIG_CONFIG_EXECUTED";
+  return { type, severity, weakening, title: `${name} ${andJoin(parts)}`, explanation: why.join(" ") };
+}
+
 export function actionWeakens(ms: Pick<MultisigFacts, "threshold" | "timeLockSec">, a: ConfigActionLite): string | null {
   if (a.kind === "ChangeThreshold" && a.newThreshold < ms.threshold) return `lower the threshold to ${a.newThreshold}`;
   if (a.kind === "SetTimeLock" && a.newTimeLock < ms.timeLockSec) return a.newTimeLock === 0 ? "remove the safety delay" : `cut the safety delay to ${fmtDuration(a.newTimeLock)}`;

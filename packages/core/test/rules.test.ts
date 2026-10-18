@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { diffSnapshots, snapshotHash, fmtDuration, short, people, actionWeakens } from "../src";
+import { diffSnapshots, snapshotHash, fmtDuration, short, people, actionWeakens, classifyConfigActions } from "../src";
 import type { OverwatchEvent } from "../src";
 import { ctx, ms, snap } from "./helpers";
 
@@ -94,5 +94,28 @@ describe("rules engine", () => {
     expect(fmtDuration(0)).toBe("no delay"); expect(fmtDuration(86400)).toBe("1 day"); expect(fmtDuration(172800)).toBe("2 days");
     expect(fmtDuration(3600)).toBe("1 hour"); expect(fmtDuration(5400)).toBe("1.5 hours"); expect(fmtDuration(600)).toBe("10 min");
     expect(short(null)).toBe("none"); expect(short("abcdefghij")).toBe("abcd…ghij"); expect(people(1)).toBe("1 person");
+  });
+  it("backfill replay: direction comes from the previous value; the first change of each kind stays neutral", () => {
+    const st = {};
+    const grade = (actions: Parameters<typeof classifyConfigActions>[1]) => {
+      const r = classifyConfigActions("Kamino", actions, st);
+      return `${r.type}:${r.severity}:${r.weakening ? "weak" : "ok"}`;
+    };
+    expect(grade([{ kind: "SetTimeLock", newTimeLock: 86400 }])).toBe("MULTISIG_CONFIG_EXECUTED:MEDIUM:ok");
+    const up = classifyConfigActions("Kamino", [{ kind: "SetTimeLock", newTimeLock: 172800 }], st);
+    expect([up.type, up.severity, up.weakening, up.title]).toEqual(["TIMELOCK_INCREASED", "INFO", false, "Kamino lengthened its safety delay from 1 day to 2 days"]);
+    expect(grade([{ kind: "SetTimeLock", newTimeLock: 0 }])).toBe("TIMELOCK_REMOVED:CRITICAL:weak");
+    expect(grade([{ kind: "ChangeThreshold", newThreshold: 3 }])).toBe("MULTISIG_CONFIG_EXECUTED:MEDIUM:ok");
+    // 3-of-5 → 4-of-7: two new signers and a higher threshold in one transaction
+    expect(grade([{ kind: "AddMember", key: "K1", permissions: 7 }, { kind: "AddMember", key: "K2", permissions: 7 }, { kind: "ChangeThreshold", newThreshold: 4 }])).toBe("MULTISIG_CONFIG_EXECUTED:MEDIUM:weak");
+    expect(grade([{ kind: "ChangeThreshold", newThreshold: 2 }])).toBe("THRESHOLD_LOWERED:CRITICAL:weak");
+    expect(grade([{ kind: "SetRentCollector", collector: null }])).toBe("MULTISIG_CONFIG_EXECUTED:INFO:ok");
+  });
+  it("backfill replay: titles count signers once the multisig's size is known", () => {
+    const st = { threshold: 3, members: 5 };
+    const r = classifyConfigActions("Kamino", [{ kind: "AddMember", key: "K1aaaaaaaa", permissions: 7 }, { kind: "AddMember", key: "K2aaaaaaaa", permissions: 7 }, { kind: "ChangeThreshold", newThreshold: 4 }], st);
+    expect(r.title).toBe("Kamino added 2 signers and raised approvals needed from 3 to 4 of 7");
+    expect(r.explanation).toContain("The multisig now has 7 signers.");
+    expect(st).toEqual({ threshold: 4, members: 7 });
   });
 });

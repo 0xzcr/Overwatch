@@ -5,6 +5,8 @@ import type { FeedItem } from "./data";
 
 const SEVS = ["INFO", "MEDIUM", "HIGH", "CRITICAL"];
 const tone = (s: string) => (s === "CRITICAL" ? "bad" : s === "HIGH" ? "warn" : s === "INFO" ? "ok" : "dim");
+// "12 Oct 2026, 17:58 UTC": fixed locale and zone, so the server and browser render the same text.
+const when = (iso: string) => `${new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} UTC`;
 
 /** Live feed over Server-Sent Events (/api/v1/stream), filterable by severity and protocol. */
 export function LiveFeed({ initial, protocols, live }: { initial: FeedItem[]; protocols: { slug: string; name: string }[]; live: boolean }) {
@@ -26,13 +28,13 @@ export function LiveFeed({ initial, protocols, live }: { initial: FeedItem[]; pr
         name: d.name ?? d.slug ?? "",
         type: d.type ?? "",
         severity: d.severity ?? "INFO",
-        weakening: d.severity !== "INFO",
+        weakening: d.weakening ?? d.severity !== "INFO",
         title: d.title ?? "",
         explanation: d.explanation ?? "",
         labels: d.labels ?? [],
-        slot: null,
+        slot: d.slot ?? null,
         txSignature: d.txSignature ?? null,
-        source: d.slug === "overwatch-demo" ? "demo" : "live",
+        source: d.source ?? (d.slug === "overwatch-demo" ? "demo" : "live"),
         blockTime: null,
         detectedAt: d.at ?? new Date().toISOString(),
       };
@@ -95,32 +97,37 @@ export function LiveFeed({ initial, protocols, live }: { initial: FeedItem[]; pr
             <li key={e.id} className={`tl__item sev-${e.severity.toLowerCase()}${e.weakening ? "" : " is-good"}${flash === e.id ? " is-new" : ""}`}>
               <span className="tl__dot" aria-hidden="true" />
               <div className="tl__meta mono">
-                <span className={`badge badge--${tone(e.severity)} mono`}>{e.severity}</span>
-                <time>{new Date(e.blockTime ?? e.detectedAt).toUTCString().replace(" GMT", " UTC")}</time>
-                {e.source !== "live" && <span className={`badge badge--${e.source === "demo" ? "accent" : "dim"} mono`}>{e.source}</span>}
-                {e.labels.map((l) => (
-                  <span key={l} className="badge badge--bad mono">
-                    {l}
-                  </span>
-                ))}
                 {e.slug && (
                   <Link href={`/protocols/${e.slug}`} className="tl__proto">
                     {e.name}
                   </Link>
                 )}
+                <span className={`badge badge--${tone(e.severity)} mono`}>{e.severity}</span>
+                {e.source === "demo" ? (
+                  <span className="badge badge--accent mono">demo</span>
+                ) : (
+                  e.source !== "live" && (
+                    <span className="badge badge--dim mono" title="Found by scanning past onchain transactions, not caught live">
+                      history
+                    </span>
+                  )
+                )}
+                {e.labels.map((l) => (
+                  <span key={l} className="badge badge--bad mono">
+                    {l}
+                  </span>
+                ))}
+                <time dateTime={e.blockTime ?? e.detectedAt}>{when(e.blockTime ?? e.detectedAt)}</time>
               </div>
               <b className="tl__title">{e.title}</b>
               <p className="tl__text">{e.explanation}</p>
               <p className="tl__foot mono">
-                {e.type}
+                {e.slot != null && <>slot {e.slot.toLocaleString("en-US")}</>}
+                {e.slot != null && e.txSignature && " · "}
                 {e.txSignature && (
-                  <>
-                    {" "}
-                    · tx{" "}
-                    <a className="addr" href={`https://explorer.solana.com/tx/${e.txSignature}${e.source === "demo" ? "?cluster=devnet" : ""}`} target="_blank" rel="noreferrer">
-                      {e.txSignature.slice(0, 8)}… ↗
-                    </a>
-                  </>
+                  <a className="addr" href={`https://explorer.solana.com/tx/${e.txSignature}${e.source === "demo" ? "?cluster=devnet" : ""}`} target="_blank" rel="noreferrer">
+                    view transaction ↗
+                  </a>
                 )}
               </p>
             </li>
