@@ -4,11 +4,24 @@ import type { MintFacts } from "../types";
 
 // Token-2022 ExtensionType discriminants — https://github.com/solana-program/token-2022/blob/main/program/src/extension/mod.rs
 export const EXT: Record<number, string> = {
-  1: "TransferFeeConfig", 3: "MintCloseAuthority", 4: "ConfidentialTransferMint", 6: "DefaultAccountState",
-  9: "NonTransferable", 10: "InterestBearingConfig", 12: "PermanentDelegate", 14: "TransferHook",
-  16: "ConfidentialTransferFeeConfig", 18: "MetadataPointer", 19: "TokenMetadata", 20: "GroupPointer",
-  21: "TokenGroup", 22: "GroupMemberPointer", 23: "TokenGroupMember", 24: "ConfidentialMintBurn",
-  25: "ScaledUiAmount", 26: "Pausable",
+  1: "TransferFeeConfig",
+  3: "MintCloseAuthority",
+  4: "ConfidentialTransferMint",
+  6: "DefaultAccountState",
+  9: "NonTransferable",
+  10: "InterestBearingConfig",
+  12: "PermanentDelegate",
+  14: "TransferHook",
+  16: "ConfidentialTransferFeeConfig",
+  18: "MetadataPointer",
+  19: "TokenMetadata",
+  20: "GroupPointer",
+  21: "TokenGroup",
+  22: "GroupMemberPointer",
+  23: "TokenGroupMember",
+  24: "ConfidentialMintBurn",
+  25: "ScaledUiAmount",
+  26: "Pausable",
 };
 
 const MINT_LEN = 82;
@@ -20,7 +33,8 @@ const optKey = (d: Uint8Array, off: number) => {
 };
 
 export function decodeMint(address: string, owner: string, data: Uint8Array): MintFacts {
-  if (owner !== TOKEN_PROGRAM && owner !== TOKEN_2022_PROGRAM) throw new Error(`mint owner ${owner} is not a token program`);
+  if (owner !== TOKEN_PROGRAM && owner !== TOKEN_2022_PROGRAM)
+    throw new Error(`mint owner ${owner} is not a token program`);
   if (data.length < MINT_LEN) throw new Error("mint too short");
   const dv = new DataView(data.buffer, data.byteOffset, data.byteLength);
   const facts: MintFacts = {

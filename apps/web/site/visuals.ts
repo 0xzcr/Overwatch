@@ -6,11 +6,13 @@ import { mulberry, hash, type Rand } from "./engine/rand";
 import { flagBits, type Capability, type TermLine } from "./content";
 import { GRADE_WORD } from "@/lib/format";
 
-const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string);
+const esc = (s: string) =>
+  s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string);
 
 const B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 const addr = (r: Rand, n = 4) => {
-  let a = "", b = "";
+  let a = "",
+    b = "";
   for (let i = 0; i < n; i++) a += B58[Math.floor(r() * B58.length)];
   for (let i = 0; i < n; i++) b += B58[Math.floor(r() * B58.length)];
   return `${a}…${b}`;
@@ -38,7 +40,8 @@ function terminal(u: Capability) {
 
 function radar(_u: Capability, r: Rand) {
   const blips = Array.from({ length: 6 }, (_, i) => {
-    const a = r() * 360, d = 18 + r() * 28;
+    const a = r() * 360,
+      d = 18 + r() * 28;
     return `<i class="${i < 2 ? "hot" : ""}" style="--a:${a.toFixed(0)}deg;--d:${d.toFixed(0)}%;--delay:${(r() * 3).toFixed(2)}s"></i>`;
   }).join("");
   return `
@@ -77,8 +80,16 @@ function gauge(u: Capability) {
   const C = 2 * Math.PI * 42;
   const rows =
     u.chapter === "map"
-      ? [["Upgrade authority", "Program PDA"], ["Mapped", "No"], ["Deduction", "−15"]]
-      : [["Multisig", "5-of-10"], ["Timelock", "1 day"], ["Nonce signers", "0"]];
+      ? [
+          ["Upgrade authority", "Program PDA"],
+          ["Mapped", "No"],
+          ["Deduction", "−15"],
+        ]
+      : [
+          ["Multisig", "5-of-10"],
+          ["Timelock", "1 day"],
+          ["Nonce signers", "0"],
+        ];
   return `
   <div class="vz vz-gauge">
     <div class="vz-gauge__dial">
@@ -94,7 +105,8 @@ function gauge(u: Capability) {
 }
 
 function chart(u: Capability, r: Rand) {
-  const W = 300, H = 120;
+  const W = 300,
+    H = 120;
   const pts: number[] = [];
   let v = 82;
   const drop = 18 + Math.floor(r() * 12);
@@ -103,7 +115,9 @@ function chart(u: Capability, r: Rand) {
     v = Math.max(70, Math.min(92, v));
     pts.push(i < drop ? v : i < drop + 6 ? 55 + (r() - 0.5) * 3 : 70 + (r() - 0.5) * 4);
   }
-  const path = pts.map((p, i) => `${i ? "L" : "M"}${((i / 39) * W).toFixed(1)},${(H - (p / 100) * H).toFixed(1)}`).join(" ");
+  const path = pts
+    .map((p, i) => `${i ? "L" : "M"}${((i / 39) * W).toFixed(1)},${(H - (p / 100) * H).toFixed(1)}`)
+    .join(" ");
   const sx = ((drop / 39) * W).toFixed(1);
   const label = u.chapter === "watch" ? "threshold 4 → 2" : "score";
   return `
@@ -134,7 +148,10 @@ function nodes(_u: Capability, r: Rand) {
   ns.forEach((n, i) => {
     if (n.l === 0) return;
     const parents = ns.map((p, j) => [p, j] as const).filter(([p]) => p.l === n.l - 1);
-    const pick = n.l === 4 ? parents[(ns.filter((x) => x.l === 4).indexOf(n)) % parents.length] : parents[Math.floor(r() * parents.length)];
+    const pick =
+      n.l === 4
+        ? parents[ns.filter((x) => x.l === 4).indexOf(n) % parents.length]
+        : parents[Math.floor(r() * parents.length)];
     if (pick) edges.push([pick[1], i]);
   });
   const labels = ["program", "authority", "squads 2/5", "signers", "nonces"];
@@ -143,7 +160,8 @@ function nodes(_u: Capability, r: Rand) {
     <svg viewBox="0 0 300 160">
       ${edges
         .map(([a, b], k) => {
-          const A = ns[a]!, B = ns[b]!;
+          const A = ns[a]!,
+            B = ns[b]!;
           return `<path class="${B.bad ? "hot" : ""}" d="M${A.x},${A.y} C${A.x + 30},${A.y} ${B.x - 30},${B.y} ${B.x},${B.y}" style="--d:${(k * 0.15).toFixed(2)}s"/>`;
         })
         .join("")}
@@ -155,7 +173,7 @@ function nodes(_u: Capability, r: Rand) {
 }
 
 const DEFAULT_ALERTS: Capability["alerts"] = [
-  ["crit", "Removed its 2 days safety delay", "Overwatch Demo · devnet"],
+  ["crit", "Removed its 2 days safety delay", "Example Lend · mainnet"],
   ["high", "Pending vote to lower the threshold to 2", "proposal #14 · not executed"],
   ["ok", "Lengthened its safety delay to 1 day", "good for depositors"],
 ];
@@ -179,10 +197,30 @@ function alerts(u: Capability) {
 
 function pipeline(u: Capability) {
   const flows: Record<string, [string[], number, string, string]> = {
-    act: [["event", "score", "publish", "registry", "check_and_exit", "idle"], 6, "Shield triggered", "position moved to idle · permissionless"],
-    build: [["signatures", "loader ix", "squads cfg", "diff", "events", "timeline"], 6, "Backfill complete", "180 days · 2 programs · 1 multisig"],
-    watch: [["deploy", "programdata", "slot diff", "rules", "alert"], 5, "PROGRAM_UPGRADED", "MEDIUM · unannounced upgrades deserve a look"],
-    score: [["snapshot", "deductions", "flags", "grade", "publish"], 5, "Tests passing", "includes Drift timeline replay"],
+    act: [
+      ["event", "score", "publish", "registry", "check_and_exit", "idle"],
+      6,
+      "Shield triggered",
+      "position moved to idle · permissionless",
+    ],
+    build: [
+      ["signatures", "loader ix", "squads cfg", "diff", "events", "timeline"],
+      6,
+      "Backfill complete",
+      "180 days · 2 programs · 1 multisig",
+    ],
+    watch: [
+      ["deploy", "programdata", "slot diff", "rules", "alert"],
+      5,
+      "PROGRAM_UPGRADED",
+      "MEDIUM · unannounced upgrades deserve a look",
+    ],
+    score: [
+      ["snapshot", "deductions", "flags", "grade", "publish"],
+      5,
+      "Tests passing",
+      "includes Drift timeline replay",
+    ],
   };
   const [steps, done, head, msg] = flows[u.chapter] ?? flows.act!;
   return `
@@ -194,14 +232,41 @@ function pipeline(u: Capability) {
 }
 
 const TOGGLES: Record<string, [string, string, boolean][]> = {
-  map: [["PermanentDelegate", "can seize balances", false], ["TransferHook", "program on every transfer", true], ["DefaultAccountState", "frozen by default", true], ["Pausable", "issuer can pause", true]],
-  watch: [["ChangeThreshold → 2", "proposal #14", false], ["SetTimeLock → 0", "proposal #15", false], ["AddMember 4Fq…a9P", "proposal #16", false], ["Executed", "not yet", true]],
-  warn: [["CRITICAL", "always", true], ["HIGH", "default", true], ["MEDIUM", "upgrades & signer changes", false], ["LOW", "everything", false]],
-  act: [["Remove timelock", "2 days → none", true], ["Lower threshold", "3 → 1", false], ["Transfer authority", "to a single key", false], ["Create signer nonce", "signer-A", false]],
+  map: [
+    ["PermanentDelegate", "can seize balances", false],
+    ["TransferHook", "program on every transfer", true],
+    ["DefaultAccountState", "frozen by default", true],
+    ["Pausable", "issuer can pause", true],
+  ],
+  watch: [
+    ["ChangeThreshold → 2", "proposal #14", false],
+    ["SetTimeLock → 0", "proposal #15", false],
+    ["AddMember 4Fq…a9P", "proposal #16", false],
+    ["Executed", "not yet", true],
+  ],
+  warn: [
+    ["CRITICAL", "always", true],
+    ["HIGH", "default", true],
+    ["MEDIUM", "upgrades & signer changes", false],
+    ["LOW", "everything", false],
+  ],
+  act: [
+    ["Remove timelock", "2 days → none", true],
+    ["Lower threshold", "3 → 1", false],
+    ["Transfer authority", "to a single key", false],
+    ["Create signer nonce", "signer-A", false],
+  ],
 };
 function toggles(u: Capability) {
   const list = TOGGLES[u.chapter] ?? TOGGLES.warn!;
-  const head = u.chapter === "map" ? ["mint.token-2022", "4 extensions"] : u.chapter === "watch" ? ["squads.pending", "WEAKENING"] : u.chapter === "act" ? ["demo.devnet", "ARMED"] : ["subscription", "HIGH+"];
+  const head =
+    u.chapter === "map"
+      ? ["mint.token-2022", "4 extensions"]
+      : u.chapter === "watch"
+        ? ["squads.pending", "WEAKENING"]
+        : u.chapter === "act"
+          ? ["demo.devnet", "ARMED"]
+          : ["subscription", "HIGH+"];
   return `
   <div class="vz vz-toggles">
     <div class="vz-toggles__head mono"><span>${head[0]}</span><b>${head[1]}</b></div>
@@ -224,7 +289,10 @@ function bits() {
   <div class="vz vz-bits">
     <div class="vz-bits__head mono"><span>flags: u64</span><b>0x406 · RED</b></div>
     <ol>${flagBits
-      .map((f, i) => `<li class="${on.has(i) ? "on" : ""} ${red.has(i) ? "mask" : ""}" style="--i:${i}"><b class="mono">${i}</b><span class="mono">${f.replaceAll("_", " ").toLowerCase()}</span></li>`)
+      .map(
+        (f, i) =>
+          `<li class="${on.has(i) ? "on" : ""} ${red.has(i) ? "mask" : ""}" style="--i:${i}"><b class="mono">${i}</b><span class="mono">${f.replaceAll("_", " ").toLowerCase()}</span></li>`,
+      )
       .join("")}</ol>
     <div class="vz-bits__foot mono"><span>flags &amp; RED_MASK (0xC11)</span><b>≠ 0 → exit</b></div>
   </div>`;
@@ -239,7 +307,7 @@ function chat() {
       <p style="--i:1">Watching Drift Protocol. Alerts at HIGH and above.</p>
       <p class="me" style="--i:2">/status drift</p>
       <p style="--i:3"><b>Drift Protocol</b>: grade <b>A</b> (85/100)<br/>Upgrade authority: squads v4 vault<br/>Multisig: 4-of-7, timelock 1 hour</p>
-      <p class="alert" style="--i:4">🔴 <b>CRITICAL</b> · Overwatch Demo removed its 2 days safety delay</p>
+      <p class="alert" style="--i:4">🔴 <b>CRITICAL</b> · Example Lend removed its 2 days safety delay</p>
     </div>
   </div>`;
 }
@@ -262,7 +330,18 @@ function ledger() {
 }
 
 const RENDER: Record<Capability["vis"], (u: Capability, r: Rand) => string> = {
-  terminal, radar, code, gauge, chart, nodes, alerts, pipeline, toggles, bits, chat, ledger,
+  terminal,
+  radar,
+  code,
+  gauge,
+  chart,
+  nodes,
+  alerts,
+  pipeline,
+  toggles,
+  bits,
+  chat,
+  ledger,
 };
 
 export function visual(u: Capability, color: string): string {

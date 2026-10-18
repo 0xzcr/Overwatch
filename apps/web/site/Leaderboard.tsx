@@ -1,7 +1,15 @@
 "use client";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { createColumnHelper, flexRender, getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable, type SortingState } from "@tanstack/react-table";
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
+  useReactTable,
+  type SortingState,
+} from "@tanstack/react-table";
 import type { ProtoCard } from "./data";
 import { GRADE_WORD } from "@/lib/format";
 
@@ -29,10 +37,13 @@ function Th({ label, tip }: { label: string; tip?: string }) {
 }
 
 const TIPS = {
-  authority: "The key that can replace a program's code. Whoever holds it can change the rules, including how your deposit can be withdrawn.",
+  authority:
+    "The key that can replace a program's code. Whoever holds it can change the rules, including how your deposit can be withdrawn.",
   threshold: "How many signers of the multisig must approve a change, out of how many members.",
-  timelock: "A mandatory waiting period between approving a change and it taking effect. It gives depositors time to withdraw.",
-  nonce: "Signers holding durable nonce accounts can pre-sign transactions that never expire. That is how the Drift attack was staged.",
+  timelock:
+    "A mandatory waiting period between approving a change and it taking effect. It gives depositors time to withdraw.",
+  nonce:
+    "Signers holding durable nonce accounts can pre-sign transactions that never expire. That is how the Drift attack was staged.",
 };
 
 export function Leaderboard({ rows }: { rows: ProtoCard[] }) {
@@ -51,12 +62,15 @@ export function Leaderboard({ rows }: { rows: ProtoCard[] }) {
           <Link href={`/protocols/${c.row.original.slug}`} className="lb__name" data-cursor="Inspect">
             {c.row.original.red && <span className="dot dot--alert" aria-label="red" />}
             <b>{c.getValue()}</b>
-            {c.row.original.source === "demo" && <span className="badge badge--accent mono">demo</span>}
           </Link>
         ),
       }),
       h.accessor("category", { header: "Category", cell: (c) => <span className="mono lb__dim">{c.getValue()}</span> }),
-      h.accessor("tvlUsd", { header: "TVL", sortUndefined: "last", cell: (c) => <span className="mono">{c.row.original.tvl}</span> }),
+      h.accessor("tvlUsd", {
+        header: "TVL",
+        sortUndefined: "last",
+        cell: (c) => <span className="mono">{c.row.original.tvl}</span>,
+      }),
       h.accessor("score", {
         header: "Grade",
         sortUndefined: "last",
@@ -71,7 +85,9 @@ export function Leaderboard({ rows }: { rows: ProtoCard[] }) {
       }),
       h.accessor("authority", {
         header: () => <Th label="Upgrade authority" tip={TIPS.authority} />,
-        cell: (c) => <span className={`mono${c.row.original.flags.includes("SINGLE_KEY") ? " bad" : ""}`}>{c.getValue()}</span>,
+        cell: (c) => (
+          <span className={`mono${c.row.original.flags.includes("SINGLE_KEY") ? " bad" : ""}`}>{c.getValue()}</span>
+        ),
       }),
       h.accessor("threshold", {
         header: () => <Th label="m-of-n" tip={TIPS.threshold} />,
@@ -94,12 +110,25 @@ export function Leaderboard({ rows }: { rows: ProtoCard[] }) {
       }),
       h.accessor("nonceSigners", {
         header: () => <Th label="Nonce exposure" tip={TIPS.nonce} />,
-        cell: (c) => <span className={`mono${c.getValue() ? " bad" : " lb__dim"}`}>{c.getValue() ? `${c.getValue()} signer(s)` : "none"}</span>,
+        cell: (c) => (
+          <span className={`mono${c.getValue() ? " bad" : " lb__dim"}`}>
+            {c.getValue() ? `${c.getValue()} signer(s)` : "none"}
+          </span>
+        ),
       }),
-      h.accessor("lastChange", { header: "Last change", sortUndefined: "last", cell: (c) => <span className="mono lb__dim">{ago(c.getValue())}</span> }),
+      h.accessor("lastChange", {
+        header: "Last change",
+        sortUndefined: "last",
+        cell: (c) => <span className="mono lb__dim">{ago(c.getValue())}</span>,
+      }),
       h.accessor("verified", {
         header: "Verified",
-        cell: (c) => (c.getValue() ? <span className="badge badge--ok mono">verified</span> : <span className="badge badge--warn mono">unverified</span>),
+        cell: (c) =>
+          c.getValue() ? (
+            <span className="badge badge--ok mono">verified</span>
+          ) : (
+            <span className="badge badge--warn mono">unverified</span>
+          ),
       }),
     ],
     [],
@@ -109,7 +138,11 @@ export function Leaderboard({ rows }: { rows: ProtoCard[] }) {
     data,
     columns: cols,
     // The snapshot has no TVL, nonce or change history; hide those columns rather than show a wall of dashes.
-    state: { sorting, globalFilter: q, columnVisibility: live ? {} : { tvlUsd: false, nonceSigners: false, lastChange: false } },
+    state: {
+      sorting,
+      globalFilter: q,
+      columnVisibility: live ? {} : { tvlUsd: false, nonceSigners: false, lastChange: false },
+    },
     onSortingChange: setSorting,
     onGlobalFilterChange: setQ,
     getCoreRowModel: getCoreRowModel(),
@@ -124,11 +157,21 @@ export function Leaderboard({ rows }: { rows: ProtoCard[] }) {
           <span className="search__icon" aria-hidden="true">
             ⌕
           </span>
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filter protocols" aria-label="Filter protocols" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Filter protocols"
+            aria-label="Filter protocols"
+          />
         </label>
         <div className="chips" role="group" aria-label="Category">
           {cats.map((c) => (
-            <button key={c} className={`chip${cat === c ? " is-on" : ""}`} aria-pressed={cat === c} onClick={() => setCat(c)}>
+            <button
+              key={c}
+              className={`chip${cat === c ? " is-on" : ""}`}
+              aria-pressed={cat === c}
+              onClick={() => setCat(c)}
+            >
               {c}
             </button>
           ))}
@@ -140,10 +183,21 @@ export function Leaderboard({ rows }: { rows: ProtoCard[] }) {
             {table.getHeaderGroups().map((g) => (
               <tr key={g.id}>
                 {g.headers.map((hd) => (
-                  <th key={hd.id} aria-sort={hd.column.getIsSorted() === "asc" ? "ascending" : hd.column.getIsSorted() === "desc" ? "descending" : "none"}>
+                  <th
+                    key={hd.id}
+                    aria-sort={
+                      hd.column.getIsSorted() === "asc"
+                        ? "ascending"
+                        : hd.column.getIsSorted() === "desc"
+                          ? "descending"
+                          : "none"
+                    }
+                  >
                     <button onClick={hd.column.getToggleSortingHandler()} className="mono">
                       {flexRender(hd.column.columnDef.header, hd.getContext())}
-                      <span className="lb__sort">{{ asc: "↑", desc: "↓" }[hd.column.getIsSorted() as string] ?? ""}</span>
+                      <span className="lb__sort">
+                        {{ asc: "↑", desc: "↓" }[hd.column.getIsSorted() as string] ?? ""}
+                      </span>
                     </button>
                   </th>
                 ))}

@@ -1,9 +1,17 @@
 /* Components for the inner pages: same tokens and language as the landing. */
 
-.dim { color: var(--dim); }
-.ok { color: var(--ok); }
-.warn { color: var(--warn); }
-.violet { color: var(--violet); }
+.dim {
+  color: var(--dim);
+}
+.ok {
+  color: var(--ok);
+}
+.warn {
+  color: var(--warn);
+}
+.violet {
+  color: var(--violet);
+}
 .sr-only {
   position: absolute;
   width: 1px;
@@ -72,13 +80,6 @@
   text-transform: uppercase;
   color: var(--dim);
 }
-.nav__status i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--mint);
-  box-shadow: 0 0 6px var(--mint);
-}
 .nav__menu {
   margin-right: 12px;
 }
@@ -116,8 +117,13 @@
   font-family: var(--sans);
 }
 @keyframes nudgeX {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(3px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(3px);
+  }
 }
 .hero__title .bad {
   background: none;
@@ -173,16 +179,6 @@
 /* ------------------------------------------------------------ marquee severities */
 
 /* ------------------------------------------------------------ landing additions */
-.tile__text {
-  font-size: 14.5px;
-  line-height: 1.55;
-  color: var(--chrome);
-  max-width: 92%;
-}
-.tiles__grid .tile {
-  min-height: 360px;
-  grid-template-rows: auto 1fr auto auto auto;
-}
 .hl {
   color: inherit;
 }
@@ -206,20 +202,6 @@
 }
 .page-note a {
   color: var(--mint);
-}
-.notice {
-  margin-bottom: 20px;
-  padding: 14px 18px;
-  border-radius: var(--radius);
-  border: 1px solid rgba(255, 181, 71, 0.3);
-  background: rgba(255, 181, 71, 0.05);
-  color: var(--amber);
-  font-size: 14px;
-  line-height: 1.6;
-}
-.notice b {
-  color: var(--ink);
-  font-weight: 500;
 }
 
 /* ------------------------------------------------------------ term tooltip */
@@ -272,7 +254,10 @@
   animation: tipIn 0.25s var(--ease);
 }
 @keyframes tipIn {
-  from { opacity: 0; transform: translateY(-4px); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
 }
 @media (max-width: 700px) {
   .term__tip {
@@ -293,11 +278,19 @@
   white-space: nowrap;
   vertical-align: middle;
 }
-.grade.g-B { --g: var(--ok-2); }
-.grade.g-C { --g: var(--amber); }
+.grade.g-B {
+  --g: var(--ok-2);
+}
+.grade.g-C {
+  --g: var(--amber);
+}
 .grade.g-D,
-.grade.g-F { --g: var(--bad); }
-.grade.g-\? { --g: var(--chrome); }
+.grade.g-F {
+  --g: var(--bad);
+}
+.grade.g-\? {
+  --g: var(--chrome);
+}
 .grade b {
   font-weight: 500;
   color: var(--g);
@@ -311,8 +304,12 @@
   padding: 3px 9px;
   gap: 6px;
 }
-.grade--sm b { font-size: 17px; }
-.grade--md b { font-size: 28px; }
+.grade--sm b {
+  font-size: 17px;
+}
+.grade--md b {
+  font-size: 28px;
+}
 .grade--lg {
   padding: 14px 22px;
   gap: 14px;
@@ -323,7 +320,9 @@
   font-size: 96px;
   text-shadow: 0 0 40px color-mix(in srgb, var(--g) 55%, transparent);
 }
-.grade--lg span { font-size: 13px; }
+.grade--lg span {
+  font-size: 13px;
+}
 .badge {
   display: inline-flex;
   align-items: center;
@@ -335,12 +334,24 @@
   font-size: 12px;
   white-space: nowrap;
 }
-.badge--ok { color: var(--ok); }
-.badge--warn { color: var(--warn); }
-.badge--bad { color: var(--bad); }
-.badge--dim { color: var(--dim); }
-.badge--accent { color: var(--cyan); }
-.badge--violet { color: var(--violet); }
+.badge--ok {
+  color: var(--ok);
+}
+.badge--warn {
+  color: var(--warn);
+}
+.badge--bad {
+  color: var(--bad);
+}
+.badge--dim {
+  color: var(--dim);
+}
+.badge--accent {
+  color: var(--cyan);
+}
+.badge--violet {
+  color: var(--violet);
+}
 .addr {
   color: var(--chrome);
   word-break: break-all;
@@ -450,8 +461,7 @@ a.addr:hover {
   border-radius: var(--radius);
   border: 1px solid var(--line-2);
   background:
-    radial-gradient(60% 60% at 50% 40%, rgba(var(--mint-rgb), 0.06), transparent 70%),
-    rgba(var(--shade-rgb), 0.88);
+    radial-gradient(60% 60% at 50% 40%, rgba(var(--mint-rgb), 0.06), transparent 70%), rgba(var(--shade-rgb), 0.88);
   backdrop-filter: blur(10px);
   overflow: hidden;
 }
@@ -472,7 +482,9 @@ a.addr:hover {
   font-family: var(--sans);
   text-align: left;
   box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.9);
-  transition: border-color 0.3s, box-shadow 0.3s;
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
 }
 .cg .react-flow__node.cg__rf:hover {
   border-color: var(--mint);
@@ -696,8 +708,12 @@ a.addr:hover {
   animation: newEvt 2.4s var(--ease);
 }
 @keyframes newEvt {
-  0% { background: rgba(var(--mint-rgb), 0.12); }
-  100% { background: transparent; }
+  0% {
+    background: rgba(var(--mint-rgb), 0.12);
+  }
+  100% {
+    background: transparent;
+  }
 }
 .tl__meta {
   display: flex;
@@ -993,8 +1009,12 @@ a.addr:hover {
   font-family: var(--mono);
   font-size: 12px;
   appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, var(--chrome) 50%), linear-gradient(135deg, var(--chrome) 50%, transparent 50%);
-  background-position: calc(100% - 18px) 15px, calc(100% - 13px) 15px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--chrome) 50%),
+    linear-gradient(135deg, var(--chrome) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 15px,
+    calc(100% - 13px) 15px;
   background-size: 5px 5px;
   background-repeat: no-repeat;
 }
@@ -1037,16 +1057,15 @@ a.addr:hover {
   font: inherit;
   font-size: 14px;
   outline: 0;
-  transition: border-color 0.3s, box-shadow 0.3s;
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
 }
 .field:focus {
   border-color: var(--mint);
   box-shadow: 0 0 0 4px rgba(var(--mint-rgb), 0.12);
 }
-.field--lg {
-  height: 58px;
-  font-size: 22px;
-}
+
 .field-row {
   display: flex;
   gap: 8px;
@@ -1078,72 +1097,9 @@ a.addr:hover {
   opacity: 0.4;
   pointer-events: none;
 }
-.btn--dashed {
-  border-style: dashed;
-}
 
 /* ------------------------------------------------------------ vault + demo */
-.vault__grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  align-items: start;
-}
-.vault__col {
-  display: grid;
-  gap: 18px;
-}
-.vault__wallet {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.vault .wallet-adapter-button {
-  height: 44px;
-  padding: 0 20px;
-  border-radius: var(--radius-sm);
-  font-family: var(--sans);
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--on-accent);
-  background: linear-gradient(120deg, var(--mint), var(--cyan));
-}
-.vault .wallet-adapter-button:not([disabled]):hover {
-  background: linear-gradient(120deg, #6dffc8, var(--cyan));
-}
-.wallet-adapter-modal-wrapper {
-  background: var(--bg-3);
-  border: 1px solid var(--line-2);
-  font-family: var(--sans);
-}
-.kpis {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1px;
-  border-radius: var(--radius);
-  border: 1px solid var(--line-2);
-  background: var(--line);
-  overflow: hidden;
-}
-.kpis--5 {
-  grid-template-columns: repeat(5, 1fr);
-  margin-bottom: 18px;
-}
-.kpi {
-  display: grid;
-  gap: 6px;
-  padding: 16px 18px;
-  background: rgba(var(--panel-rgb), 0.92);
-}
-.kpi span {
-  font-size: 12.5px;
-  color: var(--dim);
-  font-family: var(--sans);
-}
-.kpi b {
-  font-size: 19px;
-  font-weight: 400;
-}
+
 .position {
   --mx: 50%;
   --my: 50%;
@@ -1165,50 +1121,14 @@ a.addr:hover {
   border-color: var(--bad);
   box-shadow: 0 0 40px -18px var(--bad);
 }
-.position__top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-}
-.position__top h3 {
-  margin-top: 8px;
-  font-size: 26px;
-  font-weight: 500;
-  letter-spacing: -0.03em;
-}
-.position__stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-}
-.position__stats span {
-  display: block;
-  font-size: 12.5px;
-  color: var(--dim);
-  margin-bottom: 4px;
-  font-family: var(--sans);
-}
-.position__stats b {
-  font-weight: 400;
-  font-size: 15px;
-}
+
 .log {
   border-radius: var(--radius);
   border: 1px solid var(--line-2);
   background: rgba(var(--panel-rgb), 0.88);
   overflow: hidden;
 }
-.log__head {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 11px 16px;
-  border-bottom: 1px solid var(--line);
-  font-size: 12.5px;
-  color: var(--chrome);
-  font-family: var(--sans);
-}
+
 .log ul {
   display: grid;
   gap: 8px;
@@ -1228,130 +1148,6 @@ a.addr:hover {
 }
 .log li a {
   color: var(--chrome);
-}
-.log__body {
-  height: 460px;
-  overflow-y: auto;
-  padding: 16px;
-  display: grid;
-  align-content: start;
-  gap: 10px;
-}
-.log--term {
-  background: rgba(var(--shade-rgb), 0.94);
-}
-.log--term .log__body {
-  font-size: 12px;
-  line-height: 1.6;
-  gap: 2px;
-}
-.log__line {
-  color: var(--chrome);
-}
-.log__line.is-cmd {
-  color: var(--mint);
-  margin-top: 10px;
-}
-.log__line.is-err {
-  color: var(--bad);
-}
-.log__line.is-ok {
-  color: var(--ok);
-}
-.log__line a {
-  display: block;
-  padding-left: 66px;
-  color: var(--dim);
-  word-break: break-all;
-}
-.log__line a:hover {
-  color: var(--mint);
-}
-.demo__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-.demo__btn {
-  display: grid;
-  gap: 4px;
-  min-width: 210px;
-  padding: 14px 18px;
-  border-radius: var(--radius);
-  border: 1px solid var(--line-2);
-  background: rgba(var(--panel-rgb), 0.85);
-  text-align: left;
-  transition: border-color 0.3s, background 0.3s, transform 0.4s var(--ease);
-}
-.demo__btn b {
-  font-weight: 500;
-  font-size: 14.5px;
-}
-.demo__btn span {
-  font-size: 10.5px;
-  color: var(--dim);
-}
-.demo__btn:hover:not(:disabled) {
-  border-color: var(--bad);
-  background: rgba(255, 90, 61, 0.06);
-  transform: translateY(-2px);
-}
-.demo__btn.is-reset:hover:not(:disabled) {
-  border-color: var(--ok);
-  background: rgba(var(--mint-rgb), 0.06);
-}
-.demo__btn.is-busy {
-  border-color: var(--mint);
-}
-.demo__btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-.demo__latency {
-  margin-bottom: 14px;
-  font-size: 14px;
-  color: var(--mint);
-  text-shadow: 0 0 20px rgba(var(--mint-rgb), 0.5);
-}
-.demo__split {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-.demo__evt {
-  display: grid;
-  gap: 4px;
-  padding: 6px 0 6px 12px;
-  border-left: 2px solid var(--warn);
-  font-size: 13.5px;
-}
-.demo__evt.is-crit {
-  border-left-color: var(--bad);
-}
-.demo__evt.is-registry {
-  border-left-color: var(--violet);
-}
-.demo__evt.is-shield,
-.demo__evt.is-rearm {
-  border-left-color: var(--ok);
-}
-.demo__evt p {
-  color: var(--chrome);
-  font-size: 12.5px;
-}
-.demo__evt a {
-  font-size: 10.5px;
-  color: var(--dim);
-  word-break: break-all;
-}
-.demo__evt-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  font-size: 10.5px;
-  color: var(--dim);
 }
 
 /* ------------------------------------------------------------ docs */
@@ -1499,16 +1295,8 @@ a.addr:hover {
 /* ------------------------------------------------------------ responsive */
 @media (max-width: 1024px) {
   .detail__grid,
-  .vault__grid,
-  .demo__split,
   .codegrid {
     grid-template-columns: 1fr;
-  }
-  .kpis--5 {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  .tiles__grid .tile {
-    min-height: 300px;
   }
 }
 @media (max-width: 900px) {
@@ -1537,16 +1325,7 @@ a.addr:hover {
   .facts__rows > span:nth-child(even) {
     margin-bottom: 10px;
   }
-  .kpis--5 {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .position__stats {
-    grid-template-columns: 1fr 1fr;
-  }
-  .demo__btn {
-    min-width: 0;
-    width: 100%;
-  }
+
   .cg {
     height: 480px;
   }
@@ -1556,18 +1335,6 @@ a.addr:hover {
   .field-row {
     flex-direction: column;
   }
-  .log__line a {
-    padding-left: 0;
-  }
-}
-
-/* landing hero: "The / Protocol" sit smaller above "Watchdog" */
-.hero__title .hero__edition {
-  font-size: clamp(54px, 7.6vw, 128px);
-  margin-top: 0.04em;
-}
-.hero__title .hero__the {
-  color: var(--ink);
 }
 
 /* ------------------------------------------------------------ logo: the watchdog */
@@ -1576,7 +1343,9 @@ a.addr:hover {
   height: 38px;
   flex: none;
   overflow: visible;
-  transition: filter 0.4s, transform 0.5s var(--ease);
+  transition:
+    filter 0.4s,
+    transform 0.5s var(--ease);
 }
 .dog__skull {
   fill: var(--logo-fill);
@@ -1591,8 +1360,12 @@ a.addr:hover {
   stroke-linejoin: round;
   transition: transform 0.35s var(--ease);
 }
-.dog__ear--l { transform-origin: 17px 14px; }
-.dog__ear--r { transform-origin: 31px 14px; }
+.dog__ear--l {
+  transform-origin: 17px 14px;
+}
+.dog__ear--r {
+  transform-origin: 31px 14px;
+}
 .dog__tan {
   fill: rgba(255, 181, 71, 0.2);
 }
@@ -1710,17 +1483,40 @@ a:focus-visible > .logo .dog__laser,
   animation: dogLaser 1.4s var(--ease) infinite 0.15s;
 }
 @keyframes dogGrowl {
-  0%, 100% { transform: translate(0, 0) rotate(0); }
-  25% { transform: translate(-0.4px, 0.2px) rotate(-1.2deg); }
-  50% { transform: translate(0.3px, -0.2px) rotate(0.8deg); }
-  75% { transform: translate(-0.2px, 0.3px) rotate(-0.6deg); }
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0);
+  }
+  25% {
+    transform: translate(-0.4px, 0.2px) rotate(-1.2deg);
+  }
+  50% {
+    transform: translate(0.3px, -0.2px) rotate(0.8deg);
+  }
+  75% {
+    transform: translate(-0.2px, 0.3px) rotate(-0.6deg);
+  }
 }
 @keyframes dogLaser {
-  0% { stroke-dashoffset: 50; opacity: 0; }
-  12% { opacity: 1; }
-  45% { stroke-dashoffset: 0; opacity: 1; }
-  80% { stroke-dashoffset: 0; opacity: 0.85; }
-  100% { stroke-dashoffset: -50; opacity: 0; }
+  0% {
+    stroke-dashoffset: 50;
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  45% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  80% {
+    stroke-dashoffset: 0;
+    opacity: 0.85;
+  }
+  100% {
+    stroke-dashoffset: -50;
+    opacity: 0;
+  }
 }
 .logo--boot {
   width: 76px;
@@ -1737,31 +1533,80 @@ a:focus-visible > .logo .dog__laser,
   }
 }
 
-/* ------------------------------------------------------------ landing hero: The Protocol Watchdog */
-.hero--solo {
-  grid-template-columns: 1fr;
-  padding-bottom: 0;
+/* ------------------------------------------------------------ landing hero: the text eye and The Protocol Watchdog */
+.wd {
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  align-items: center;
+  padding-top: 80px;
+  padding-bottom: clamp(40px, 8vh, 90px);
 }
-.hero--solo .hero__title-wrap {
-  margin: 0 0 0 calc(-0.5 * var(--gutter));
+.wd__text {
+  grid-row: 1;
+  grid-column: 1;
+  align-self: end;
+  display: grid;
+  gap: 22px;
+  max-width: 760px;
+  /* the title sizes itself to this column (cqi), so "THE PROTOCOL" always fits on one line */
+  container-type: inline-size;
 }
-.hero__title--watchdog .hero__the {
-  font-size: clamp(30px, 3.6vw, 60px);
+.wd__eye {
+  grid-row: 1;
+  grid-column: 2;
+  justify-self: end;
+  width: min(100%, 80vh, 760px);
+  aspect-ratio: 1;
+}
+.eye {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.wd__kicker {
+  margin: 0;
+  font-size: 13px;
   color: var(--chrome);
 }
-.hero__title--watchdog .hero__edition,
-.hero__title--watchdog .hero__watchdog {
-  font-family: var(--sans);
-  font-style: normal;
-  font-weight: 500;
-  font-size: clamp(64px, 12.5vw, 212px);
-  line-height: 0.86;
-  letter-spacing: -0.045em;
-  margin-top: 0;
+.wd__title {
+  font-family: var(--display);
+  /* "THE PROTOCOL" is about 7em wide in this face, so 14cqi leaves a little room at any column width */
+  font-size: min(118px, 14cqi);
+  font-weight: 800;
+  white-space: nowrap;
+  font-stretch: 88%;
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
 }
-.hero__title--watchdog .hero__watchdog {
-  padding-right: 0.04em;
-  filter: none;
+/* the reveal hides each line under overflow:hidden; this padding keeps descenders out of the clip */
+.wd__title .hero__line {
+  padding-bottom: 0.08em;
+}
+.wd__accent {
+  color: var(--mint);
+}
+.wd__sub {
+  margin: 0;
+  max-width: 520px;
+  font-size: clamp(15px, 1.2vw, 17px);
+  line-height: 1.6;
+  color: var(--chrome);
+}
+@media (max-width: 900px) {
+  .wd {
+    grid-template-columns: 1fr;
+    align-content: start;
+    padding-top: 76px;
+  }
+  .wd__eye {
+    grid-column: 1;
+    justify-self: center;
+    width: min(100%, 52vh);
+  }
+  .wd__text {
+    grid-row: 2;
+    grid-column: 1;
+  }
 }
 .manifesto__sig {
   font-size: 15px;
@@ -1772,58 +1617,17 @@ a:focus-visible > .logo .dog__laser,
   font-weight: 500;
   letter-spacing: -0.03em;
 }
-@media (max-width: 640px) {
-  .hero__title--watchdog .hero__edition,
-  .hero__title--watchdog .hero__watchdog {
-    font-size: 17.5vw;
-  }
-}
-.hero__title--watchdog .hero__line {
-  padding-bottom: 0.24em;
-  margin-bottom: -0.2em;
-}
-/* the g's descender sits in this line's own padding, so the overflow:hidden line (needed for the reveal) does not clip it.
-   The line takes the word's font size so 0.28em is measured against the 212px word, not the 16px heading. */
-.hero__title--watchdog .hero__line:last-child {
-  font-size: clamp(64px, 12.5vw, 212px);
-  padding-bottom: 0.28em;
-  margin-bottom: 0;
-}
-@media (max-width: 640px) {
-  .hero__title--watchdog .hero__line:last-child {
-    font-size: 17.5vw;
-  }
-}
-/* optical left alignment: each word's first glyph sits on the same x (side bearings differ per letter) */
-.hero__title--watchdog .hero__line:nth-child(2) .hero__edition {
-  margin-left: -0.061em;
-}
-.hero__title--watchdog .hero__line:nth-child(3) .hero__watchdog {
-  margin-left: -0.02em;
-}
 /* scroll "selection": each character takes the site's ::selection colours as the hero scrolls away */
 .hero__title--watchdog .ch.is-sel {
   background: var(--mint);
   color: var(--on-accent);
 }
 
-/* ------------------------------------------------------------ landing sections: each one has its own accent and band */
+/* ------------------------------------------------------------ landing sections */
 .sec {
   position: relative;
-  border-top: 1px solid var(--sec-line);
-  background: linear-gradient(180deg, var(--sec-tint), transparent 55%);
+  border-top: 1px solid var(--line);
 }
-.sec-label {
-  font-size: 12px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--sec-c);
-  padding: 28px 0 0;
-  margin: 0;
-}
-.sec--1 { --sec-c: #2BFFB0; --sec-line: rgba(43, 255, 176, 0.45); --sec-tint: rgba(43, 255, 176, 0.05); }
-.sec--2 { --sec-c: #5AA8FF; --sec-line: rgba(90, 168, 255, 0.45); --sec-tint: rgba(90, 168, 255, 0.05); }
-.sec--4 { --sec-c: #FF5A3D; --sec-line: rgba(255, 90, 61, 0.5); --sec-tint: rgba(255, 90, 61, 0.07); background: linear-gradient(0deg, var(--sec-tint), transparent 70%); }
 
 /* the eyes are already red, so the growl turns them white-hot instead */
 html[data-time="night"] a:hover > .logo .dog__eye,
@@ -1835,9 +1639,12 @@ html[data-time="night"] .logo--boot .dog__eye {
 
 /* ------------------------------------------------------------ security look: instrument type, hard edges */
 .h2 {
+  font-family: var(--display);
   font-size: clamp(32px, 4.4vw, 64px);
+  font-weight: 700;
+  font-stretch: 90%;
   line-height: 1;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
 }
 .btn,
 .nav__link,
@@ -1847,8 +1654,7 @@ html[data-time="night"] .logo--boot .dog__eye {
 .lb__table th,
 .menu__kicker,
 .path__cta,
-.hl__more,
-.sec-label {
+.hl__more {
   font-family: var(--mono);
 }
 .btn,
@@ -1867,13 +1673,13 @@ html[data-time="night"] .logo--boot .dog__eye {
   padding-bottom: 28px;
   border-bottom: 1px solid var(--line);
 }
-.hero--page::before {
-  display: none;
-}
 .hero__title--page {
+  font-family: var(--display);
   font-size: clamp(34px, 3.6vw, 52px);
+  font-weight: 700;
+  font-stretch: 90%;
   line-height: 1;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
 }
 .hero--page ~ .page-block {
   padding-top: 32px;

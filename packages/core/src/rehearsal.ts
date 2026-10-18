@@ -9,9 +9,16 @@ import type { ControlSnapshot, OverwatchEvent } from "./types";
  * and runs it through the real rules engine and scoring. No transaction is sent.
  */
 
-export const REHEARSAL_ACTIONS = ["remove-timelock", "lower-threshold", "create-signer-nonce", "transfer-authority", "reset"] as const;
+export const REHEARSAL_ACTIONS = [
+  "remove-timelock",
+  "lower-threshold",
+  "create-signer-nonce",
+  "transfer-authority",
+  "reset",
+] as const;
 export type RehearsalAction = (typeof REHEARSAL_ACTIONS)[number];
-export const isRehearsalAction = (a: string): a is RehearsalAction => (REHEARSAL_ACTIONS as readonly string[]).includes(a);
+export const isRehearsalAction = (a: string): a is RehearsalAction =>
+  (REHEARSAL_ACTIONS as readonly string[]).includes(a);
 
 export interface DemoModel {
   timeLock: number;
@@ -79,19 +86,35 @@ export function demoSnapshot(m: DemoModel, at: string): ControlSnapshot {
 export function applyDemoAction(m: DemoModel, a: RehearsalAction): { next: DemoModel; log: string[] } {
   switch (a) {
     case "remove-timelock":
-      return { next: { ...m, timeLock: 0 }, log: [`multisig_config_set_time_lock ${m.timeLock}s → 0s (config authority signs, executes instantly)`] };
+      return {
+        next: { ...m, timeLock: 0 },
+        log: [`multisig_config_set_time_lock ${m.timeLock}s → 0s (config authority signs, executes instantly)`],
+      };
     case "lower-threshold":
       return { next: { ...m, threshold: 1 }, log: [`multisig_change_threshold ${m.threshold} → 1`] };
     case "create-signer-nonce":
       return { next: { ...m, nonce: true }, log: ["create durable nonce account, authority = signer-a"] };
     case "transfer-authority": {
       const log: string[] = [];
-      if (m.timeLock > 0) log.push("multisig has a timelock, so a vault transaction can't execute yet. Removing it first (this is itself an alert).", "multisig_config_set_time_lock → 0s");
-      log.push("vault_transaction_create: BPF loader SetAuthority → demo admin key", "proposal approved by 2 signers, executed");
+      if (m.timeLock > 0)
+        log.push(
+          "multisig has a timelock, so a vault transaction can't execute yet. Removing it first (this is itself an alert).",
+          "multisig_config_set_time_lock → 0s",
+        );
+      log.push(
+        "vault_transaction_create: BPF loader SetAuthority → demo admin key",
+        "proposal approved by 2 signers, executed",
+      );
       return { next: { ...m, timeLock: 0, singleKey: true }, log };
     }
     case "reset":
-      return { next: DEMO_BASELINE, log: ["restore 2-of-3, 2-day timelock, close nonce accounts, upgrade authority back to the multisig vault", "keeper re-arms the vault position"] };
+      return {
+        next: DEMO_BASELINE,
+        log: [
+          "restore 2-of-3, 2-day timelock, close nonce accounts, upgrade authority back to the multisig vault",
+          "keeper re-arms the vault position",
+        ],
+      };
   }
 }
 
@@ -123,7 +146,16 @@ export function rehearse(done: RehearsalAction[], action: RehearsalAction): Rehe
   for (const [i, a] of [...done, action].entries()) {
     const at = new Date(t0 + i * 60_000).toISOString();
     const { next, log } = applyDemoAction(m, a);
-    const events = a === "reset" ? [] : diffSnapshots(demoSnapshot(m, at), demoSnapshot(next, at), { history, slot: i + 1, blockTime: at, now: at, name: DEMO_NAME });
+    const events =
+      a === "reset"
+        ? []
+        : diffSnapshots(demoSnapshot(m, at), demoSnapshot(next, at), {
+            history,
+            slot: i + 1,
+            blockTime: at,
+            now: at,
+            name: DEMO_NAME,
+          });
     if (a === "reset") history.length = 0;
     history.push(...events);
     m = next;
@@ -139,7 +171,12 @@ export function rehearse(done: RehearsalAction[], action: RehearsalAction): Rehe
     }
     last = {
       log,
-      events: events.map((e) => ({ severity: e.severity, title: readable(e.title), explanation: readable(e.explanation), labels: e.labels ?? [] })),
+      events: events.map((e) => ({
+        severity: e.severity,
+        title: readable(e.title),
+        explanation: readable(e.explanation),
+        labels: e.labels ?? [],
+      })),
       registry: { score: sc.score, grade: sc.grade, red: sc.red, flags: flagNames(sc.flags), version },
       shield,
     };

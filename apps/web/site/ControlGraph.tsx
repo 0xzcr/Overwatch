@@ -17,7 +17,17 @@ const KIND_LABEL: Record<GNode["kind"], string> = {
 };
 
 /** "Who can move your money": Program → upgrade authority -> multisig -> signers (-> nonce accounts), plus collateral and oracles. */
-export function ControlGraph({ nodes, edges, network, summary }: { nodes: GNode[]; edges: GEdge[]; network: "mainnet" | "devnet"; summary?: boolean }) {
+export function ControlGraph({
+  nodes,
+  edges,
+  network,
+  summary,
+}: {
+  nodes: GNode[];
+  edges: GEdge[];
+  network: "mainnet" | "devnet";
+  summary?: boolean;
+}) {
   const [sel, setSel] = useState<GNode | null>(null);
   const { rfNodes, rfEdges } = useMemo(() => {
     const counts = new Map<number, number>();
@@ -73,7 +83,11 @@ export function ControlGraph({ nodes, edges, network, summary }: { nodes: GNode[
         <Background color="rgba(150,180,255,0.12)" gap={28} />
         <Controls showInteractive={false} />
       </ReactFlow>
-      <div className="cg__hint mono">{summary ? "summary from the snapshot · addresses load with live data" : "click a node · pinch or use controls to zoom"}</div>
+      <div className="cg__hint mono">
+        {summary
+          ? "summary from the snapshot · addresses load with live data"
+          : "click a node · pinch or use controls to zoom"}
+      </div>
       {sel && (
         <div className="cg__panel">
           <div className="cg__panel-top mono">
@@ -85,7 +99,12 @@ export function ControlGraph({ nodes, edges, network, summary }: { nodes: GNode[
           <b className={sel.danger ? "bad" : ""}>{sel.label}</b>
           <span className="mono">{sel.sub}</span>
           {sel.address && (
-            <a className="mono addr" href={`https://explorer.solana.com/address/${sel.address}${network === "devnet" ? "?cluster=devnet" : ""}`} target="_blank" rel="noreferrer">
+            <a
+              className="mono addr"
+              href={`https://explorer.solana.com/address/${sel.address}${network === "devnet" ? "?cluster=devnet" : ""}`}
+              target="_blank"
+              rel="noreferrer"
+            >
               {sel.address} ↗
             </a>
           )}

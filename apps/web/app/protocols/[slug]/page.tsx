@@ -23,12 +23,26 @@ function summaryGraph(c: ProtoCard): { nodes: GNode[]; edges: GEdge[] } {
   const nodes: GNode[] = [{ id: "p", kind: "program", label: c.name, sub: "program", danger: false, layer: 0 }];
   const edges: GEdge[] = [];
   const single = c.flags.includes("SINGLE_KEY");
-  nodes.push({ id: "a", kind: "authority", label: c.authority, sub: single ? "one private key" : "upgrade authority", danger: single, layer: 1 });
+  nodes.push({
+    id: "a",
+    kind: "authority",
+    label: c.authority,
+    sub: single ? "one private key" : "upgrade authority",
+    danger: single,
+    layer: 1,
+  });
   edges.push({ from: "p", to: "a", label: "upgrade authority", danger: single });
   const m = /^(\d+)-of-(\d+)$/.exec(c.threshold);
   if (m) {
     const weak = c.timelockSec === 0 || Number(m[1]) <= 2;
-    nodes.push({ id: "m", kind: "multisig", label: `Squads ${c.threshold}`, sub: `timelock ${c.timelock}`, danger: weak, layer: 2 });
+    nodes.push({
+      id: "m",
+      kind: "multisig",
+      label: `Squads ${c.threshold}`,
+      sub: `timelock ${c.timelock}`,
+      danger: weak,
+      layer: 2,
+    });
     edges.push({ from: "a", to: "m", label: "vault of" });
     for (let i = 0; i < Number(m[2]); i++) {
       nodes.push({ id: `s${i}`, kind: "signer", label: `Signer ${i + 1}`, sub: "member", danger: false, layer: 3 });
@@ -49,7 +63,10 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
   const registryId = process.env.REGISTRY_PROGRAM_ID;
   const devnetRpc = process.env.SOLANA_DEVNET_RPC_URL || "https://api.devnet.solana.com";
   const record = registryId
-    ? await Promise.race([fetchRiskRecord(devnetRpc, slug, registryId).catch(() => null), new Promise<null>((r) => setTimeout(() => r(null), 2500))])
+    ? await Promise.race([
+        fetchRiskRecord(devnetRpc, slug, registryId).catch(() => null),
+        new Promise<null>((r) => setTimeout(() => r(null), 2500)),
+      ])
     : null;
   const bot = process.env.TELEGRAM_BOT_USERNAME;
   const tone = p.grade === "A" || p.grade === "B" ? "#2BFFB0" : p.grade === "C" ? "#FFB547" : "#FF5A3D";
@@ -84,10 +101,24 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
             </div>
           </div>
         }
-        stageAttrs={stage("graph", { colorA: tone, colorB: "#1d6bff", x: 2.6, y: 0.4, yNarrow: 1.5, scale: 0.85, opacity: 1, front: true, sway: 0.4 })}
+        stageAttrs={stage("graph", {
+          colorA: tone,
+          colorB: "#1d6bff",
+          x: 2.6,
+          y: 0.4,
+          yNarrow: 1.5,
+          scale: 0.85,
+          opacity: 1,
+          front: true,
+          sway: 0.4,
+        })}
       />
 
-      <section className="page-block" data-dock="Control graph" {...stage("graph", { colorA: tone, colorB: "#1b2340", opacity: 0.22, scale: 1.4, autoRotate: 0.04 })}>
+      <section
+        className="page-block"
+        data-dock="Control graph"
+        {...stage("graph", { colorA: tone, colorB: "#1b2340", opacity: 0.22, scale: 1.4, autoRotate: 0.04 })}
+      >
         <SectionHead title={<>Who can move your money</>} />
         <ControlGraph nodes={graph.nodes} edges={graph.edges} network={net} summary={!s} />
       </section>
@@ -112,7 +143,9 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
                     </span>
                     <Addr v={x.upgradeAuthority} network={net} full />
                     <span>Authority type</span>
-                    <span className={x.authorityKind === "SINGLE_KEY" ? "bad" : ""}>{AUTHORITY_LABEL[x.authorityKind]}</span>
+                    <span className={x.authorityKind === "SINGLE_KEY" ? "bad" : ""}>
+                      {AUTHORITY_LABEL[x.authorityKind]}
+                    </span>
                   </dd>
                 </div>
               ))}
@@ -147,7 +180,13 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
                       <span>none, so changes need a vote</span>
                     )}
                     <span>Pending config</span>
-                    <span>{m.pending.length ? m.pending.map((x) => `#${x.transactionIndex}: ${x.actions.map((a) => a.kind).join(", ")}`).join("; ") : "none"}</span>
+                    <span>
+                      {m.pending.length
+                        ? m.pending
+                            .map((x) => `#${x.transactionIndex}: ${x.actions.map((a) => a.kind).join(", ")}`)
+                            .join("; ")
+                        : "none"}
+                    </span>
                   </dd>
                   <table className="facts__signers">
                     <thead>
@@ -168,7 +207,9 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
                               <Addr v={mem.key} network={net} />
                             </td>
                             <td className="mono dim">{PERMS(mem.permissions)}</td>
-                            <td className={`mono${n.length ? " bad" : " dim"}`}>{n.length ? n.map((x) => <Addr key={x.address} v={x.address} network={net} />) : "none"}</td>
+                            <td className={`mono${n.length ? " bad" : " dim"}`}>
+                              {n.length ? n.map((x) => <Addr key={x.address} v={x.address} network={net} />) : "none"}
+                            </td>
                           </tr>
                         );
                       })}
@@ -226,7 +267,8 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
                         </span>
                         <span>Admin</span>
                         <span>
-                          <Addr v={a.admin} network={net} /> <span className={kind.startsWith("single") ? "warn" : "dim"}>{kind}</span>
+                          <Addr v={a.admin} network={net} />{" "}
+                          <span className={kind.startsWith("single") ? "warn" : "dim"}>{kind}</span>
                         </span>
                         {a.guardian && (
                           <>
@@ -247,7 +289,8 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
                   })
                 ) : (
                   <dd className="dim">
-                    Admin config isn&apos;t mapped for this protocol yet. Admin keys, listing authority and withdraw limits appear once its IDL adapter lands.
+                    Admin config isn&apos;t mapped for this protocol yet. Admin keys, listing authority and withdraw
+                    limits appear once its IDL adapter lands.
                   </dd>
                 )}
               </div>
@@ -274,7 +317,10 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
                 </dd>
               </div>
               <div className="facts__card is-dashed">
-                <dd className="dim">Raw accounts, signers, nonce accounts, collateral and oracles appear when the live database is connected.</dd>
+                <dd className="dim">
+                  Raw accounts, signers, nonce accounts, collateral and oracles appear when the live database is
+                  connected.
+                </dd>
               </div>
             </dl>
           )}
@@ -294,7 +340,13 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
                   <span className="mono bad">−{b.points}</span>
                 </div>
               ))}
-              {!p.breakdown.length && <div className="breakdown__row dim">{live ? "No deductions." : "Itemised deductions need the live database. This grade is from the snapshot."}</div>}
+              {!p.breakdown.length && (
+                <div className="breakdown__row dim">
+                  {live
+                    ? "No deductions."
+                    : "Itemised deductions need the live database. This grade is from the snapshot."}
+                </div>
+              )}
               <div className="breakdown__row breakdown__total">
                 <span className="label">Score</span>
                 <span className="mono">
@@ -303,7 +355,8 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
               </div>
             </div>
             <p className="page-note">
-              Flags: <span className="mono">{p.flags.join(", ") || "none"}</span>. <Link href="/docs#scoring">How grades work →</Link>
+              Flags: <span className="mono">{p.flags.join(", ") || "none"}</span>.{" "}
+              <Link href="/docs#scoring">How grades work →</Link>
             </p>
           </div>
 
@@ -329,10 +382,13 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
                 <Addr v={record.publisher} network="devnet" />
               </dl>
             ) : (
-              <p className="page-note">Not published to the devnet registry yet. The indexer pushes a RiskRecord after the first live score.</p>
+              <p className="page-note">
+                Not published to the devnet registry yet. The indexer pushes a RiskRecord after the first live score.
+              </p>
             )}
             <p className="page-note">
-              Any Solana program can read this account (owner and <Term t="pda">PDA</Term> check) and act on it. <Link href="/vault">See the protected vault →</Link>
+              Any Solana program can read this account (owner and <Term t="pda">PDA</Term> check) and act on it.{" "}
+              <Link href="/docs#onchain">How programs use it →</Link>
             </p>
           </div>
 
@@ -340,7 +396,11 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
             <SectionHead title="Get alerts" />
             <div className="detail__ctas">
               {bot ? (
-                <a href={`https://t.me/${bot}?start=watch_${slug}`} className="btn btn--glow btn--sm" data-cursor="Telegram">
+                <a
+                  href={`https://t.me/${bot}?start=watch_${slug}`}
+                  className="btn btn--glow btn--sm"
+                  data-cursor="Telegram"
+                >
                   <span>Telegram: watch {p.name}</span>
                 </a>
               ) : null}
@@ -357,7 +417,11 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
         <Timeline
           events={events}
           network={net}
-          empty={live ? undefined : "The governance timeline (backfill and live events) appears when the live database is connected."}
+          empty={
+            live
+              ? undefined
+              : "The governance timeline (backfill and live events) appears when the live database is connected."
+          }
         />
       </section>
     </>

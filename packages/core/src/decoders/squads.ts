@@ -6,7 +6,8 @@ import { SQUADS_V4 } from "../constants/programs";
 import type { ConfigActionLite, MultisigFacts, MultisigMember, PendingConfigProposal } from "../types";
 
 const bn = (v: unknown) => (typeof v === "number" ? v : Number((v as { toString(): string }).toString()));
-const info = (data: Uint8Array) => ({ data: Buffer.from(data), owner: new PublicKey(SQUADS_V4), lamports: 0, executable: false }) as never;
+const info = (data: Uint8Array) =>
+  ({ data: Buffer.from(data), owner: new PublicKey(SQUADS_V4), lamports: 0, executable: false }) as never;
 
 export const MULTISIG_DISCRIMINATOR = Uint8Array.from(multisig.accounts.multisigDiscriminator);
 export const PROPOSAL_DISCRIMINATOR = Uint8Array.from(multisig.accounts.proposalDiscriminator);
@@ -17,7 +18,12 @@ export const MULTISIG_FIELD_OFFSET = 8;
 const startsWith = (d: Uint8Array, p: Uint8Array) => p.every((b, i) => d[i] === b);
 export const isMultisigAccount = (d: Uint8Array) => startsWith(d, MULTISIG_DISCRIMINATOR);
 
-export function decodeMultisig(address: string, data: Uint8Array, vaultIndex = 0, role = "upgrade_authority"): Omit<MultisigFacts, "pending"> {
+export function decodeMultisig(
+  address: string,
+  data: Uint8Array,
+  vaultIndex = 0,
+  role = "upgrade_authority",
+): Omit<MultisigFacts, "pending"> {
   if (!isMultisigAccount(data)) throw new Error("not a Squads v4 Multisig account");
   const [m] = multisig.accounts.Multisig.fromAccountInfo(info(data));
   const cfg = m.configAuthority.toBase58();
@@ -41,7 +47,11 @@ export function decodeProposal(data: Uint8Array): { multisig: string; transactio
   return { multisig: p.multisig.toBase58(), transactionIndex: bn(p.transactionIndex), status: p.status.__kind };
 }
 
-export function decodeConfigTransaction(data: Uint8Array): { multisig: string; index: number; actions: ConfigActionLite[] } {
+export function decodeConfigTransaction(data: Uint8Array): {
+  multisig: string;
+  index: number;
+  actions: ConfigActionLite[];
+} {
   if (!startsWith(data, CONFIG_TX_DISCRIMINATOR)) throw new Error("not a ConfigTransaction");
   const [c] = multisig.accounts.ConfigTransaction.fromAccountInfo(info(data));
   return { multisig: c.multisig.toBase58(), index: bn(c.index), actions: c.actions.map(liteAction) };
@@ -75,7 +85,12 @@ export function pendingFrom(
     .filter((c) => c.index > ms.staleTransactionIndex)
     .map((c) => ({ c, p: proposals.find((p) => p.transactionIndex === c.index) }))
     .filter(({ p }) => p && live.has(p.status))
-    .map(({ c, p }) => ({ transactionIndex: c.index, status: p!.status, actions: c.actions, configTransaction: c.address }));
+    .map(({ c, p }) => ({
+      transactionIndex: c.index,
+      status: p!.status,
+      actions: c.actions,
+      configTransaction: c.address,
+    }));
 }
 
 /** Squads v4 vault PDA: seeds ["multisig", multisigPda, "vault", u8 index]. */

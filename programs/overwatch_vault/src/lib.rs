@@ -2,7 +2,7 @@
 //! `check_and_exit` is permissionless: anyone can pull a position back to idle when the protocol's
 //! Overwatch `RiskRecord` is red (`flags & RED_MASK != 0`) or its score is below `vault.min_score`.
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Mint, MintTo, Burn, Token, TokenAccount, Transfer};
+use anchor_spl::token::{self, Burn, Mint, MintTo, Token, TokenAccount, Transfer};
 use overwatch_registry::{flags::RED_MASK, RiskRecord, RISK_SEED};
 
 declare_id!("9HyNZKXgyJzCoSq3PQ16etGn7eC4ZDauTuRUUe9Jef5A");
@@ -34,15 +34,36 @@ pub mod overwatch_vault {
         let assets = ctx.accounts.vault.total_assets(ctx.accounts.idle.amount)?;
         let supply = ctx.accounts.share_mint.supply;
         let shares = shares_for_deposit(amount, assets, supply)?;
-        token::transfer(CpiContext::new(ctx.accounts.token_program.key(), Transfer {
-            from: ctx.accounts.user_tokens.to_account_info(), to: ctx.accounts.idle.to_account_info(), authority: ctx.accounts.user.to_account_info(),
-        }), amount)?;
+        token::transfer(
+            CpiContext::new(
+                ctx.accounts.token_program.key(),
+                Transfer {
+                    from: ctx.accounts.user_tokens.to_account_info(),
+                    to: ctx.accounts.idle.to_account_info(),
+                    authority: ctx.accounts.user.to_account_info(),
+                },
+            ),
+            amount,
+        )?;
         let mint = ctx.accounts.vault.mint;
         let seeds: &[&[u8]] = &[VAULT_SEED, mint.as_ref(), &[ctx.accounts.vault.bump]];
-        token::mint_to(CpiContext::new_with_signer(ctx.accounts.token_program.key(), MintTo {
-            mint: ctx.accounts.share_mint.to_account_info(), to: ctx.accounts.user_shares.to_account_info(), authority: ctx.accounts.vault.to_account_info(),
-        }, &[seeds]), shares)?;
-        emit!(Deposited { user: ctx.accounts.user.key(), amount, shares });
+        token::mint_to(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.key(),
+                MintTo {
+                    mint: ctx.accounts.share_mint.to_account_info(),
+                    to: ctx.accounts.user_shares.to_account_info(),
+                    authority: ctx.accounts.vault.to_account_info(),
+                },
+                &[seeds],
+            ),
+            shares,
+        )?;
+        emit!(Deposited {
+            user: ctx.accounts.user.key(),
+            amount,
+            shares
+        });
         Ok(())
     }
 
@@ -50,16 +71,40 @@ pub mod overwatch_vault {
         require!(shares > 0, VaultError::ZeroAmount);
         let assets = ctx.accounts.vault.total_assets(ctx.accounts.idle.amount)?;
         let amount = assets_for_shares(shares, assets, ctx.accounts.share_mint.supply)?;
-        require!(amount <= ctx.accounts.idle.amount, VaultError::InsufficientIdle);
-        token::burn(CpiContext::new(ctx.accounts.token_program.key(), Burn {
-            mint: ctx.accounts.share_mint.to_account_info(), from: ctx.accounts.user_shares.to_account_info(), authority: ctx.accounts.user.to_account_info(),
-        }), shares)?;
+        require!(
+            amount <= ctx.accounts.idle.amount,
+            VaultError::InsufficientIdle
+        );
+        token::burn(
+            CpiContext::new(
+                ctx.accounts.token_program.key(),
+                Burn {
+                    mint: ctx.accounts.share_mint.to_account_info(),
+                    from: ctx.accounts.user_shares.to_account_info(),
+                    authority: ctx.accounts.user.to_account_info(),
+                },
+            ),
+            shares,
+        )?;
         let mint = ctx.accounts.vault.mint;
         let seeds: &[&[u8]] = &[VAULT_SEED, mint.as_ref(), &[ctx.accounts.vault.bump]];
-        token::transfer(CpiContext::new_with_signer(ctx.accounts.token_program.key(), Transfer {
-            from: ctx.accounts.idle.to_account_info(), to: ctx.accounts.user_tokens.to_account_info(), authority: ctx.accounts.vault.to_account_info(),
-        }, &[seeds]), amount)?;
-        emit!(Withdrawn { user: ctx.accounts.user.key(), amount, shares });
+        token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.key(),
+                Transfer {
+                    from: ctx.accounts.idle.to_account_info(),
+                    to: ctx.accounts.user_tokens.to_account_info(),
+                    authority: ctx.accounts.vault.to_account_info(),
+                },
+                &[seeds],
+            ),
+            amount,
+        )?;
+        emit!(Withdrawn {
+            user: ctx.accounts.user.key(),
+            amount,
+            shares
+        });
         Ok(())
     }
 
@@ -75,19 +120,37 @@ pub mod overwatch_vault {
         require!(!p.shielded, VaultError::PositionShielded);
         let mint = ctx.accounts.vault.mint;
         let seeds: &[&[u8]] = &[VAULT_SEED, mint.as_ref(), &[ctx.accounts.vault.bump]];
-        token::transfer(CpiContext::new_with_signer(ctx.accounts.token_program.key(), Transfer {
-            from: ctx.accounts.idle.to_account_info(), to: ctx.accounts.position_tokens.to_account_info(), authority: ctx.accounts.vault.to_account_info(),
-        }, &[seeds]), amount)?;
-        p.allocated = p.allocated.checked_add(amount).ok_or(VaultError::MathOverflow)?;
+        token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.key(),
+                Transfer {
+                    from: ctx.accounts.idle.to_account_info(),
+                    to: ctx.accounts.position_tokens.to_account_info(),
+                    authority: ctx.accounts.vault.to_account_info(),
+                },
+                &[seeds],
+            ),
+            amount,
+        )?;
+        p.allocated = p
+            .allocated
+            .checked_add(amount)
+            .ok_or(VaultError::MathOverflow)?;
         let v = &mut ctx.accounts.vault;
-        v.total_allocated = v.total_allocated.checked_add(amount).ok_or(VaultError::MathOverflow)?;
+        v.total_allocated = v
+            .total_allocated
+            .checked_add(amount)
+            .ok_or(VaultError::MathOverflow)?;
         Ok(())
     }
 
     /// Manager can re-arm a shielded position once the protocol is no longer red (demo reset).
     pub fn reset_position(ctx: Context<ResetPosition>) -> Result<()> {
         let r = &ctx.accounts.risk;
-        require!(!should_exit(r, ctx.accounts.vault.min_score), VaultError::StillRed);
+        require!(
+            !should_exit(r, ctx.accounts.vault.min_score),
+            VaultError::StillRed
+        );
         ctx.accounts.position.shielded = false;
         Ok(())
     }
@@ -100,20 +163,39 @@ pub mod overwatch_vault {
         if p.shielded {
             return Ok(()); // idempotent
         }
-        require!(should_exit(r, ctx.accounts.vault.min_score), VaultError::NotRed);
+        require!(
+            should_exit(r, ctx.accounts.vault.min_score),
+            VaultError::NotRed
+        );
         let amount = ctx.accounts.position_tokens.amount;
         let mint = ctx.accounts.vault.mint;
         let seeds: &[&[u8]] = &[VAULT_SEED, mint.as_ref(), &[ctx.accounts.vault.bump]];
         if amount > 0 {
-            token::transfer(CpiContext::new_with_signer(ctx.accounts.token_program.key(), Transfer {
-                from: ctx.accounts.position_tokens.to_account_info(), to: ctx.accounts.idle.to_account_info(), authority: ctx.accounts.vault.to_account_info(),
-            }, &[seeds]), amount)?;
+            token::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.key(),
+                    Transfer {
+                        from: ctx.accounts.position_tokens.to_account_info(),
+                        to: ctx.accounts.idle.to_account_info(),
+                        authority: ctx.accounts.vault.to_account_info(),
+                    },
+                    &[seeds],
+                ),
+                amount,
+            )?;
         }
         let v = &mut ctx.accounts.vault;
         v.total_allocated = v.total_allocated.saturating_sub(p.allocated);
         p.allocated = 0;
         p.shielded = true;
-        emit!(ShieldTriggered { vault: v.key(), protocol_id: p.protocol_id, amount, score: r.score, flags: r.flags, caller: ctx.accounts.caller.key() });
+        emit!(ShieldTriggered {
+            vault: v.key(),
+            protocol_id: p.protocol_id,
+            amount,
+            score: r.score,
+            flags: r.flags,
+            caller: ctx.accounts.caller.key()
+        });
         Ok(())
     }
 }
@@ -133,7 +215,8 @@ pub fn shares_for_deposit(amount: u64, total_assets: u64, supply: u64) -> Result
 
 pub fn assets_for_shares(shares: u64, total_assets: u64, supply: u64) -> Result<u64> {
     require!(supply > 0 && shares <= supply, VaultError::ZeroAmount);
-    u64::try_from((shares as u128) * (total_assets as u128) / (supply as u128)).map_err(|_| error!(VaultError::MathOverflow))
+    u64::try_from((shares as u128) * (total_assets as u128) / (supply as u128))
+        .map_err(|_| error!(VaultError::MathOverflow))
 }
 
 #[derive(Accounts)]
@@ -243,7 +326,8 @@ pub struct Vault {
 
 impl Vault {
     pub fn total_assets(&self, idle: u64) -> Result<u64> {
-        idle.checked_add(self.total_allocated).ok_or(error!(VaultError::MathOverflow))
+        idle.checked_add(self.total_allocated)
+            .ok_or(error!(VaultError::MathOverflow))
     }
 }
 
@@ -269,9 +353,17 @@ pub struct ShieldTriggered {
 }
 
 #[event]
-pub struct Deposited { pub user: Pubkey, pub amount: u64, pub shares: u64 }
+pub struct Deposited {
+    pub user: Pubkey,
+    pub amount: u64,
+    pub shares: u64,
+}
 #[event]
-pub struct Withdrawn { pub user: Pubkey, pub amount: u64, pub shares: u64 }
+pub struct Withdrawn {
+    pub user: Pubkey,
+    pub amount: u64,
+    pub shares: u64,
+}
 
 #[error_code]
 pub enum VaultError {

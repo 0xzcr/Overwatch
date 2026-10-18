@@ -26,24 +26,45 @@ for (const cfg0 of list) {
   if (snapshot.programs.length !== cfg.programs.length) problems.push("program(s) failed to decode");
   // every mapped upgrade multisig must derive one of the program authorities
   for (const m of cfg.multisigs.filter((x) => x.role === "upgrade_authority")) {
-    const ok = snapshot.programs.some((p) => p.upgradeAuthority && findVaultIndex(m.address, p.upgradeAuthority) === m.vault_index);
-    if (!ok) problems.push(`multisig ${m.address} does not derive any program authority at vault index ${m.vault_index}`);
+    const ok = snapshot.programs.some(
+      (p) => p.upgradeAuthority && findVaultIndex(m.address, p.upgradeAuthority) === m.vault_index,
+    );
+    if (!ok)
+      problems.push(`multisig ${m.address} does not derive any program authority at vault index ${m.vault_index}`);
   }
   // try discovery for unmapped PDA authorities
   for (const p of snapshot.programs.filter((x) => x.authorityKind === "OTHER_PROGRAM_PDA" && x.upgradeAuthority)) {
     const found = await discoverSquadsMultisig(rpc, p.upgradeAuthority!, 40).catch(() => null);
-    if (found) console.log(`  ↳ ${cfg.slug}: discovered Squads multisig ${found.multisig} (vault ${found.vaultIndex}) — add to protocols.yaml`);
+    if (found)
+      console.log(
+        `  ↳ ${cfg.slug}: discovered Squads multisig ${found.multisig} (vault ${found.vaultIndex}) — add to protocols.yaml`,
+      );
   }
   const verified = problems.length === 0;
-  const final = verified ? (await collectSnapshot(rpc, { ...cfg, verified: true }, { scanNonces: false })).snapshot : snapshot;
+  const final = verified
+    ? (await collectSnapshot(rpc, { ...cfg, verified: true }, { scanNonces: false })).snapshot
+    : snapshot;
   const tvl = cfg.defillama_slug ? await fetchTvl(cfg.defillama_slug) : null;
 
   const values = {
-    slug: cfg.slug, name: cfg.name, category: cfg.category, website: cfg.website, defillamaSlug: cfg.defillama_slug ?? null,
-    network: cfg.network, source: cfg.source, config: { ...cfg, verified }, verified, verification: { checkedAt: new Date().toISOString(), problems },
-    tvlUsd: tvl, tvlFetchedAt: tvl ? new Date() : null,
+    slug: cfg.slug,
+    name: cfg.name,
+    category: cfg.category,
+    website: cfg.website,
+    defillamaSlug: cfg.defillama_slug ?? null,
+    network: cfg.network,
+    source: cfg.source,
+    config: { ...cfg, verified },
+    verified,
+    verification: { checkedAt: new Date().toISOString(), problems },
+    tvlUsd: tvl,
+    tvlFetchedAt: tvl ? new Date() : null,
   };
-  const [row] = await d.insert(protocols).values(values).onConflictDoUpdate({ target: protocols.slug, set: values }).returning();
+  const [row] = await d
+    .insert(protocols)
+    .values(values)
+    .onConflictDoUpdate({ target: protocols.slug, set: values })
+    .returning();
   await d.delete(watchedAccounts).where(eq(watchedAccounts.protocolId, row!.id));
   const wa = [
     ...final.programs.flatMap((p) => [
@@ -55,17 +76,29 @@ for (const cfg0 of list) {
     ...cfg.oracles.map((m) => ({ kind: "oracle", address: m, label: "oracle" })),
     ...cfg.admin_accounts.map((m) => ({ kind: "admin", address: m, label: "admin config" })),
   ];
-  if (wa.length) await d.insert(watchedAccounts).values(wa.map((w) => ({ ...w, protocolId: row!.id, verified }))).onConflictDoNothing();
+  if (wa.length)
+    await d
+      .insert(watchedAccounts)
+      .values(wa.map((w) => ({ ...w, protocolId: row!.id, verified })))
+      .onConflictDoNothing();
   const r = await ingestSnapshot(row!, final, { source: "live" });
 
   const ms = final.multisigs[0];
   report.push({
-    protocol: cfg.slug, verified: verified ? "✔" : "✘", authority: [...new Set(final.programs.map((p) => p.authorityKind))].join("+"),
-    multisig: ms ? `${ms.threshold}/${ms.members.length}` : "-", timelock: ms ? `${ms.timeLockSec}s` : "-",
-    grade: `${r.score.grade} ${r.score.score}`, problems: problems.join("; ").slice(0, 70) || "-",
+    protocol: cfg.slug,
+    verified: verified ? "✔" : "✘",
+    authority: [...new Set(final.programs.map((p) => p.authorityKind))].join("+"),
+    multisig: ms ? `${ms.threshold}/${ms.members.length}` : "-",
+    timelock: ms ? `${ms.timeLockSec}s` : "-",
+    grade: `${r.score.grade} ${r.score.score}`,
+    problems: problems.join("; ").slice(0, 70) || "-",
   });
 }
 
 table(report);
-console.log(`\nAuthority kinds: ${Object.entries(AUTHORITY_LABEL).map(([k, v]) => `${k}=${v}`).join(", ")}`);
+console.log(
+  `\nAuthority kinds: ${Object.entries(AUTHORITY_LABEL)
+    .map(([k, v]) => `${k}=${v}`)
+    .join(", ")}`,
+);
 await sql().end();

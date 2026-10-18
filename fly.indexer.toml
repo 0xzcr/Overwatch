@@ -1,6 +1,6 @@
 # fly launch --config fly.indexer.toml --dockerfile Dockerfile.worker --build-arg APP=indexer
 app = "overwatch-indexer"
-primary_region = "iad"
+primary_region = "syd" # next to the Supabase database (ap-southeast-2)
 [build]
   dockerfile = "Dockerfile.worker"
   [build.args]

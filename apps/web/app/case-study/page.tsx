@@ -5,7 +5,8 @@ import { PageHero, Term, cssVars, stage } from "@/site/ui";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Case study" };
 
-const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+const fmtDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 
 export default async function CaseStudy() {
   const { headline: h } = await loadProtocols();
@@ -17,15 +18,27 @@ export default async function CaseStudy() {
     <>
       <PageHero
         dock="Case study"
-        lines={[
-          "Drift lost $285M.",
-          `${days} days of warning.`,
-        ]}
+        lines={["Drift lost $285M.", `${days} days of warning.`]}
         lede="The warning signs were onchain and public. No smart-contract bug was involved. The attacker collected pre-signed durable-nonce transactions from Security Council signers, waited, and used them to take admin. This replay is a backtest: Overwatch's current rules applied to the public record, reconstructed from incident reports. It is not a live catch."
-        stageAttrs={stage("knot", { colorA: "#FFB547", colorB: "#1b2340", x: 3, y: 0.6, yNarrow: 1.5, scale: 0.85, autoRotate: 0.16, jitter: 0.02, opacity: 0.95 })}
+        stageAttrs={stage("knot", {
+          colorA: "#FFB547",
+          colorB: "#1b2340",
+          x: 3,
+          y: 0.6,
+          yNarrow: 1.5,
+          scale: 0.85,
+          autoRotate: 0.16,
+          jitter: 0.02,
+          opacity: 0.95,
+        })}
       />
 
-      <section className="manifesto" id="why" data-dock="Why" {...stage("scatter", { colorA: "#7CF3FF", colorB: "#2a2f5a", opacity: 0.55, autoRotate: 0.03 })}>
+      <section
+        className="manifesto"
+        id="why"
+        data-dock="Why"
+        {...stage("scatter", { colorA: "#7CF3FF", colorB: "#2a2f5a", opacity: 0.55, autoRotate: 0.03 })}
+      >
         <div className="manifesto__pin">
           <p className="manifesto__text">
             {manifesto.split(" ").map((w, i) => (
@@ -34,7 +47,9 @@ export default async function CaseStudy() {
               </span>
             ))}
           </p>
-          <p className="manifesto__sig">Existing monitors serve protocol teams. Overwatch watches on behalf of depositors.</p>
+          <p className="manifesto__sig">
+            Existing monitors serve protocol teams. Overwatch watches on behalf of depositors.
+          </p>
         </div>
       </section>
 
@@ -42,7 +57,16 @@ export default async function CaseStudy() {
         className="stats"
         id="numbers"
         data-dock="The locks"
-        {...stage("lattice", { colorA: "#7CF3FF", colorB: "#8B7CFF", opacity: 0.75, x: 3.2, y: 0.9, scale: 0.85, autoRotate: 0.14, tiltX: 0.2 })}
+        {...stage("lattice", {
+          colorA: "#7CF3FF",
+          colorB: "#8B7CFF",
+          opacity: 0.75,
+          x: 3.2,
+          y: 0.9,
+          scale: 0.85,
+          autoRotate: 0.14,
+          tiltX: 0.2,
+        })}
       >
         <header className="section-head">
           <h2 className="h2">
@@ -152,13 +176,19 @@ export default async function CaseStudy() {
             ))}
           </ul>
           <p>
-            Reconstructed data: the reports do not publish full signer or nonce addresses, so these use placeholders (signer-A…F). The pre-migration threshold and timelock were
-            not published; the reports describe the council as 2-of-5 with no timelock at the time of the attack, so both councils are modelled that way. Dates follow
-            BlockSec&apos;s timeline. Drift&apos;s current council (4-of-7, 1-hour timelock) is watched live on its protocol page.
+            Reconstructed data: the reports do not publish full signer or nonce addresses, so these use placeholders
+            (signer-A…F). The pre-migration threshold and timelock were not published; the reports describe the council
+            as 2-of-5 with no timelock at the time of the attack, so both councils are modelled that way. Dates follow
+            BlockSec&apos;s timeline. Drift&apos;s current council (4-of-7, 1-hour timelock) is watched live on its
+            protocol page.
           </p>
         </div>
       </section>
-      <script id="ow-drift" type="application/json" dangerouslySetInnerHTML={{ __html: JSON.stringify(steps).replace(/</g, "\\u003c") }} />
+      <script
+        id="ow-drift"
+        type="application/json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(steps).replace(/</g, "\\u003c") }}
+      />
     </>
   );
 }

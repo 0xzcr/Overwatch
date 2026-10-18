@@ -1,6 +1,14 @@
 import "server-only";
-import { DRIFT_STEPS, DRIFT_SOURCES, diffSnapshots, scoreSnapshot, flagNames, fmtDuration, type OverwatchEvent } from "@overwatch/core";
-import { getProtocols, getEvents, getPublishes, type ProtocolView, type EventView } from "@/lib/data";
+import {
+  DRIFT_STEPS,
+  DRIFT_SOURCES,
+  diffSnapshots,
+  scoreSnapshot,
+  flagNames,
+  fmtDuration,
+  type OverwatchEvent,
+} from "@overwatch/core";
+import { getProtocols, getEvents, type ProtocolView, type EventView } from "@/lib/data";
 
 /** A protocol row as the site shows it. Built from live DB data or the labelled snapshot below. */
 export interface ProtoCard {
@@ -42,9 +50,15 @@ export interface ReplayStep {
 export const SNAPSHOT_LABEL = "mainnet snapshot · Oct 11 2026";
 
 const usd = (n: number | null | undefined) =>
-  n == null ? "—" : n >= 1e9 ? `$${(n / 1e9).toFixed(2)}B` : n >= 1e6 ? `$${(n / 1e6).toFixed(1)}M` : `$${Math.round(n).toLocaleString()}`;
+  n == null
+    ? "—"
+    : n >= 1e9
+      ? `$${(n / 1e9).toFixed(2)}B`
+      : n >= 1e6
+        ? `$${(n / 1e6).toFixed(1)}M`
+        : `$${Math.round(n).toLocaleString("en-US")}`;
 
-const AUTH:Record<string, string> = {
+const AUTH: Record<string, string> = {
   SQUADS_V4_VAULT: "Squads v4 multisig",
   SINGLE_KEY: "Single private key",
   OTHER_PROGRAM_PDA: "Program-owned (unmapped)",
@@ -56,7 +70,16 @@ const AUTH:Record<string, string> = {
 
 // Snapshot of the mainnet watch list from docs/submission/headline-stats.md (generated 2026-10-11).
 // Used only when the database is unreachable, and always labelled as a snapshot in the UI.
-const FALLBACK: [slug: string, name: string, category: string, grade: string, score: number, authority: string, threshold: string, timelockSec: number | null][] = [
+const FALLBACK: [
+  slug: string,
+  name: string,
+  category: string,
+  grade: string,
+  score: number,
+  authority: string,
+  threshold: string,
+  timelockSec: number | null,
+][] = [
   ["drift", "Drift Protocol", "perps", "A", 85, "SQUADS_V4_VAULT", "4-of-7", 3600],
   ["jito", "Jito (JitoSOL)", "lst", "A", 85, "OTHER_PROGRAM_PDA", "—", null],
   ["jupiter-aggregator", "Jupiter Aggregator", "aggregator", "A", 85, "OTHER_PROGRAM_PDA", "—", null],
@@ -81,11 +104,33 @@ const fmtTimelock = (s: number | null) => (s == null ? "—" : s === 0 ? "no del
 function fallbackCards(): ProtoCard[] {
   return FALLBACK.map(([slug, name, category, grade, score, kind, threshold, timelockSec]) => {
     const unmapped = ["OTHER_PROGRAM_PDA", "REALMS_GOVERNANCE"].includes(kind);
-    const flags = [...(kind === "SINGLE_KEY" ? ["SINGLE_KEY"] : []), ...(timelockSec === 0 ? ["NO_TIMELOCK"] : []), ...(unmapped ? ["UNVERIFIED"] : [])];
+    const flags = [
+      ...(kind === "SINGLE_KEY" ? ["SINGLE_KEY"] : []),
+      ...(timelockSec === 0 ? ["NO_TIMELOCK"] : []),
+      ...(unmapped ? ["UNVERIFIED"] : []),
+    ];
     return {
-      slug, name, category, grade, score, red: kind === "SINGLE_KEY", authorityKind: kind, authority: AUTH[kind] ?? kind, threshold, timelockSec,
-      timelock: fmtTimelock(timelockSec), tvlUsd: null, tvl: "—", flags, breakdown: [], nonceSigners: 0, controlled: false, verified: !unmapped,
-      lastChange: null, source: "snapshot", website: null,
+      slug,
+      name,
+      category,
+      grade,
+      score,
+      red: kind === "SINGLE_KEY",
+      authorityKind: kind,
+      authority: AUTH[kind] ?? kind,
+      threshold,
+      timelockSec,
+      timelock: fmtTimelock(timelockSec),
+      tvlUsd: null,
+      tvl: "—",
+      flags,
+      breakdown: [],
+      nonceSigners: 0,
+      controlled: false,
+      verified: !unmapped,
+      lastChange: null,
+      source: "snapshot",
+      website: null,
     };
   });
 }
@@ -99,7 +144,10 @@ function fromView(p: ProtocolView): ProtoCard {
     score: p.score,
     red: p.red,
     authorityKind: p.authorityKind,
-    authority: p.authorityKind.split(" + ").map((k) => AUTH[k] ?? k).join(" + "),
+    authority: p.authorityKind
+      .split(" + ")
+      .map((k) => AUTH[k] ?? k)
+      .join(" + "),
     threshold: p.threshold,
     timelockSec: p.timelockSec,
     timelock: fmtTimelock(p.timelockSec),
@@ -121,8 +169,10 @@ function fromView(p: ProtocolView): ProtoCard {
 const NO_DB = process.env.NODE_ENV === "production" && !process.env.DATABASE_URL;
 // Long enough for a fresh TLS connection to a distant database region (~3.5s measured), short enough that a dead one
 // falls back to the snapshot before the page feels hung.
-const withTimeout = <T,>(run: () => Promise<T>, ms = 5000): Promise<T> =>
-  NO_DB ? Promise.reject(new Error("no database configured")) : Promise.race([run(), new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
+const withTimeout = <T>(run: () => Promise<T>, ms = 5000): Promise<T> =>
+  NO_DB
+    ? Promise.reject(new Error("no database configured"))
+    : Promise.race([run(), new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
 
 /** Live protocol views, or null when the database is unreachable. */
 async function liveViews(): Promise<ProtocolView[] | null> {
@@ -134,12 +184,14 @@ async function liveViews(): Promise<ProtocolView[] | null> {
   }
 }
 
-const sortCards = (xs: ProtoCard[]) => xs.sort((a, b) => (b.score ?? -1) - (a.score ?? -1) || a.name.localeCompare(b.name));
+const sortCards = (xs: ProtoCard[]) =>
+  xs.sort((a, b) => (b.score ?? -1) - (a.score ?? -1) || a.name.localeCompare(b.name));
 
 /** "Changeable by ≤2 people with no delay": a single upgrade key, or a multisig with threshold ≤ 2 and no timelock. */
-const lowNoDelay = (p: ProtoCard) => p.flags.includes("SINGLE_KEY") || (p.timelockSec === 0 && Number(p.threshold.split("-")[0]) <= 2);
+const lowNoDelay = (p: ProtoCard) =>
+  p.flags.includes("SINGLE_KEY") || (p.timelockSec === 0 && Number(p.threshold.split("-")[0]) <= 2);
 
-export interface Headline {
+interface Headline {
   live: boolean;
   at: string;
   total: number;
@@ -153,7 +205,8 @@ export interface Headline {
 }
 
 function headline(cards: ProtoCard[], live: boolean, views: ProtocolView[] | null): Headline {
-  const sum = (xs: ProtocolView[]) => (xs.some((x) => x.tvlUsd != null) ? xs.reduce((n, x) => n + (x.tvlUsd ?? 0), 0) : null);
+  const sum = (xs: ProtocolView[]) =>
+    xs.some((x) => x.tvlUsd != null) ? xs.reduce((n, x) => n + (x.tvlUsd ?? 0), 0) : null;
   return {
     live,
     at: new Date().toISOString(),
@@ -177,11 +230,30 @@ export async function loadProtocols() {
   return { live, cards, headline: headline(cards, live, live ? mainnet : null) };
 }
 
-export type FeedItem = Pick<EventView, "id" | "slug" | "name" | "type" | "severity" | "weakening" | "title" | "explanation" | "labels" | "slot" | "txSignature" | "source" | "blockTime" | "detectedAt">;
+export type FeedItem = Pick<
+  EventView,
+  | "id"
+  | "slug"
+  | "name"
+  | "type"
+  | "severity"
+  | "weakening"
+  | "title"
+  | "explanation"
+  | "labels"
+  | "slot"
+  | "txSignature"
+  | "source"
+  | "blockTime"
+  | "detectedAt"
+>;
 
 export async function loadEvents(limit = 200, minSeverity?: string): Promise<{ live: boolean; events: FeedItem[] }> {
   try {
-    const events = await withTimeout(() => getEvents({ limit, ...(minSeverity ? { minSeverity } : {}) }));
+    // The devnet demo protocol is a backend test fixture; the public feed shows mainnet history and live catches only.
+    const events = await withTimeout(() =>
+      getEvents({ limit, sources: ["live", "backfill"], ...(minSeverity ? { minSeverity } : {}) }),
+    );
     return { live: true, events };
   } catch {
     return { live: false, events: [] };
@@ -190,7 +262,7 @@ export async function loadEvents(limit = 200, minSeverity?: string): Promise<{ l
 
 export async function loadProtocol(slug: string) {
   const views = await liveViews();
-  const view = views?.find((p) => p.slug === slug) ?? null;
+  const view = views?.find((p) => p.slug === slug && p.source !== "demo") ?? null;
   if (view) {
     let events: FeedItem[] = [];
     try {
@@ -203,15 +275,6 @@ export async function loadProtocol(slug: string) {
   if (views) return null; // DB is up and the protocol is unknown
   const card = fallbackCards().find((c) => c.slug === slug);
   return card ? { live: false, card, view: null, events: [] as FeedItem[] } : null;
-}
-
-export async function loadShields() {
-  try {
-    const pubs = await withTimeout(() => getPublishes(100));
-    return pubs.filter((p) => p.kind === "shield").map((p) => ({ tx: p.tx, at: p.at, slug: p.slug }));
-  } catch {
-    return [];
-  }
 }
 
 // ---------------------------------------------------------------- Drift replay
@@ -230,17 +293,30 @@ export function driftReplay(): ReplayStep[] {
   const history: OverwatchEvent[] = [];
   return DRIFT_STEPS.map((st, i) => {
     const prev = DRIFT_STEPS[i - 1];
-    const alerts = prev ? diffSnapshots(prev.snapshot, st.snapshot, { history, slot: i, blockTime: st.date, now: st.date, name: "Drift" }) : [];
+    const alerts = prev
+      ? diffSnapshots(prev.snapshot, st.snapshot, { history, slot: i, blockTime: st.date, now: st.date, name: "Drift" })
+      : [];
     history.push(...alerts);
     const sc = scoreSnapshot(st.snapshot, history, st.date);
     const level: ReplayStep["level"] =
-      i === DRIFT_STEPS.length - 1 ? "dead" : alerts.some((a) => a.severity === "CRITICAL") ? "bad" : alerts.length || sc.red ? "warn" : "ok";
+      i === DRIFT_STEPS.length - 1
+        ? "dead"
+        : alerts.some((a) => a.severity === "CRITICAL")
+          ? "bad"
+          : alerts.length || sc.red
+            ? "warn"
+            : "ok";
     return {
       date: st.date,
       headline: st.headline,
       detail: st.detail,
       level,
-      alerts: alerts.map((a) => ({ severity: a.severity, title: a.title, explanation: readable(a.explanation), labels: a.labels })),
+      alerts: alerts.map((a) => ({
+        severity: a.severity,
+        title: a.title,
+        explanation: readable(a.explanation),
+        labels: a.labels,
+      })),
       score: sc.score,
       grade: sc.grade,
       red: sc.red,

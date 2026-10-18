@@ -12,13 +12,29 @@ const LEVELS = [
 const RANK: Record<string, number> = { INFO: 0, LOW: 1, MEDIUM: 2, HIGH: 3, CRITICAL: 4 };
 const at = (e: FeedItem) => e.blockTime ?? e.detectedAt;
 // Fixed locale and zone, so the server and the browser render the same text.
-const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
-const clock = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
+const day = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+const clock = (iso: string) =>
+  new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
 /** "marginfi has a pending vote…" reads as "has a pending vote…" next to the protocol column. */
 const rest = (e: FeedItem) => (e.name && e.title.startsWith(`${e.name} `) ? e.title.slice(e.name.length + 1) : e.title);
 
 /** Event log over Server-Sent Events (/api/v1/stream): grouped by UTC day, filterable, one line per change. */
-export function LiveFeed({ initial, protocols, live }: { initial: FeedItem[]; protocols: { slug: string; name: string }[]; live: boolean }) {
+export function LiveFeed({
+  initial,
+  protocols,
+  live,
+}: {
+  initial: FeedItem[];
+  protocols: { slug: string; name: string }[];
+  live: boolean;
+}) {
   const [items, setItems] = useState(initial);
   const [min, setMin] = useState("INFO");
   const [proto, setProto] = useState("all");
@@ -44,7 +60,7 @@ export function LiveFeed({ initial, protocols, live }: { initial: FeedItem[]; pr
         labels: d.labels ?? [],
         slot: d.slot ?? null,
         txSignature: d.txSignature ?? null,
-        source: d.source ?? (d.slug === "overwatch-demo" ? "demo" : "live"),
+        source: d.source ?? "live",
         blockTime: null,
         detectedAt: d.at ?? new Date().toISOString(),
       };
@@ -56,7 +72,13 @@ export function LiveFeed({ initial, protocols, live }: { initial: FeedItem[]; pr
   }, []);
 
   const shown = useMemo(
-    () => items.filter((e) => (RANK[e.severity] ?? 0) >= RANK[min]! && (proto === "all" || e.slug === proto) && (deploys || e.type !== "PROGRAM_UPGRADED")),
+    () =>
+      items.filter(
+        (e) =>
+          (RANK[e.severity] ?? 0) >= RANK[min]! &&
+          (proto === "all" || e.slug === proto) &&
+          (deploys || e.type !== "PROGRAM_UPGRADED"),
+      ),
     [items, min, proto, deploys],
   );
   // Consecutive runs of the same UTC day; the list is already newest-first.
@@ -80,17 +102,31 @@ export function LiveFeed({ initial, protocols, live }: { initial: FeedItem[]; pr
         </span>
         <span className="evlog__count mono">
           {shown.length} {shown.length === 1 ? "event" : "events"}
-          {serious > 0 && <> · <b>{serious} high or critical</b></>}
+          {serious > 0 && (
+            <>
+              {" "}
+              · <b>{serious} high or critical</b>
+            </>
+          )}
         </span>
         <div className="evlog__filters">
           <div className="chips" role="group" aria-label="Minimum severity">
             {LEVELS.map((l) => (
-              <button key={l.min} className={`chip chip--tag${min === l.min ? " is-on" : ""}`} aria-pressed={min === l.min} onClick={() => setMin(l.min)}>
+              <button
+                key={l.min}
+                className={`chip chip--tag${min === l.min ? " is-on" : ""}`}
+                aria-pressed={min === l.min}
+                onClick={() => setMin(l.min)}
+              >
                 {l.label}
               </button>
             ))}
           </div>
-          <button className={`chip chip--tag${deploys ? "" : " is-on"}`} aria-pressed={!deploys} onClick={() => setDeploys((x) => !x)}>
+          <button
+            className={`chip chip--tag${deploys ? "" : " is-on"}`}
+            aria-pressed={!deploys}
+            onClick={() => setDeploys((x) => !x)}
+          >
             Hide code deploys
           </button>
           <label className="select mono">
@@ -109,12 +145,20 @@ export function LiveFeed({ initial, protocols, live }: { initial: FeedItem[]; pr
 
       {!shown.length ? (
         <div className="evlog__empty">
-          <b>{items.length ? "Nothing matches these filters." : live ? "No events recorded yet." : "No event history on this deployment."}</b>
+          <b>
+            {items.length
+              ? "Nothing matches these filters."
+              : live
+                ? "No events recorded yet."
+                : "No event history on this deployment."}
+          </b>
           {live || items.length ? (
-            <p>New changes appear here within seconds of confirming onchain. Durable nonce accounts are scanned hourly.</p>
+            <p>
+              New changes appear here within seconds of confirming onchain. Durable nonce accounts are scanned hourly.
+            </p>
           ) : (
             <p>
-              The live database isn&apos;t connected here. To see an alert fire, use the <Link href="/demo">demo console</Link> or step through the{" "}
+              The live database isn&apos;t connected here. To see how alerts read, step through the{" "}
               <Link href="/case-study">Drift replay</Link>.
             </p>
           )}
@@ -135,7 +179,10 @@ export function LiveFeed({ initial, protocols, live }: { initial: FeedItem[]; pr
               </h2>
               <ul>
                 {g.rows.map((e) => (
-                  <li key={e.id} className={`evlog__row sev-${e.severity.toLowerCase()}${flash === e.id ? " is-new" : ""}`}>
+                  <li
+                    key={e.id}
+                    className={`evlog__row sev-${e.severity.toLowerCase()}${flash === e.id ? " is-new" : ""}`}
+                  >
                     <details>
                       <summary>
                         <time className="mono" dateTime={at(e)}>
@@ -145,14 +192,15 @@ export function LiveFeed({ initial, protocols, live }: { initial: FeedItem[]; pr
                         <span className="evlog__proto">{e.name}</span>
                         <span className="evlog__title">
                           {rest(e)}
-                          {!e.weakening && e.severity === "INFO" && <span className="evlog__tag is-good mono">stronger</span>}
+                          {!e.weakening && e.severity === "INFO" && (
+                            <span className="evlog__tag is-good mono">stronger</span>
+                          )}
                           {e.labels.map((l) => (
                             <span key={l} className="evlog__tag is-bad mono">
                               {l}
                             </span>
                           ))}
                           {/* Most rows come from scanning past transactions, so the rarer live catches carry the tag. */}
-                          {e.source === "demo" && <span className="evlog__tag mono">demo</span>}
                           {e.source === "live" && (
                             <span className="evlog__tag is-live mono" title="Caught by live monitoring as it happened">
                               live
@@ -165,7 +213,11 @@ export function LiveFeed({ initial, protocols, live }: { initial: FeedItem[]; pr
                         <p className="mono">
                           {e.slot != null && <span>slot {e.slot.toLocaleString("en-US")}</span>}
                           {e.txSignature && (
-                            <a href={`https://explorer.solana.com/tx/${e.txSignature}${e.source === "demo" ? "?cluster=devnet" : ""}`} target="_blank" rel="noreferrer">
+                            <a
+                              href={`https://explorer.solana.com/tx/${e.txSignature}`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
                               transaction ↗
                             </a>
                           )}

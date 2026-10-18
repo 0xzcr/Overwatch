@@ -1,8 +1,21 @@
-import { ComputeBudgetProgram, Connection, Keypair, Transaction, TransactionInstruction, sendAndConfirmTransaction } from "@solana/web3.js";
+import {
+  ComputeBudgetProgram,
+  Connection,
+  Keypair,
+  Transaction,
+  TransactionInstruction,
+  sendAndConfirmTransaction,
+} from "@solana/web3.js";
 
 export type Log = (line: string, sig?: string) => void;
 
-export async function send(conn: Connection, ixs: TransactionInstruction[], signers: Keypair[], log?: Log, label = "tx"): Promise<string> {
+export async function send(
+  conn: Connection,
+  ixs: TransactionInstruction[],
+  signers: Keypair[],
+  log?: Log,
+  label = "tx",
+): Promise<string> {
   const tx = new Transaction().add(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 5_000 }), ...ixs);
   let last: unknown;
   for (let i = 0; i < 3; i++) {

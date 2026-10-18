@@ -56,7 +56,13 @@ export function Chrome() {
         <NavLinks />
         <div className="nav__actions">
           <NavClock />
-          <button className="nav__link nav__menu" id="menuOpen" data-cursor="Menu" aria-expanded="false" aria-controls="menu">
+          <button
+            className="nav__link nav__menu"
+            id="menuOpen"
+            data-cursor="Menu"
+            aria-expanded="false"
+            aria-controls="menu"
+          >
             <span>Menu</span>
             <span className="nav__burger">
               <i />
@@ -125,7 +131,11 @@ export function Chrome() {
           <symbol id="ow-mark" viewBox="0 0 48 48">
             <g stroke="url(#owGrad)" strokeLinejoin="round">
               <path d="M15.6 15 L12 1.5 L20.6 12 Z M32.4 15 L36 1.5 L27.4 12 Z" fill="#0b1d18" strokeWidth="2" />
-              <path d="M16 11.5 L32 11.5 L37.5 19.5 L31.5 30 L28.5 40 L19.5 40 L16.5 30 L10.5 19.5 Z" fill="#07120f" strokeWidth="2.4" />
+              <path
+                d="M16 11.5 L32 11.5 L37.5 19.5 L31.5 30 L28.5 40 L19.5 40 L16.5 30 L10.5 19.5 Z"
+                fill="#07120f"
+                strokeWidth="2.4"
+              />
             </g>
             <path d="M16.4 21.8 L21.4 22.9 L17.4 24.2 Z M31.6 21.8 L26.6 22.9 L30.6 24.2 Z" fill="#2BFFB0" />
             <path d="M21.4 30.2 L26.6 30.2 L24 33.1 Z" fill="#7CF3FF" />
@@ -142,7 +152,10 @@ export function Footer() {
       <div className="footer__top">
         <div className="footer__brand">
           <Logo className="logo logo--footer" />
-          <p>Overwatch reads who can change the Solana protocols holding your deposits and alerts you after those controls weaken onchain. It watches authority, not prices or code.</p>
+          <p>
+            Overwatch reads who can change the Solana protocols holding your deposits and alerts you after those
+            controls weaken onchain. It watches authority, not prices or code.
+          </p>
         </div>
         <div className="footer__cols">
           <div>
@@ -154,8 +167,7 @@ export function Footer() {
           <div>
             <h4>Act</h4>
             <Link href="/alerts">Alerts</Link>
-            <Link href="/vault">Protected vault</Link>
-            <Link href="/demo">Demo console</Link>
+            <Link href="/docs#onchain">Onchain registry</Link>
           </div>
           <div>
             <h4>Learn</h4>

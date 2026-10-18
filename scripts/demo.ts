@@ -1,7 +1,8 @@
 // DEVNET ONLY — see packages/demo. Usage: tsx scripts/demo.ts <setup|remove-timelock|lower-threshold|create-signer-nonce|transfer-authority|reset>
 import { ACTIONS, setup } from "@overwatch/demo";
 import { sql } from "@overwatch/db";
-const log = (line: string, sig?: string) => console.log(sig ? `${line}\n   https://explorer.solana.com/tx/${sig}?cluster=devnet` : line);
+const log = (line: string, sig?: string) =>
+  console.log(sig ? `${line}\n   https://explorer.solana.com/tx/${sig}?cluster=devnet` : line);
 const run: Record<string, (l: typeof log) => Promise<unknown>> = { setup, ...ACTIONS };
 const name = process.argv[2] ?? "";
 if (!Object.hasOwn(run, name)) {

@@ -12,7 +12,6 @@ export function NavClock() {
   }, []);
   return (
     <span className="nav__status">
-      <i aria-hidden="true" />
       <time dateTime={now ?? undefined}>{now ?? "--:--:--"}</time> GMT
     </span>
   );

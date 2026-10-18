@@ -26,7 +26,8 @@ pub mod flags {
     pub const NO_TIMELOCK_LOW_THRESHOLD: u64 = 1 << 10;
     pub const RECENT_CRITICAL: u64 = 1 << 11;
     /// Any of these ⇒ red.
-    pub const RED_MASK: u64 = SINGLE_KEY | SIGNER_NONCE | NO_TIMELOCK_LOW_THRESHOLD | RECENT_CRITICAL;
+    pub const RED_MASK: u64 =
+        SINGLE_KEY | SIGNER_NONCE | NO_TIMELOCK_LOW_THRESHOLD | RECENT_CRITICAL;
 }
 
 #[program]
@@ -46,7 +47,10 @@ pub mod overwatch_registry {
     pub fn add_publisher(ctx: Context<AdminOnly>, publisher: Pubkey) -> Result<()> {
         let c = &mut ctx.accounts.config;
         require!(!c.is_publisher(&publisher), RegistryError::AlreadyPublisher);
-        require!((c.publisher_count as usize) < MAX_PUBLISHERS, RegistryError::TooManyPublishers);
+        require!(
+            (c.publisher_count as usize) < MAX_PUBLISHERS,
+            RegistryError::TooManyPublishers
+        );
         let i = c.publisher_count as usize;
         c.publishers[i] = publisher;
         c.publisher_count += 1;
@@ -56,7 +60,10 @@ pub mod overwatch_registry {
     pub fn remove_publisher(ctx: Context<AdminOnly>, publisher: Pubkey) -> Result<()> {
         let c = &mut ctx.accounts.config;
         let n = c.publisher_count as usize;
-        let i = c.publishers[..n].iter().position(|p| *p == publisher).ok_or(RegistryError::NotPublisher)?;
+        let i = c.publishers[..n]
+            .iter()
+            .position(|p| *p == publisher)
+            .ok_or(RegistryError::NotPublisher)?;
         c.publishers[i] = c.publishers[n - 1];
         c.publishers[n - 1] = Pubkey::default();
         c.publisher_count -= 1;
@@ -73,15 +80,28 @@ pub mod overwatch_registry {
         Ok(())
     }
 
-    pub fn upsert_risk(ctx: Context<UpsertRisk>, protocol_id: [u8; 32], score: u8, grade: u8, flags: u64, last_event_slot: u64) -> Result<()> {
+    pub fn upsert_risk(
+        ctx: Context<UpsertRisk>,
+        protocol_id: [u8; 32],
+        score: u8,
+        grade: u8,
+        flags: u64,
+        last_event_slot: u64,
+    ) -> Result<()> {
         let c = &ctx.accounts.config;
         require!(!c.paused, RegistryError::Paused);
-        require!(c.is_publisher(&ctx.accounts.publisher.key()), RegistryError::NotPublisher);
+        require!(
+            c.is_publisher(&ctx.accounts.publisher.key()),
+            RegistryError::NotPublisher
+        );
         require!(score <= 100, RegistryError::InvalidScore);
         require!(grade <= 4, RegistryError::InvalidGrade);
         let r = &mut ctx.accounts.risk;
         if r.version > 0 {
-            require!(last_event_slot >= r.last_event_slot, RegistryError::StaleUpdate);
+            require!(
+                last_event_slot >= r.last_event_slot,
+                RegistryError::StaleUpdate
+            );
         }
         r.protocol_id = protocol_id;
         r.score = score;
@@ -90,9 +110,20 @@ pub mod overwatch_registry {
         r.last_event_slot = last_event_slot;
         r.updated_slot = Clock::get()?.slot;
         r.publisher = ctx.accounts.publisher.key();
-        r.version = r.version.checked_add(1).ok_or(RegistryError::InvalidScore)?;
+        r.version = r
+            .version
+            .checked_add(1)
+            .ok_or(RegistryError::InvalidScore)?;
         r.bump = ctx.bumps.risk;
-        emit!(RiskUpdated { protocol_id, score, grade, flags, last_event_slot, red: flags & flags::RED_MASK != 0, version: r.version });
+        emit!(RiskUpdated {
+            protocol_id,
+            score,
+            grade,
+            flags,
+            last_event_slot,
+            red: flags & flags::RED_MASK != 0,
+            version: r.version
+        });
         Ok(())
     }
 }

@@ -1,7 +1,17 @@
 import { describe, it, expect } from "vitest";
 import { telegramHtml, backoffMs, MAX_ATTEMPTS, webhookPayload } from "../src/format";
 
-const a = { name: "Kamino <Lend>", slug: "kamino-lend", severity: "CRITICAL", title: "Timelock removed", explanation: "2 people can now change the program instantly.", type: "TIMELOCK_REMOVED", txSignature: "abc", network: "mainnet", labels: ["Drift pattern"] };
+const a = {
+  name: "Kamino <Lend>",
+  slug: "kamino-lend",
+  severity: "CRITICAL",
+  title: "Timelock removed",
+  explanation: "2 people can now change the program instantly.",
+  type: "TIMELOCK_REMOVED",
+  txSignature: "abc",
+  network: "mainnet",
+  labels: ["Drift pattern"],
+};
 describe("alert formatting", () => {
   it("escapes HTML and includes the what-you-can-do line and links", () => {
     const m = telegramHtml(a, "https://ow.example");

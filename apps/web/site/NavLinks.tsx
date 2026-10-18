@@ -14,7 +14,12 @@ export function NavLinks() {
   return (
     <nav className="nav__center" aria-label="Primary">
       {LINKS.map(([href, label]) => (
-        <Link key={href} href={href} className="nav__link" aria-current={path === href || path.startsWith(`${href}/`) ? "page" : undefined}>
+        <Link
+          key={href}
+          href={href}
+          className="nav__link"
+          aria-current={path === href || path.startsWith(`${href}/`) ? "page" : undefined}
+        >
           {label}
         </Link>
       ))}

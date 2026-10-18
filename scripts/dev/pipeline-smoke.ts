@@ -47,16 +47,33 @@ try {
   await d.delete(protocols).where(eq(protocols.slug, SLUG));
   const [p] = await d
     .insert(protocols)
-    .values({ slug: SLUG, name: "Pipeline Smoke Protocol", category: "lending", network: "devnet", source: "demo", config: {}, verified: true })
+    .values({
+      slug: SLUG,
+      name: "Pipeline Smoke Protocol",
+      category: "lending",
+      network: "devnet",
+      source: "demo",
+      config: {},
+      verified: true,
+    })
     .returning();
-  const [sub] = await d.insert(subscriptions).values({ channel: "webhook", target: url, minSeverity: "HIGH", protocolIds: [p!.id], secret: SECRET }).returning();
+  const [sub] = await d
+    .insert(subscriptions)
+    .values({ channel: "webhook", target: url, minSeverity: "HIGH", protocolIds: [p!.id], secret: SECRET })
+    .returning();
 
   // 2. Baseline, then the same change the demo's "Remove timelock" button makes.
   const at = new Date().toISOString();
   const base = await ingestSnapshot(p!, { ...demoSnapshot(DEMO_BASELINE, at), protocol: SLUG }, { source: "demo" });
   const weakened = applyDemoAction(DEMO_BASELINE, "remove-timelock").next;
-  const r = await ingestSnapshot(p!, { ...demoSnapshot(weakened, at), protocol: SLUG, slot: 1 }, { source: "demo", txSignature: null });
-  console.log(`baseline score ${base.score.score} ${base.score.grade} · after change ${r.score.score} ${r.score.grade}${r.score.red ? " (red)" : ""}`);
+  const r = await ingestSnapshot(
+    p!,
+    { ...demoSnapshot(weakened, at), protocol: SLUG, slot: 1 },
+    { source: "demo", txSignature: null },
+  );
+  console.log(
+    `baseline score ${base.score.score} ${base.score.grade} · after change ${r.score.score} ${r.score.grade}${r.score.red ? " (red)" : ""}`,
+  );
   const ev = r.events[0] ?? fail("no event was detected");
   console.log(`event: ${ev.severity} ${ev.title}`);
   if (ev.severity !== "CRITICAL") fail(`expected CRITICAL, got ${ev.severity}`);
@@ -74,7 +91,8 @@ try {
   // 4. NOTIFY is what the SSE stream forwards to browsers.
   await new Promise((res) => setTimeout(res, 1500)); // a distant database region can take a few round trips
   const kinds = notified.map((n) => (JSON.parse(n) as { kind: string }).kind);
-  if (!kinds.includes("event") || !kinds.includes("score")) fail(`expected event and score notifications, got [${kinds.join(", ")}]`);
+  if (!kinds.includes("event") || !kinds.includes("score"))
+    fail(`expected event and score notifications, got [${kinds.join(", ")}]`);
   console.log(`notify: ${kinds.join(", ")}`);
   console.log("pipeline ok");
 } finally {

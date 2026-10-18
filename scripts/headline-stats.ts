@@ -7,10 +7,16 @@ const rows = (await listProtocols()).filter((p) => p.source !== "demo");
 const snaps = rows.map((p) => ({ p, s: p.snapshot as ControlSnapshot | null }));
 const single = snaps.filter(({ s }) => s?.programs.some((x) => x.authorityKind === "SINGLE_KEY"));
 const noTl = snaps.filter(({ s }) => s?.multisigs.some((m) => m.timeLockSec === 0));
-const le2NoDelay = snaps.filter(({ s }) => s?.programs.some((x) => x.authorityKind === "SINGLE_KEY") || s?.multisigs.some((m) => m.timeLockSec === 0 && m.threshold <= 2));
+const le2NoDelay = snaps.filter(
+  ({ s }) =>
+    s?.programs.some((x) => x.authorityKind === "SINGLE_KEY") ||
+    s?.multisigs.some((m) => m.timeLockSec === 0 && m.threshold <= 2),
+);
 const unmapped = snaps.filter(({ p }) => p.score && (BigInt(p.score.flags) & (1n << 9n)) !== 0n);
 const lt24 = snaps.filter(({ s }) => s?.multisigs.some((m) => m.timeLockSec > 0 && m.timeLockSec < 86400));
-const adminSingle = snaps.filter(({ s }) => (s?.admin as AdminFacts[] | undefined)?.some((a) => a.admin && isOnCurve(a.admin)));
+const adminSingle = snaps.filter(({ s }) =>
+  (s?.admin as AdminFacts[] | undefined)?.some((a) => a.admin && isOnCurve(a.admin)),
+);
 const tvl = (xs: typeof snaps) => xs.reduce((n, { p }) => n + (p.tvlUsd ?? 0), 0);
 const usd = (n: number) => `$${(n / 1e9).toFixed(2)}B`;
 const evs = await listEvents({ limit: 1000 });

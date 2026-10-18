@@ -35,14 +35,34 @@ export default function ApiDocs() {
         lines={["API"]}
         lede={
           <>
-            JSON over HTTPS. Every response is <span className="mono">{"{ version, data }"}</span>. Pass <span className="mono">x-api-key</span> for paid tiers; anonymous use is
-            limited to 30 requests a minute.
+            JSON over HTTPS. Every response is <span className="mono">{"{ version, data }"}</span>. Pass{" "}
+            <span className="mono">x-api-key</span> for paid tiers; anonymous use is limited to 30 requests a minute.
           </>
         }
-        stageAttrs={stage("terrain", { colorA: "#5AA8FF", colorB: "#8B7CFF", x: 2.2, y: -0.2, yNarrow: 1.2, scale: 0.9, opacity: 1, autoRotate: 0.06 })}
+        stageAttrs={stage("terrain", {
+          colorA: "#5AA8FF",
+          colorB: "#8B7CFF",
+          x: 2.2,
+          y: -0.2,
+          yNarrow: 1.2,
+          scale: 0.9,
+          opacity: 1,
+          autoRotate: 0.06,
+        })}
       />
 
-      <section className="page-block" data-dock="Endpoints" {...stage("terrain", { colorA: "#5AA8FF", colorB: "#1b2340", opacity: 0.25, y: -1.2, scale: 1.3, autoRotate: 0.02 })}>
+      <section
+        className="page-block"
+        data-dock="Endpoints"
+        {...stage("terrain", {
+          colorA: "#5AA8FF",
+          colorB: "#1b2340",
+          opacity: 0.25,
+          y: -1.2,
+          scale: 1.3,
+          autoRotate: 0.02,
+        })}
+      >
         <SectionHead title="Endpoints" />
         <table className="dtable dtable--api">
           <tbody>
@@ -79,8 +99,9 @@ curl -N https://<host>/api/v1/stream   # event: event / score / registry / shiel
           title="Webhook signatures"
           lede={
             <>
-              Each delivery is signed: <span className="mono">x-overwatch-signature = hex(HMAC-SHA256(secret, rawBody))</span>. Failed deliveries retry with exponential backoff, up to
-              6 attempts.
+              Each delivery is signed:{" "}
+              <span className="mono">x-overwatch-signature = hex(HMAC-SHA256(secret, rawBody))</span>. Failed deliveries
+              retry with exponential backoff, up to 6 attempts.
             </>
           }
           row
@@ -96,8 +117,9 @@ if (!ok) return new Response(null, { status: 401 });`}</Code>
           title="Onchain: read the registry from your program"
           lede={
             <>
-              The <span className="mono">RiskRecord</span> PDA is <span className="mono">[&quot;risk&quot;, sha256(slug)]</span> under the registry program. Check the owner and the PDA,
-              then test <span className="mono">flags &amp; RED_MASK</span>.
+              The <span className="mono">RiskRecord</span> PDA is{" "}
+              <span className="mono">[&quot;risk&quot;, sha256(slug)]</span> under the registry program. Check the owner
+              and the PDA, then test <span className="mono">flags &amp; RED_MASK</span>.
             </>
           }
           row

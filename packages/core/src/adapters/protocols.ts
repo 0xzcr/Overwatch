@@ -19,7 +19,16 @@ export const driftAdapter: ProtocolAdapter = {
   decode(acc): AdminFacts {
     check(acc, DRIFT_PROGRAM, accountDiscriminator("State"));
     const f = decodePrefix(acc.data, DRIFT_STATE, NO_TYPES);
-    return { account: acc.address, adapter: "drift:State", admin: s(f.admin), guardian: null, listingAuthority: s(f.admin), params: { signer: f.signer ?? null, whitelistMint: f.whitelistMint ?? null }, oracles: [], mints: [] };
+    return {
+      account: acc.address,
+      adapter: "drift:State",
+      admin: s(f.admin),
+      guardian: null,
+      listingAuthority: s(f.admin),
+      params: { signer: f.signer ?? null, whitelistMint: f.whitelistMint ?? null },
+      oracles: [],
+      mints: [],
+    };
   },
 };
 
@@ -33,9 +42,21 @@ export const kaminoAdapter: ProtocolAdapter = {
     check(acc, KAMINO_PROGRAM, accountDiscriminator("LendingMarket"));
     const f = decodePrefix(acc.data, KAMINO_LENDING_MARKET, NO_TYPES);
     return {
-      account: acc.address, adapter: "kamino:LendingMarket", admin: s(f.lendingMarketOwner), guardian: null, listingAuthority: s(f.lendingMarketOwner),
-      params: { emergencyMode: f.emergencyMode === 1, borrowDisabled: f.borrowDisabled === 1, autodeleverageEnabled: f.autodeleverageEnabled === 1, referralFeeBps: f.referralFeeBps ?? null, globalAllowedBorrowValue: f.globalAllowedBorrowValue ?? null, pendingOwner: f.lendingMarketOwnerCached !== f.lendingMarketOwner ? s(f.lendingMarketOwnerCached) : null },
-      oracles: [], mints: [],
+      account: acc.address,
+      adapter: "kamino:LendingMarket",
+      admin: s(f.lendingMarketOwner),
+      guardian: null,
+      listingAuthority: s(f.lendingMarketOwner),
+      params: {
+        emergencyMode: f.emergencyMode === 1,
+        borrowDisabled: f.borrowDisabled === 1,
+        autodeleverageEnabled: f.autodeleverageEnabled === 1,
+        referralFeeBps: f.referralFeeBps ?? null,
+        globalAllowedBorrowValue: f.globalAllowedBorrowValue ?? null,
+        pendingOwner: f.lendingMarketOwnerCached !== f.lendingMarketOwner ? s(f.lendingMarketOwnerCached) : null,
+      },
+      oracles: [],
+      mints: [],
     };
   },
 };
@@ -49,7 +70,16 @@ export const marginfiAdapter: ProtocolAdapter = {
   decode(acc): AdminFacts {
     check(acc, MARGINFI_PROGRAM, Uint8Array.from([182, 23, 173, 240, 151, 206, 182, 67]));
     const f = decodePrefix(acc.data, MARGINFI_GROUP, NO_TYPES);
-    return { account: acc.address, adapter: "marginfi:MarginfiGroup", admin: s(f.admin), guardian: null, listingAuthority: s(f.admin), params: { groupFlags: f.group_flags ?? null }, oracles: [], mints: [] };
+    return {
+      account: acc.address,
+      adapter: "marginfi:MarginfiGroup",
+      admin: s(f.admin),
+      guardian: null,
+      listingAuthority: s(f.admin),
+      params: { groupFlags: f.group_flags ?? null },
+      oracles: [],
+      mints: [],
+    };
   },
 };
 
@@ -62,7 +92,19 @@ export const orcaAdapter: ProtocolAdapter = {
   decode(acc): AdminFacts {
     check(acc, ORCA_PROGRAM, Uint8Array.from([157, 20, 49, 224, 217, 87, 193, 254]));
     const f = decodePrefix(acc.data, ORCA_WHIRLPOOLS_CONFIG, NO_TYPES);
-    return { account: acc.address, adapter: "orca:WhirlpoolsConfig", admin: s(f.fee_authority), guardian: s(f.reward_emissions_super_authority), listingAuthority: null, params: { collectProtocolFeesAuthority: f.collect_protocol_fees_authority ?? null, defaultProtocolFeeRate: f.default_protocol_fee_rate ?? null }, oracles: [], mints: [] };
+    return {
+      account: acc.address,
+      adapter: "orca:WhirlpoolsConfig",
+      admin: s(f.fee_authority),
+      guardian: s(f.reward_emissions_super_authority),
+      listingAuthority: null,
+      params: {
+        collectProtocolFeesAuthority: f.collect_protocol_fees_authority ?? null,
+        defaultProtocolFeeRate: f.default_protocol_fee_rate ?? null,
+      },
+      oracles: [],
+      mints: [],
+    };
   },
 };
 

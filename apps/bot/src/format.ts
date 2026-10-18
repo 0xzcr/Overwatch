@@ -1,6 +1,14 @@
 /** Plain-English alert formatting shared by Telegram, email and webhooks. */
 export interface AlertInput {
-  name: string; slug: string; severity: string; title: string; explanation: string; type: string; txSignature: string | null; network: string; labels: string[];
+  name: string;
+  slug: string;
+  severity: string;
+  title: string;
+  explanation: string;
+  type: string;
+  txSignature: string | null;
+  network: string;
+  labels: string[];
 }
 const EMOJI: Record<string, string> = { CRITICAL: "🚨", HIGH: "🟠", MEDIUM: "🟡", LOW: "⚪", INFO: "🟢" };
 const ACTION: Record<string, string> = {
@@ -13,7 +21,9 @@ const ACTION: Record<string, string> = {
 const esc = (s: string) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]!);
 
 export function telegramHtml(a: AlertInput, site: string): string {
-  const tx = a.txSignature ? `\n<a href="https://explorer.solana.com/tx/${a.txSignature}${a.network === "devnet" ? "?cluster=devnet" : ""}">View transaction</a> · ` : "\n";
+  const tx = a.txSignature
+    ? `\n<a href="https://explorer.solana.com/tx/${a.txSignature}${a.network === "devnet" ? "?cluster=devnet" : ""}">View transaction</a> · `
+    : "\n";
   return [
     `${EMOJI[a.severity] ?? "•"} <b>${esc(a.name)}</b> · ${a.severity}${a.labels.length ? ` · ${esc(a.labels.join(", "))}` : ""}`,
     `<b>${esc(a.title)}</b>`,
@@ -31,7 +41,23 @@ export function emailHtml(a: AlertInput, site: string): { subject: string; html:
 }
 
 export function webhookPayload(a: AlertInput & { id: number; detectedAt: string; slot: number | null }) {
-  return { version: "2026-10-11", event: { id: a.id, protocol: a.slug, protocol_name: a.name, type: a.type, severity: a.severity, title: a.title, explanation: a.explanation, labels: a.labels, tx_signature: a.txSignature, slot: a.slot, network: a.network, detected_at: a.detectedAt } };
+  return {
+    version: "2026-10-11",
+    event: {
+      id: a.id,
+      protocol: a.slug,
+      protocol_name: a.name,
+      type: a.type,
+      severity: a.severity,
+      title: a.title,
+      explanation: a.explanation,
+      labels: a.labels,
+      tx_signature: a.txSignature,
+      slot: a.slot,
+      network: a.network,
+      detected_at: a.detectedAt,
+    },
+  };
 }
 
 /** Exponential backoff for retries: 10s, 20s, 40s, 80s, 160s; give up after 6 attempts. */

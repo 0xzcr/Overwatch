@@ -4,11 +4,28 @@ import { BlockList, isIP } from "node:net";
 
 const blocked = new BlockList();
 // Private, loopback, CGNAT, link-local (cloud metadata), benchmarking, multicast and reserved ranges.
-for (const [net, bits] of [["0.0.0.0", 8], ["10.0.0.0", 8], ["100.64.0.0", 10], ["127.0.0.0", 8], ["169.254.0.0", 16], ["172.16.0.0", 12], ["192.0.0.0", 24], ["192.168.0.0", 16], ["198.18.0.0", 15], ["224.0.0.0", 3]] as const)
+for (const [net, bits] of [
+  ["0.0.0.0", 8],
+  ["10.0.0.0", 8],
+  ["100.64.0.0", 10],
+  ["127.0.0.0", 8],
+  ["169.254.0.0", 16],
+  ["172.16.0.0", 12],
+  ["192.0.0.0", 24],
+  ["192.168.0.0", 16],
+  ["198.18.0.0", 15],
+  ["224.0.0.0", 3],
+] as const)
   blocked.addSubnet(net, bits, "ipv4");
 // Unspecified, loopback, NAT64 (can smuggle the ranges above), unique-local, link-local, multicast. No ::ffff:0:0/96 rule:
 // BlockList matches IPv4 lookups against mapped IPv6 rules, so it would block every IPv4 address; mapped ones are unwrapped below.
-for (const [net, bits] of [["::", 127], ["64:ff9b::", 96], ["fc00::", 7], ["fe80::", 10], ["ff00::", 8]] as const)
+for (const [net, bits] of [
+  ["::", 127],
+  ["64:ff9b::", 96],
+  ["fc00::", 7],
+  ["fe80::", 10],
+  ["ff00::", 8],
+] as const)
   blocked.addSubnet(net, bits, "ipv6");
 
 /** "::ffff:127.0.0.1" or its normalised "::ffff:7f00:1" → "127.0.0.1"; anything else unchanged. */

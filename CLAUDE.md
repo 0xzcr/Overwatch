@@ -43,10 +43,10 @@ Turborepo + pnpm monorepo.
 |---|---|---|
 | `overwatch_registry` | RiskRecord PDAs, publisher whitelist, stale-slot rejection | Anchor |
 | `overwatch_vault` | deposit / withdraw / allocate + permissionless `check_and_exit` | Anchor |
-| Indexer | reads accounts, diffs snapshots, runs rules | TS, `@solana/kit`, `@sqds/multisig` |
+| Indexer | reads accounts, diffs snapshots, runs rules | TS, own JSON-RPC + websocket client (`packages/solana`), `@sqds/multisig` |
 | `protocols.yaml` | the curated watch list + per-protocol baselines | YAML |
 | DB | snapshots, flags, events, subscriptions | Postgres + Drizzle |
-| Web | control map, protocol pages, events, documentation, demo | Next.js 15 |
+| Web | control map, protocol pages, live events, case study, alerts, documentation | Next.js 15 |
 | Bot | alerts | grammY (Telegram) |
 
 ## Account layouts that matter
@@ -97,8 +97,13 @@ happen off-chain where it cannot see.
 Any backtest against Drift must be labelled as applying current rules to the public
 record — not as a live catch. Do not let marketing copy blur this.
 
-## Deployment state (as of 2026-10-17)
+## Deployment state (as of 2026-10-18)
 
-The web app is deployed and complete. The indexer, API, registry and vault are written
-but **not connected to infrastructure**: no `DATABASE_URL` on the deployment, no devnet
-keypairs. See TODO.md for the ordered path to live.
+- Web: live on Vercel (functions in `syd1`), reading a Supabase Postgres in Sydney (transaction pooler for queries,
+  session pooler for `LISTEN`). The demo console and protected-vault pages were removed from the site.
+- Indexer and bot: written and working, run locally; Fly configs (`fly.indexer.toml`, `fly.bot.toml`, region `syd`) are
+  ready but not deployed yet.
+- Registry and vault: deployed on devnet; onchain publishing needs the devnet keypairs in `keys/`.
+
+ARCHITECTURE.md explains the whole system; CONTRIBUTING.md covers setup, workflow and deployment; TODO.md lists what is
+incomplete.

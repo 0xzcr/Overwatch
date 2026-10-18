@@ -28,9 +28,12 @@ export interface Runtime {
   scramble: (el: HTMLElement) => void;
 }
 
-export const $ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) => root.querySelector<T>(sel);
-export const $$ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) => Array.from(root.querySelectorAll<T>(sel));
-export const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string);
+export const $ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) =>
+  root.querySelector<T>(sel);
+export const $$ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) =>
+  Array.from(root.querySelectorAll<T>(sel));
+export const esc = (s: string) =>
+  s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string);
 
 let runtime: Runtime | null = null;
 
@@ -103,7 +106,12 @@ function createRuntime(): Runtime {
     gsap
       .timeline({
         onComplete: () => {
-          gsap.to(bootEl, { clipPath: "inset(0 0 100% 0)", duration: 1.1, ease: "expo.inOut", onComplete: () => bootEl.remove() });
+          gsap.to(bootEl, {
+            clipPath: "inset(0 0 100% 0)",
+            duration: 1.1,
+            ease: "expo.inOut",
+            onComplete: () => bootEl.remove(),
+          });
           gsap.delayedCall(0.35, markReady);
           gsap.from(".nav", { opacity: 0, y: -20, duration: 1, ease: "power2.out", delay: 0.55 });
         },
@@ -135,7 +143,9 @@ function createRuntime(): Runtime {
       const k = Math.min(1, (performance.now() - t0) / 700);
       el.textContent = target
         .split("")
-        .map((ch, i) => (ch === " " || i < k * target.length ? ch : (GLYPHS[Math.floor(Math.random() * GLYPHS.length)] ?? "")))
+        .map((ch, i) =>
+          ch === " " || i < k * target.length ? ch : (GLYPHS[Math.floor(Math.random() * GLYPHS.length)] ?? ""),
+        )
         .join("");
       if (k < 1) requestAnimationFrame(tick);
       else el.textContent = target;
@@ -145,7 +155,8 @@ function createRuntime(): Runtime {
 
   // ---------------------------------------------------------------- slot counter + pointer readout
   let slot: number | null = null;
-  const fmtSlot = () => $$("[data-slot]").forEach((el) => (el.textContent = slot == null ? "offline" : slot.toLocaleString("en-US")));
+  const fmtSlot = () =>
+    $$("[data-slot]").forEach((el) => (el.textContent = slot == null ? "offline" : slot.toLocaleString("en-US")));
   async function syncSlot() {
     try {
       const r = await fetch("/api/v1/status", { cache: "no-store" });
@@ -180,7 +191,8 @@ function createRuntime(): Runtime {
   window.addEventListener("pointermove", (e) => {
     const tgt = $("#tgt");
     if (!tgt) return;
-    const x = (e.clientX / window.innerWidth) * 2 - 1, y = -(e.clientY / window.innerHeight) * 2 + 1;
+    const x = (e.clientX / window.innerWidth) * 2 - 1,
+      y = -(e.clientY / window.innerHeight) * 2 + 1;
     tgt.textContent = `${x >= 0 ? "+" : ""}${x.toFixed(3)} / ${y >= 0 ? "+" : ""}${y.toFixed(3)}`;
   });
 
@@ -196,7 +208,9 @@ function createRuntime(): Runtime {
       cursor.classList.remove("is-gone");
       xTo(e.clientX);
       yTo(e.clientY);
-      const t = (e.target as HTMLElement | null)?.closest<HTMLElement>("[data-cursor], a, button, input, select, summary, textarea");
+      const t = (e.target as HTMLElement | null)?.closest<HTMLElement>(
+        "[data-cursor], a, button, input, select, summary, textarea",
+      );
       cursor.classList.toggle("is-hover", !!t);
       cursor.classList.toggle("is-text", !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA"));
       if (cursorLabel) cursorLabel.textContent = t?.dataset.cursor ?? "";
@@ -235,7 +249,11 @@ function createRuntime(): Runtime {
     menu.setAttribute("aria-hidden", "false");
     menuBtn?.setAttribute("aria-expanded", "true");
     lenis.stop();
-    gsap.fromTo(".menu__list li", { yPercent: 60, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.9, ease: "expo.out", stagger: 0.04, delay: 0.15 });
+    gsap.fromTo(
+      ".menu__list li",
+      { yPercent: 60, opacity: 0 },
+      { yPercent: 0, opacity: 1, duration: 0.9, ease: "expo.out", stagger: 0.04, delay: 0.15 },
+    );
   }
   function closeMenu() {
     if (!menu || !menuIsOpen) return;
@@ -251,7 +269,17 @@ function createRuntime(): Runtime {
   $$<HTMLAnchorElement>(".menu__list a").forEach((a) => {
     a.addEventListener("pointerenter", () => {
       const shape = a.dataset.shape as ShapeName | undefined;
-      if (shape) morph(shape, { colorA: a.dataset.color ?? "#2BFFB0", colorB: "#7CF3FF", x: 2.9, scale: 1.05, opacity: 1, duration: 1.2, autoRotate: 0.15, arcs: shape === "globe" });
+      if (shape)
+        morph(shape, {
+          colorA: a.dataset.color ?? "#2BFFB0",
+          colorB: "#7CF3FF",
+          x: 2.9,
+          scale: 1.05,
+          opacity: 1,
+          duration: 1.2,
+          autoRotate: 0.15,
+          arcs: shape === "globe",
+        });
     });
     a.addEventListener("click", () => closeMenu());
   });

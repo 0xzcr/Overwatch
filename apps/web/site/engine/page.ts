@@ -93,7 +93,14 @@ export function initPage(rt: Runtime): () => void {
       if (first) apply(first.cfg, true);
       if (calm) return;
       gsap.from(".hero__line > span", { yPercent: 110, rotate: 4, duration: 1.4, ease: "expo.out", stagger: 0.09 });
-      gsap.from(".hero__eyebrow, .hero__aside > *, .hero .hud, .hero__scroll", { opacity: 0, y: 16, duration: 1, ease: "power2.out", stagger: 0.06, delay: 0.3 });
+      gsap.from(".hero__eyebrow, .hero__aside > *, .hero .hud, .hero__scroll", {
+        opacity: 0,
+        y: 16,
+        duration: 1,
+        ease: "power2.out",
+        stagger: 0.06,
+        delay: 0.3,
+      });
       $$("[data-scramble]").forEach((el, k) => gsap.delayedCall(0.4 + k * 0.15, () => rt.scramble(el)));
     });
     $$("[data-scramble]").forEach((el) => el.addEventListener("mouseenter", () => rt.scramble(el)));
@@ -110,12 +117,23 @@ export function initPage(rt: Runtime): () => void {
       const el = stops[i];
       if (!el || i === dockIdx || !dockNum || !dockName) return;
       dockIdx = i;
-      gsap.fromTo([dockNum, dockName], { yPercent: 60, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.5, ease: "power3.out", stagger: 0.04 });
+      gsap.fromTo(
+        [dockNum, dockName],
+        { yPercent: 60, opacity: 0 },
+        { yPercent: 0, opacity: 1, duration: 0.5, ease: "power3.out", stagger: 0.04 },
+      );
       dockNum.textContent = String(i).padStart(2, "0");
       dockName.textContent = el.dataset.dock ?? "";
       dock?.style.setProperty("--c", tone(el.dataset.dockColor ?? "#2BFFB0"));
     };
-    stops.forEach((el, i) => ScrollTrigger.create({ trigger: el, start: "top 50%", end: "bottom 50%", onToggle: (self) => self.isActive && setDock(i) }));
+    stops.forEach((el, i) =>
+      ScrollTrigger.create({
+        trigger: el,
+        start: "top 50%",
+        end: "bottom 50%",
+        onToggle: (self) => self.isActive && setDock(i),
+      }),
+    );
     setDock(0);
     onClick($("#dockPrev"), () => {
       const i = Math.max(0, dockIdx - 1);
@@ -146,18 +164,53 @@ export function initPage(rt: Runtime): () => void {
               chs.forEach((c, i) => c.classList.toggle("is-sel", i < n));
             },
           });
-        gsap.to(".hero__aside, .hero .hud", { y: -80, opacity: 0, ease: "none", scrollTrigger: { trigger: ".hero", start: "20% top", end: "80% top", scrub: true } });
+        gsap.to(".hero__aside, .hero .hud", {
+          y: -80,
+          opacity: 0,
+          ease: "none",
+          scrollTrigger: { trigger: ".hero", start: "20% top", end: "80% top", scrub: true },
+        });
       }
       const words = $$(".manifesto__text .w");
       if (words.length)
-        gsap.fromTo(words, { opacity: 0.12 }, { opacity: 1, stagger: 0.05, ease: "none", scrollTrigger: { trigger: ".manifesto", start: "top 70%", end: "bottom 70%", scrub: true } });
+        gsap.fromTo(
+          words,
+          { opacity: 0.12 },
+          {
+            opacity: 1,
+            stagger: 0.05,
+            ease: "none",
+            scrollTrigger: { trigger: ".manifesto", start: "top 70%", end: "bottom 70%", scrub: true },
+          },
+        );
       $$(".section-head, .cta__head, .block-head").forEach((el) =>
-        gsap.from(el.children, { y: 40, opacity: 0, duration: 1.1, ease: "expo.out", stagger: 0.08, scrollTrigger: { trigger: el, start: "top 85%" } }),
+        gsap.from(el.children, {
+          y: 40,
+          opacity: 0,
+          duration: 1.1,
+          ease: "expo.out",
+          stagger: 0.08,
+          scrollTrigger: { trigger: el, start: "top 85%" },
+        }),
       );
-      $$(".tiles__grid, .paths, .stats__grid, .cards, [data-reveal]").forEach((grid) =>
-        gsap.from(grid.children, { y: 50, opacity: 0, duration: 1, ease: "expo.out", stagger: 0.06, scrollTrigger: { trigger: grid, start: "top 88%" } }),
+      $$(".steps, .paths, .stats__grid, .cards, [data-reveal]").forEach((grid) =>
+        gsap.from(grid.children, {
+          y: 50,
+          opacity: 0,
+          duration: 1,
+          ease: "expo.out",
+          stagger: 0.06,
+          scrollTrigger: { trigger: grid, start: "top 88%" },
+        }),
       );
-      $$(".chapter__name").forEach((el) => gsap.from(el, { clipPath: "inset(0 100% 0 0)", duration: 1.6, ease: "expo.inOut", scrollTrigger: { trigger: el, start: "top 88%" } }));
+      $$(".chapter__name").forEach((el) =>
+        gsap.from(el, {
+          clipPath: "inset(0 100% 0 0)",
+          duration: 1.6,
+          ease: "expo.inOut",
+          scrollTrigger: { trigger: el, start: "top 88%" },
+        }),
+      );
     }
 
     // count-ups
@@ -168,7 +221,13 @@ export function initPage(rt: Runtime): () => void {
         trigger: el,
         start: "top 90%",
         once: true,
-        onEnter: () => gsap.to(o, { v: end, duration: calm ? 0 : 1.6, ease: "power3.out", onUpdate: () => (el.textContent = String(Math.round(o.v))) }),
+        onEnter: () =>
+          gsap.to(o, {
+            v: end,
+            duration: calm ? 0 : 1.6,
+            ease: "power3.out",
+            onUpdate: () => (el.textContent = String(Math.round(o.v))),
+          }),
       });
     });
 
@@ -179,21 +238,23 @@ export function initPage(rt: Runtime): () => void {
         const strength = el.classList.contains("hl") ? 3 : el.hasAttribute("data-tilt") ? 4 : 7;
         el.addEventListener("pointermove", (e) => {
           const r = el.getBoundingClientRect();
-          const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+          const px = (e.clientX - r.left) / r.width,
+            py = (e.clientY - r.top) / r.height;
           el.style.setProperty("--mx", `${(px * 100).toFixed(1)}%`);
           el.style.setProperty("--my", `${(py * 100).toFixed(1)}%`);
-          gsap.to(el, { rotateY: (px - 0.5) * strength, rotateX: -(py - 0.5) * strength, transformPerspective: 900, duration: 0.5, ease: "power2.out" });
+          gsap.to(el, {
+            rotateY: (px - 0.5) * strength,
+            rotateX: -(py - 0.5) * strength,
+            transformPerspective: 900,
+            duration: 0.5,
+            ease: "power2.out",
+          });
         });
-        el.addEventListener("pointerleave", () => gsap.to(el, { rotateY: 0, rotateX: 0, duration: 0.8, ease: "elastic.out(1, 0.5)" }));
+        el.addEventListener("pointerleave", () =>
+          gsap.to(el, { rotateY: 0, rotateX: 0, duration: 0.8, ease: "elastic.out(1, 0.5)" }),
+        );
       });
     }
-    $$<HTMLElement>(".tile[data-shape]").forEach((t) =>
-      t.addEventListener("pointerenter", () => {
-        const shape = t.dataset.shape as ShapeName | undefined;
-        if (shape) morph(shape, { colorA: t.dataset.color ?? "#2BFFB0", colorB: "#1b2340", opacity: 0.55, scale: 1.25, duration: 1.4, autoRotate: 0.15 });
-      }),
-    );
-    $(".tiles__grid")?.addEventListener("pointerleave", () => rt.lastStage && morph(rt.lastStage.shape, rt.lastStage.opts));
 
     // ------------------------------------------------------------ drift replay
     const detail = $("#driftDetail");
@@ -206,10 +267,26 @@ export function initPage(rt: Runtime): () => void {
       applyDriftStage = () => {
         const s = steps[driftI];
         if (!s) return;
-        const base = { colorB: "#1b2340", x: 3, y: 1.1, scale: 0.72, autoRotate: 0.1, opacity: 0.95, duration: 1.4 } satisfies MorphOptions;
+        const base = {
+          colorB: "#1b2340",
+          x: 3,
+          y: 1.1,
+          scale: 0.72,
+          autoRotate: 0.1,
+          opacity: 0.95,
+          duration: 1.4,
+        } satisfies MorphOptions;
         rt.lastStage = { shape: "knot", opts: { ...base, colorA: "#2BFFB0" } };
         if (!rt.isReady() || rt.menuOpen()) return;
-        if (s.level === "dead") morph("burst", { ...base, colorA: "#FF5A3D", colorB: "#ff2a6d", jitter: 0.08, opacity: 0.9, autoRotate: 0.3 });
+        if (s.level === "dead")
+          morph("burst", {
+            ...base,
+            colorA: "#FF5A3D",
+            colorB: "#ff2a6d",
+            jitter: 0.08,
+            opacity: 0.9,
+            autoRotate: 0.3,
+          });
         else if (s.level === "bad") morph("knot", { ...base, colorA: "#FF5A3D", jitter: 0.05, autoRotate: 0.25 });
         else if (s.level === "warn") morph("knot", { ...base, colorA: "#FFB547", jitter: 0.02, autoRotate: 0.16 });
         else morph("knot", { ...base, colorA: "#2BFFB0" });
@@ -223,11 +300,19 @@ export function initPage(rt: Runtime): () => void {
           li.classList.toggle("is-past", j < i);
         });
         const daysEl = $("#driftDays");
-        const warning = firstAlert >= 0 && i >= firstAlert ? (DRAIN - Date.parse(steps[firstAlert]?.date ?? "")) / DAY : 0;
-        gsap.to(daysObj, { v: warning, duration: reduced ? 0 : 1.2, ease: "power3.out", onUpdate: () => daysEl && (daysEl.textContent = daysObj.v.toFixed(1)) });
+        const warning =
+          firstAlert >= 0 && i >= firstAlert ? (DRAIN - Date.parse(steps[firstAlert]?.date ?? "")) / DAY : 0;
+        gsap.to(daysObj, {
+          v: warning,
+          duration: reduced ? 0 : 1.2,
+          ease: "power3.out",
+          onUpdate: () => daysEl && (daysEl.textContent = daysObj.v.toFixed(1)),
+        });
         const left = Math.max(0, (DRAIN - Date.parse(s.date)) / DAY);
         const leftEl = $("#driftLeft");
-        if (leftEl) leftEl.textContent = left > 0 ? `${left.toFixed(1)} days until the drain` : "drain in progress · ~$285M over ~12 minutes";
+        if (leftEl)
+          leftEl.textContent =
+            left > 0 ? `${left.toFixed(1)} days until the drain` : "drain in progress · ~$285M over ~12 minutes";
         const gradeEl = $("#driftGrade");
         if (gradeEl) {
           gradeEl.textContent = s.grade;
@@ -252,7 +337,8 @@ export function initPage(rt: Runtime): () => void {
                   .join("")
               : `<div class="d-alert sev-none"><span class="mono">${i === 0 ? "BASELINE" : "NO NEW EVENTS"}</span><b>${s.red ? "Already graded red: two people can change everything instantly." : "Nothing new to report."}</b></div>`
           }</div>`;
-        if (!reduced) gsap.from(detail.children, { y: 20, opacity: 0, duration: 0.7, ease: "power3.out", stagger: 0.06 });
+        if (!reduced)
+          gsap.from(detail.children, { y: 20, opacity: 0, duration: 0.7, ease: "power3.out", stagger: 0.06 });
         if (driftActive) applyDriftStage();
       };
       $$<HTMLButtonElement>("[data-step]").forEach((b) => onClick(b, () => render(Number(b.dataset.step))));
@@ -273,14 +359,18 @@ export function initPage(rt: Runtime): () => void {
       cleanups.push(stop);
       listen("keydown", (e) => {
         if ((e.target as HTMLElement).closest("input, textarea, select")) return;
-        if (driftActive && (e.key === "ArrowRight" || e.key === "ArrowLeft")) render(Math.max(0, Math.min(steps.length - 1, driftI + (e.key === "ArrowRight" ? 1 : -1))));
+        if (driftActive && (e.key === "ArrowRight" || e.key === "ArrowLeft"))
+          render(Math.max(0, Math.min(steps.length - 1, driftI + (e.key === "ArrowRight" ? 1 : -1))));
       });
       render(0);
     }
   });
 
   // live visuals only animate while visible
-  const io = new IntersectionObserver((entries) => entries.forEach((e) => e.target.classList.toggle("is-live", e.isIntersecting)), { rootMargin: "80px" });
+  const io = new IntersectionObserver(
+    (entries) => entries.forEach((e) => e.target.classList.toggle("is-live", e.isIntersecting)),
+    { rootMargin: "80px" },
+  );
   $$(".vis").forEach((v) => io.observe(v));
   cleanups.push(() => io.disconnect());
 

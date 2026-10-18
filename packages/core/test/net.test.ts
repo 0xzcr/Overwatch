@@ -6,7 +6,17 @@ describe("webhook URL check", () => {
     delete process.env.WEBHOOK_ALLOW_PRIVATE_URLS;
   });
   it("refuses internal addresses, including ones disguised as IPv6", async () => {
-    for (const u of ["https://127.0.0.1/h", "https://10.1.2.3/h", "https://172.20.0.1/h", "https://192.168.1.1/h", "https://169.254.169.254/latest/meta-data/", "https://[::1]/h", "https://[::ffff:127.0.0.1]/h", "https://[fd00::1]/h", "https://0.0.0.0/h"])
+    for (const u of [
+      "https://127.0.0.1/h",
+      "https://10.1.2.3/h",
+      "https://172.20.0.1/h",
+      "https://192.168.1.1/h",
+      "https://169.254.169.254/latest/meta-data/",
+      "https://[::1]/h",
+      "https://[::ffff:127.0.0.1]/h",
+      "https://[fd00::1]/h",
+      "https://0.0.0.0/h",
+    ])
       expect(await webhookUrlProblem(u), u).toBe("points to a private or internal address");
   });
   it("requires https and no credentials", async () => {

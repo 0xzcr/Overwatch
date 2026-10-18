@@ -2,13 +2,7 @@ export type Severity = "INFO" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 export const SEVERITY_ORDER: Record<Severity, number> = { INFO: 0, LOW: 1, MEDIUM: 2, HIGH: 3, CRITICAL: 4 };
 
 export type AuthorityKind =
-  | "IMMUTABLE"
-  | "SQUADS_V4_VAULT"
-  | "SQUADS_V3"
-  | "REALMS_GOVERNANCE"
-  | "OTHER_PROGRAM_PDA"
-  | "SINGLE_KEY"
-  | "UNKNOWN";
+  "IMMUTABLE" | "SQUADS_V4_VAULT" | "SQUADS_V3" | "REALMS_GOVERNANCE" | "OTHER_PROGRAM_PDA" | "SINGLE_KEY" | "UNKNOWN";
 
 export interface ProgramFacts {
   programId: string;

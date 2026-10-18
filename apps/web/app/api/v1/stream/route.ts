@@ -10,16 +10,43 @@ export async function GET(req: Request) {
   let ping: NodeJS.Timeout;
   const stream = new ReadableStream({
     async start(ctrl) {
-      const send = (event: string, data: string) => { try { ctrl.enqueue(enc.encode(`event: ${event}\ndata: ${data}\n\n`)); } catch {} };
+      const send = (event: string, data: string) => {
+        try {
+          ctrl.enqueue(enc.encode(`event: ${event}\ndata: ${data}\n\n`));
+        } catch {}
+      };
       send("hello", JSON.stringify({ at: new Date().toISOString() }));
       const l = await direct().listen(CHANNEL, (payload) => {
-        try { const d = JSON.parse(payload) as { kind: string }; send(d.kind, payload); } catch {}
+        try {
+          const d = JSON.parse(payload) as { kind: string };
+          send(d.kind, payload);
+        } catch {}
       });
       unlisten = () => l.unlisten();
-      ping = setInterval(() => { try { ctrl.enqueue(enc.encode(`: ping\n\n`)); } catch {} }, 15_000);
-      req.signal.addEventListener("abort", () => { clearInterval(ping); void unlisten?.(); try { ctrl.close(); } catch {} });
+      ping = setInterval(() => {
+        try {
+          ctrl.enqueue(enc.encode(`: ping\n\n`));
+        } catch {}
+      }, 15_000);
+      req.signal.addEventListener("abort", () => {
+        clearInterval(ping);
+        void unlisten?.();
+        try {
+          ctrl.close();
+        } catch {}
+      });
     },
-    cancel() { clearInterval(ping); void unlisten?.(); },
+    cancel() {
+      clearInterval(ping);
+      void unlisten?.();
+    },
   });
-  return new Response(stream, { headers: { "content-type": "text/event-stream", "cache-control": "no-cache, no-transform", connection: "keep-alive", "x-accel-buffering": "no" } });
+  return new Response(stream, {
+    headers: {
+      "content-type": "text/event-stream",
+      "cache-control": "no-cache, no-transform",
+      connection: "keep-alive",
+      "x-accel-buffering": "no",
+    },
+  });
 }

@@ -9,7 +9,14 @@ export const protocolConfigSchema = z.object({
   docs_sources: z.array(z.string()).default([]),
   programs: z.array(z.object({ id: z.string(), label: z.string() })).min(1),
   multisigs: z
-    .array(z.object({ address: z.string(), vault_index: z.number().int().min(0).max(255), role: z.enum(["upgrade_authority", "admin", "treasury"]), discovered_via: z.string().optional() }))
+    .array(
+      z.object({
+        address: z.string(),
+        vault_index: z.number().int().min(0).max(255),
+        role: z.enum(["upgrade_authority", "admin", "treasury"]),
+        discovered_via: z.string().optional(),
+      }),
+    )
     .default([]),
   admin_accounts: z.array(z.string()).default([]),
   collateral_mints: z.array(z.string()).default([]),

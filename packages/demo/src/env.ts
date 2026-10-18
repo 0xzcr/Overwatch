@@ -9,7 +9,9 @@ const p = (f: string) => (f.startsWith("/") ? f : resolve(ROOT, f.replace(/^~\//
 
 export function connection() {
   const key = process.env.HELIUS_API_KEY;
-  const url = process.env.SOLANA_DEVNET_RPC_URL || (key ? `https://devnet.helius-rpc.com/?api-key=${key}` : "https://api.devnet.solana.com");
+  const url =
+    process.env.SOLANA_DEVNET_RPC_URL ||
+    (key ? `https://devnet.helius-rpc.com/?api-key=${key}` : "https://api.devnet.solana.com");
   if (/mainnet/i.test(url)) throw new Error("refusing to send transactions to a mainnet RPC");
   return new Connection(url, { commitment: "confirmed", wsEndpoint: process.env.SOLANA_DEVNET_WS_URL || undefined });
 }

@@ -1,10 +1,7 @@
-# fly launch --config fly.indexer.toml --dockerfile Dockerfile.worker --build-arg APP=indexer
+# fly launch --config fly.bot.toml --dockerfile Dockerfile.worker --build-arg APP=bot
 app = "overwatch-bot"
-primary_region = "iad"
+primary_region = "syd" # next to the Supabase database (ap-southeast-2)
 [build]
   dockerfile = "Dockerfile.worker"
   [build.args]
     APP = "bot"
-[mounts]
-  source = "overwatch_keys"
-  destination = "/app/keys"

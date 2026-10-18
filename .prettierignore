@@ -1,0 +1,14 @@
+node_modules
+.next
+.turbo
+.vercel
+dist
+coverage
+target
+test-ledger
+.anchor
+fixtures
+packages/db/migrations
+pnpm-lock.yaml
+*.md
+*.json

@@ -7,22 +7,25 @@ type V3 = [number, number, number];
 const TAU = Math.PI * 2;
 
 const gauss = (r: Rand) => Math.sqrt(-2 * Math.log(r() + 1e-9)) * Math.cos(TAU * r());
-const pick = <T,>(xs: readonly T[], r: Rand): T => xs[Math.floor(r() * xs.length)] as T;
+const pick = <T>(xs: readonly T[], r: Rand): T => xs[Math.floor(r() * xs.length)] as T;
 
 function rotX(p: V3, a: number) {
-  const c = Math.cos(a), s = Math.sin(a);
+  const c = Math.cos(a),
+    s = Math.sin(a);
   const y = p[1] * c - p[2] * s;
   p[2] = p[1] * s + p[2] * c;
   p[1] = y;
 }
 function rotY(p: V3, a: number) {
-  const c = Math.cos(a), s = Math.sin(a);
+  const c = Math.cos(a),
+    s = Math.sin(a);
   const x = p[0] * c + p[2] * s;
   p[2] = -p[0] * s + p[2] * c;
   p[0] = x;
 }
 function rotZ(p: V3, a: number) {
-  const c = Math.cos(a), s = Math.sin(a);
+  const c = Math.cos(a),
+    s = Math.sin(a);
   const x = p[0] * c - p[1] * s;
   p[1] = p[0] * s + p[1] * c;
   p[0] = x;
@@ -57,15 +60,27 @@ function makeNoise(seed: number) {
   const fade = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
   const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
   return (x: number, y: number, z: number) => {
-    const X = Math.floor(x) & 255, Y = Math.floor(y) & 255, Z = Math.floor(z) & 255;
+    const X = Math.floor(x) & 255,
+      Y = Math.floor(y) & 255,
+      Z = Math.floor(z) & 255;
     x -= Math.floor(x);
     y -= Math.floor(y);
     z -= Math.floor(z);
-    const u = fade(x), v = fade(y), w = fade(z);
-    const A = P(X) + Y, AA = P(A) + Z, AB = P(A + 1) + Z;
-    const B = P(X + 1) + Y, BA = P(B) + Z, BB = P(B + 1) + Z;
+    const u = fade(x),
+      v = fade(y),
+      w = fade(z);
+    const A = P(X) + Y,
+      AA = P(A) + Z,
+      AB = P(A + 1) + Z;
+    const B = P(X + 1) + Y,
+      BA = P(B) + Z,
+      BB = P(B + 1) + Z;
     return lerp(
-      lerp(lerp(grad(P(AA), x, y, z), grad(P(BA), x - 1, y, z), u), lerp(grad(P(AB), x, y - 1, z), grad(P(BB), x - 1, y - 1, z), u), v),
+      lerp(
+        lerp(grad(P(AA), x, y, z), grad(P(BA), x - 1, y, z), u),
+        lerp(grad(P(AB), x, y - 1, z), grad(P(BB), x - 1, y - 1, z), u),
+        v,
+      ),
       lerp(
         lerp(grad(P(AA + 1), x, y, z - 1), grad(P(BA + 1), x - 1, y, z - 1), u),
         lerp(grad(P(AB + 1), x, y - 1, z - 1), grad(P(BB + 1), x - 1, y - 1, z - 1), u),
@@ -108,7 +123,8 @@ function orb(count: number, r: Rand) {
       return [Math.cos(a) * rad, Math.sin(a) * rad, Math.sqrt(Math.max(0, 2.12 * 2.12 - rad * rad))];
     }
     if (f < 0.83) {
-      const a = r() * TAU, rad = Math.sqrt(r()) * 0.16;
+      const a = r() * TAU,
+        rad = Math.sqrt(r()) * 0.16;
       return [Math.cos(a) * rad, Math.sin(a) * rad, 2.2];
     }
     const k = Math.floor(r() * 3);
@@ -124,7 +140,8 @@ function orb(count: number, r: Rand) {
 function radar(count: number, r: Rand) {
   const blips = Array.from({ length: 7 }, (_, i) => {
     const br = mulberry(i * 97 + 11);
-    const a = br() * TAU, rad = 0.6 + br() * 2;
+    const a = br() * TAU,
+      rad = 0.6 + br() * 2;
     return [Math.cos(a) * rad, Math.sin(a) * rad, 0.05 + br() * 0.06] as V3;
   });
   return fill(count, (f) => {
@@ -154,25 +171,79 @@ function radar(count: number, r: Rand) {
 }
 
 function lattice(count: number, r: Rand) {
-  const n = 4, size = 0.52, gap = 0.82;
+  const n = 4,
+    size = 0.52,
+    gap = 0.82;
   const off = ((n - 1) * gap) / 2;
   const E: [V3, V3][] = [
-    [[-1, -1, -1], [1, -1, -1]], [[-1, 1, -1], [1, 1, -1]], [[-1, -1, 1], [1, -1, 1]], [[-1, 1, 1], [1, 1, 1]],
-    [[-1, -1, -1], [-1, 1, -1]], [[1, -1, -1], [1, 1, -1]], [[-1, -1, 1], [-1, 1, 1]], [[1, -1, 1], [1, 1, 1]],
-    [[-1, -1, -1], [-1, -1, 1]], [[1, -1, -1], [1, -1, 1]], [[-1, 1, -1], [-1, 1, 1]], [[1, 1, -1], [1, 1, 1]],
+    [
+      [-1, -1, -1],
+      [1, -1, -1],
+    ],
+    [
+      [-1, 1, -1],
+      [1, 1, -1],
+    ],
+    [
+      [-1, -1, 1],
+      [1, -1, 1],
+    ],
+    [
+      [-1, 1, 1],
+      [1, 1, 1],
+    ],
+    [
+      [-1, -1, -1],
+      [-1, 1, -1],
+    ],
+    [
+      [1, -1, -1],
+      [1, 1, -1],
+    ],
+    [
+      [-1, -1, 1],
+      [-1, 1, 1],
+    ],
+    [
+      [1, -1, 1],
+      [1, 1, 1],
+    ],
+    [
+      [-1, -1, -1],
+      [-1, -1, 1],
+    ],
+    [
+      [1, -1, -1],
+      [1, -1, 1],
+    ],
+    [
+      [-1, 1, -1],
+      [-1, 1, 1],
+    ],
+    [
+      [1, 1, -1],
+      [1, 1, 1],
+    ],
   ];
   return fill(count, () => {
     const c: V3 = [Math.floor(r() * n) * gap - off, Math.floor(r() * n) * gap - off, Math.floor(r() * n) * gap - off];
     const [a, b] = pick(E, r);
-    const t = r(), h = size / 2;
-    const p: V3 = [c[0] + (a[0] + (b[0] - a[0]) * t) * h, c[1] + (a[1] + (b[1] - a[1]) * t) * h, c[2] + (a[2] + (b[2] - a[2]) * t) * h];
+    const t = r(),
+      h = size / 2;
+    const p: V3 = [
+      c[0] + (a[0] + (b[0] - a[0]) * t) * h,
+      c[1] + (a[1] + (b[1] - a[1]) * t) * h,
+      c[2] + (a[2] + (b[2] - a[2]) * t) * h,
+    ];
     rotY(p, 0.65);
     rotX(p, 0.45);
     return p;
   });
 }
 
-const SHIELD_TOP = 2.1, SHIELD_W = 1.75, SHIELD_H = 4.6;
+const SHIELD_TOP = 2.1,
+  SHIELD_W = 1.75,
+  SHIELD_H = 4.6;
 function shieldHalfWidth(y: number) {
   const k = (SHIELD_TOP - y) / SHIELD_H;
   return SHIELD_W * Math.cos(Math.pow(k, 1.6) * (Math.PI / 2));
@@ -221,7 +292,10 @@ function shield(count: number, r: Rand) {
 
 function burst(count: number, r: Rand) {
   const sr = mulberry(77);
-  const dirs = Array.from({ length: 90 }, () => [...spherePoint(sr, 1), 1.2 + sr() * 1.7] as [number, number, number, number]);
+  const dirs = Array.from(
+    { length: 90 },
+    () => [...spherePoint(sr, 1), 1.2 + sr() * 1.7] as [number, number, number, number],
+  );
   return fill(count, (f) => {
     if (f < 0.62) {
       const d = pick(dirs, r);
@@ -230,7 +304,8 @@ function burst(count: number, r: Rand) {
       return [d[0] * t + gauss(r) * j, d[1] * t + gauss(r) * j, d[2] * t + gauss(r) * j];
     }
     if (f < 0.8) return spherePoint(r, 0.55 * Math.cbrt(r()));
-    const a = r() * TAU, rad = 2.6 + gauss(r) * 0.05;
+    const a = r() * TAU,
+      rad = 2.6 + gauss(r) * 0.05;
     const p: V3 = [Math.cos(a) * rad, Math.sin(a) * rad, gauss(r) * 0.04];
     rotX(p, 1.2);
     rotZ(p, 0.4);
@@ -257,7 +332,8 @@ function graph(count: number, r: Rand) {
   const nodes = layers.flat();
   const links: [N, N][] = [];
   for (let li = 0; li < layers.length - 1; li++) {
-    const A = layers[li] as N[], B = layers[li + 1] as N[];
+    const A = layers[li] as N[],
+      B = layers[li + 1] as N[];
     B.forEach((b, i) => links.push([A[i % A.length] as N, b]));
     if (li >= 2) B.forEach((b) => links.push([pick(A, gr), b]));
   }
@@ -271,7 +347,11 @@ function graph(count: number, r: Rand) {
       const t = r();
       // gentle arc between layers
       const bow = Math.sin(t * Math.PI) * 0.18;
-      return [a.p[0] + (b.p[0] - a.p[0]) * t, a.p[1] + (b.p[1] - a.p[1]) * t + bow, a.p[2] + (b.p[2] - a.p[2]) * t + gauss(r) * 0.006];
+      return [
+        a.p[0] + (b.p[0] - a.p[0]) * t,
+        a.p[1] + (b.p[1] - a.p[1]) * t + bow,
+        a.p[2] + (b.p[2] - a.p[2]) * t + gauss(r) * 0.006,
+      ];
     }
     const p = spherePoint(r, 3 + r() * 0.3);
     p[0] *= 1.1;
@@ -281,7 +361,10 @@ function graph(count: number, r: Rand) {
 }
 
 function lock(count: number, r: Rand) {
-  const bw = 1.55, bh = 1.25, bd = 0.42, by = -0.75;
+  const bw = 1.55,
+    bh = 1.25,
+    bd = 0.42,
+    by = -0.75;
   return fill(count, (f) => {
     if (f < 0.55) {
       const face = r();
@@ -308,11 +391,13 @@ function lock(count: number, r: Rand) {
       return [x, y, z];
     }
     if (f < 0.92) {
-      const R = 1.0, tube = 0.19;
+      const R = 1.0,
+        tube = 0.19;
       const a = r() * TAU;
       if (r() < 0.7) {
         const t = r() * Math.PI;
-        const cx = Math.cos(t) * R, cy = by + bh + 0.65 + Math.sin(t) * R;
+        const cx = Math.cos(t) * R,
+          cy = by + bh + 0.65 + Math.sin(t) * R;
         return [cx + Math.cos(a) * Math.cos(t) * tube, cy + Math.cos(a) * Math.sin(t) * tube, Math.sin(a) * tube];
       }
       const cx = r() < 0.5 ? -R : R;
@@ -325,17 +410,21 @@ function lock(count: number, r: Rand) {
 }
 
 function knot(count: number, r: Rand) {
-  const P = 2, Q = 3;
+  const P = 2,
+    Q = 3;
   const curve = (t: number): V3 => {
     const rr = Math.cos(Q * t) + 2.1;
     return [rr * Math.cos(P * t), rr * Math.sin(P * t), -Math.sin(Q * t)];
   };
   return fill(count, (f) => {
     const t = r() * TAU;
-    const c = curve(t), c2 = curve(t + 0.01);
+    const c = curve(t),
+      c2 = curve(t + 0.01);
     const T: V3 = [c2[0] - c[0], c2[1] - c[1], c2[2] - c[2]];
     const tl = Math.hypot(...T);
-    T[0] /= tl; T[1] /= tl; T[2] /= tl;
+    T[0] /= tl;
+    T[1] /= tl;
+    T[2] /= tl;
     const nl = Math.hypot(T[1], T[0]) || 1;
     const N: V3 = [-T[1] / nl, T[0] / nl, 0];
     const B: V3 = [T[1] * N[2] - T[2] * N[1], T[2] * N[0] - T[0] * N[2], T[0] * N[1] - T[1] * N[0]];
@@ -394,7 +483,8 @@ function globe(count: number, r: Rand) {
 }
 
 function wordmark(count: number, r: Rand) {
-  const W = 1400, H = 260;
+  const W = 1400,
+    H = 260;
   const pts: [number, number][] = [];
   const cv = document.createElement("canvas");
   cv.width = W;
@@ -407,7 +497,8 @@ function wordmark(count: number, r: Rand) {
     ctx.textBaseline = "middle";
     ctx.fillText("OVERWATCH", W / 2, H / 2 + 8);
     const data = ctx.getImageData(0, 0, W, H).data;
-    for (let y = 0; y < H; y += 2) for (let x = 0; x < W; x += 2) if ((data[(y * W + x) * 4 + 3] ?? 0) > 128) pts.push([x, y]);
+    for (let y = 0; y < H; y += 2)
+      for (let x = 0; x < W; x += 2) if ((data[(y * W + x) * 4 + 3] ?? 0) > 128) pts.push([x, y]);
   }
   const scale = 7.6 / W;
   return fill(count, (f) => {
@@ -428,7 +519,20 @@ function scatter(count: number, r: Rand) {
   });
 }
 
-export const SHAPES = { orb, radar, lattice, shield, burst, graph, lock, knot, terrain, globe, wordmark, scatter } as const;
+export const SHAPES = {
+  orb,
+  radar,
+  lattice,
+  shield,
+  burst,
+  graph,
+  lock,
+  knot,
+  terrain,
+  globe,
+  wordmark,
+  scatter,
+} as const;
 export type ShapeName = keyof typeof SHAPES;
 export const SHAPE_NAMES = Object.keys(SHAPES) as ShapeName[];
 

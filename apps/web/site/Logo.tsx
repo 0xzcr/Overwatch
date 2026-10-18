@@ -6,7 +6,13 @@
  */
 export function Logo({ className = "logo", title }: { className?: string; title?: string }) {
   return (
-    <svg viewBox="0 0 48 48" className={className} role={title ? "img" : undefined} aria-hidden={title ? undefined : true} aria-label={title}>
+    <svg
+      viewBox="0 0 48 48"
+      className={className}
+      role={title ? "img" : undefined}
+      aria-hidden={title ? undefined : true}
+      aria-label={title}
+    >
       <defs>
         <linearGradient id="owDogGrad" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#2BFFB0" />
@@ -30,7 +36,10 @@ export function Logo({ className = "logo", title }: { className?: string; title?
         <path className="dog__ear dog__ear--l" d="M15.6 15 L12 1.5 L20.6 12 Z" />
         <path className="dog__ear dog__ear--r" d="M32.4 15 L36 1.5 L27.4 12 Z" />
         {/* skull: wide cheeks tapering into a long doberman muzzle */}
-        <path className="dog__skull" d="M16 11.5 L32 11.5 L37.5 19.5 L31.5 30 L28.5 40 L19.5 40 L16.5 30 L10.5 19.5 Z" />
+        <path
+          className="dog__skull"
+          d="M16 11.5 L32 11.5 L37.5 19.5 L31.5 30 L28.5 40 L19.5 40 L16.5 30 L10.5 19.5 Z"
+        />
         {/* tan muzzle + blaze */}
         <path className="dog__tan" d="M19.8 29 L28.2 29 L27.2 38.6 L20.8 38.6 Z" />
         <path className="dog__blaze" d="M24 13 L25.6 20 L24 28 L22.4 20 Z" />
@@ -54,7 +63,10 @@ export function Logo({ className = "logo", title }: { className?: string; title?
         </g>
         {/* spiked collar */}
         <path className="dog__collar" d="M18.6 41.4 L29.4 41.4" />
-        <path className="dog__spike" d="M19.8 41.6 L20.6 44.2 L21.4 41.6 Z M23.2 41.6 L24 44.6 L24.8 41.6 Z M26.6 41.6 L27.4 44.2 L28.2 41.6 Z" />
+        <path
+          className="dog__spike"
+          d="M19.8 41.6 L20.6 44.2 L21.4 41.6 Z M23.2 41.6 L24 44.6 L24.8 41.6 Z M26.6 41.6 L27.4 44.2 L28.2 41.6 Z"
+        />
       </g>
     </svg>
   );

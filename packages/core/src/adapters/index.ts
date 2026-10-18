@@ -1,6 +1,10 @@
 import type { AdminFacts } from "../types";
 
-export interface EncodedAccount { address: string; owner: string; data: Uint8Array }
+export interface EncodedAccount {
+  address: string;
+  owner: string;
+  data: Uint8Array;
+}
 
 /** Per-protocol admin-config decoder. Adapters must be verified against real account bytes (see fixtures/). */
 export interface ProtocolAdapter {

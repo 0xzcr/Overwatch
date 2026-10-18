@@ -8,7 +8,11 @@ export const cssVars = (v: Record<string, string>) => v as CSSProperties;
 
 /** Markup attributes that tell the particle stage which shape to show while this section is in view. */
 export function stage(shape: ShapeName | "drift", opts: MorphOptions = {}, pulse = false) {
-  return { "data-stage": shape, "data-stage-opts": JSON.stringify(opts), ...(pulse ? { "data-stage-pulse": "1" } : {}) };
+  return {
+    "data-stage": shape,
+    "data-stage-opts": JSON.stringify(opts),
+    ...(pulse ? { "data-stage-pulse": "1" } : {}),
+  };
 }
 
 export function Vis({ html, className }: { html: string; className?: string }) {
@@ -30,7 +34,15 @@ export function Term({ t, children }: { t: string; children?: ReactNode }) {
   );
 }
 
-export function Grade({ grade, score, size = "md" }: { grade: string | null; score: number | null; size?: "sm" | "md" | "lg" }) {
+export function Grade({
+  grade,
+  score,
+  size = "md",
+}: {
+  grade: string | null;
+  score: number | null;
+  size?: "sm" | "md" | "lg";
+}) {
   const g = grade ?? "?";
   return (
     <span className={`grade grade--${size} g-${g}`}>
@@ -43,11 +55,27 @@ export function Grade({ grade, score, size = "md" }: { grade: string | null; sco
   );
 }
 
-export function Badge({ tone = "dim", children }: { tone?: "ok" | "warn" | "bad" | "dim" | "accent" | "violet"; children: ReactNode }) {
+export function Badge({
+  tone = "dim",
+  children,
+}: {
+  tone?: "ok" | "warn" | "bad" | "dim" | "accent" | "violet";
+  children: ReactNode;
+}) {
   return <span className={`badge badge--${tone} mono`}>{children}</span>;
 }
 
-export function Addr({ v, network = "mainnet", kind = "address", full = false }: { v: string | null | undefined; network?: "mainnet" | "devnet"; kind?: "address" | "tx"; full?: boolean }) {
+export function Addr({
+  v,
+  network = "mainnet",
+  kind = "address",
+  full = false,
+}: {
+  v: string | null | undefined;
+  network?: "mainnet" | "devnet";
+  kind?: "address" | "tx";
+  full?: boolean;
+}) {
   if (!v) return <span className="mono addr addr--none">none</span>;
   const real = /^[1-9A-HJ-NP-Za-km-z]{32,88}$/.test(v);
   if (!real)

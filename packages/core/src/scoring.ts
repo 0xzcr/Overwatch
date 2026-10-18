@@ -32,13 +32,27 @@ export const RED_MASK = FLAG.SINGLE_KEY | FLAG.NO_TIMELOCK_LOW_THRESHOLD | FLAG.
 export const isRed = (flags: bigint) => (flags & RED_MASK) !== 0n;
 
 export type Grade = "A" | "B" | "C" | "D" | "F";
-export interface Deduction { key: string; points: number; reason: string }
-export interface ScoreResult { score: number; grade: Grade; flags: bigint; breakdown: Deduction[]; red: boolean }
+export interface Deduction {
+  key: string;
+  points: number;
+  reason: string;
+}
+export interface ScoreResult {
+  score: number;
+  grade: Grade;
+  flags: bigint;
+  breakdown: Deduction[];
+  red: boolean;
+}
 
 export const gradeFor = (s: number): Grade => (s >= 85 ? "A" : s >= 70 ? "B" : s >= 55 ? "C" : s >= 40 ? "D" : "F");
 const DAY = 86_400_000;
 
-export function scoreSnapshot(s: ControlSnapshot, recentEvents: Pick<OverwatchEvent, "severity" | "weakening" | "blockTime" | "detectedAt" | "title">[], now = new Date().toISOString()): ScoreResult {
+export function scoreSnapshot(
+  s: ControlSnapshot,
+  recentEvents: Pick<OverwatchEvent, "severity" | "weakening" | "blockTime" | "detectedAt" | "title">[],
+  now = new Date().toISOString(),
+): ScoreResult {
   const d: Deduction[] = [];
   let flags = 0n;
   const add = (key: string, points: number, reason: string) => d.push({ key, points, reason });
@@ -59,7 +73,9 @@ export function scoreSnapshot(s: ControlSnapshot, recentEvents: Pick<OverwatchEv
   }
   if (relevant.length) {
     const minT = Math.min(...relevant.map((m) => m.threshold));
-    const minRatio = Math.min(...relevant.map((m) => m.threshold / Math.max(1, m.members.filter((x) => (x.permissions & 2) !== 0).length)));
+    const minRatio = Math.min(
+      ...relevant.map((m) => m.threshold / Math.max(1, m.members.filter((x) => (x.permissions & 2) !== 0).length)),
+    );
     if (minT <= 2) {
       flags |= FLAG.LOW_THRESHOLD;
       add("threshold_le_2", 20, `Only ${minT} signature(s) are needed to approve changes.`);
@@ -79,7 +95,11 @@ export function scoreSnapshot(s: ControlSnapshot, recentEvents: Pick<OverwatchEv
   const nonceSigners = new Set(s.nonces.filter((n) => signers.has(n.authority)).map((n) => n.authority));
   if (nonceSigners.size) {
     flags |= FLAG.SIGNER_NONCE;
-    add("signer_nonce", Math.min(30, nonceSigners.size * 10), `${nonceSigners.size} signer(s) hold durable nonce accounts (pre-signed transactions that never expire).`);
+    add(
+      "signer_nonce",
+      Math.min(30, nonceSigners.size * 10),
+      `${nonceSigners.size} signer(s) hold durable nonce accounts (pre-signed transactions that never expire).`,
+    );
   }
 
   if (s.multisigs.some((m) => m.pending.some((p) => p.actions.some((a) => actionWeakens(m, a))))) {
@@ -88,7 +108,12 @@ export function scoreSnapshot(s: ControlSnapshot, recentEvents: Pick<OverwatchEv
   }
 
   const t = Date.parse(now);
-  const recent = recentEvents.filter((e) => e.weakening && SEVERITY_ORDER[e.severity] >= SEVERITY_ORDER.HIGH && t - Date.parse(e.blockTime ?? e.detectedAt) <= 30 * DAY);
+  const recent = recentEvents.filter(
+    (e) =>
+      e.weakening &&
+      SEVERITY_ORDER[e.severity] >= SEVERITY_ORDER.HIGH &&
+      t - Date.parse(e.blockTime ?? e.detectedAt) <= 30 * DAY,
+  );
   if (recent.length) {
     flags |= FLAG.RECENT_WEAKENING;
     if (recent.some((e) => e.severity === "CRITICAL")) flags |= FLAG.RECENT_CRITICAL;
@@ -100,13 +125,22 @@ export function scoreSnapshot(s: ControlSnapshot, recentEvents: Pick<OverwatchEv
   if (risky) flags |= FLAG.RISKY_COLLATERAL;
   if (dep) flags |= FLAG.DEPRECATED_ORACLE;
   const coll = Math.min(20, (risky + dep) * 10);
-  if (coll) add("collateral_oracle", coll, `${risky} collateral token(s) with PermanentDelegate, ${dep} deprecated oracle(s).`);
+  if (coll)
+    add("collateral_oracle", coll, `${risky} collateral token(s) with PermanentDelegate, ${dep} deprecated oracle(s).`);
 
   // Control we cannot attribute (unmapped PDA, unknown, or governance we don't decode yet) is not "safe" — it's unknown.
-  const unmapped = s.programs.filter((p) => ["OTHER_PROGRAM_PDA", "UNKNOWN", "SQUADS_V3", "REALMS_GOVERNANCE"].includes(p.authorityKind) || (p.authorityKind === "SQUADS_V4_VAULT" && !s.multisigs.some((m) => m.address === p.multisig)));
+  const unmapped = s.programs.filter(
+    (p) =>
+      ["OTHER_PROGRAM_PDA", "UNKNOWN", "SQUADS_V3", "REALMS_GOVERNANCE"].includes(p.authorityKind) ||
+      (p.authorityKind === "SQUADS_V4_VAULT" && !s.multisigs.some((m) => m.address === p.multisig)),
+  );
   if (unmapped.length) {
     flags |= FLAG.UNVERIFIED;
-    add("unmapped_control", 15, `Overwatch could not fully map who controls ${unmapped.length} program(s) (${[...new Set(unmapped.map((p) => p.authorityKind))].join(", ")}). Unknown is not the same as safe.`);
+    add(
+      "unmapped_control",
+      15,
+      `Overwatch could not fully map who controls ${unmapped.length} program(s) (${[...new Set(unmapped.map((p) => p.authorityKind))].join(", ")}). Unknown is not the same as safe.`,
+    );
   }
   if (!s.verified) flags |= FLAG.UNVERIFIED;
 
@@ -114,4 +148,7 @@ export function scoreSnapshot(s: ControlSnapshot, recentEvents: Pick<OverwatchEv
   return { score, grade: gradeFor(score), flags, breakdown: d, red: isRed(flags) };
 }
 
-export const flagNames = (flags: bigint) => Object.entries(FLAG).filter(([, b]) => (flags & b) !== 0n).map(([k]) => k);
+export const flagNames = (flags: bigint) =>
+  Object.entries(FLAG)
+    .filter(([, b]) => (flags & b) !== 0n)
+    .map(([k]) => k);

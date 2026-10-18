@@ -1,6 +1,18 @@
 // Site copy. Everything describes what Overwatch does; nothing here is presented as live data.
 
-export type Vis = "terminal" | "radar" | "code" | "gauge" | "chart" | "nodes" | "alerts" | "pipeline" | "toggles" | "bits" | "chat" | "ledger";
+export type Vis =
+  | "terminal"
+  | "radar"
+  | "code"
+  | "gauge"
+  | "chart"
+  | "nodes"
+  | "alerts"
+  | "pipeline"
+  | "toggles"
+  | "bits"
+  | "chat"
+  | "ledger";
 export type TermLine = [kind: "$" | "i" | "w" | "e" | "s", text: string];
 export type AlertLine = [lvl: "crit" | "high" | "med" | "info" | "ok", title: string, sub: string];
 
@@ -19,13 +31,29 @@ export interface Capability {
 
 export const pages = [
   { href: "/", name: "Overview", kicker: "What Overwatch does", shape: "orb", color: "#2BFFB0" },
-  { href: "/protocols", name: "Control map", kicker: "Grades for the top Solana protocols", shape: "globe", color: "#2BFFB0" },
-  { href: "/events", name: "Live events", kicker: "Control changes as they land onchain", shape: "radar", color: "#7CF3FF" },
+  {
+    href: "/protocols",
+    name: "Control map",
+    kicker: "Grades for the top Solana protocols",
+    shape: "globe",
+    color: "#2BFFB0",
+  },
+  {
+    href: "/events",
+    name: "Live events",
+    kicker: "Control changes as they land onchain",
+    shape: "radar",
+    color: "#7CF3FF",
+  },
   { href: "/case-study", name: "Case study", kicker: "The Drift exploit, replayed", shape: "knot", color: "#FF5A3D" },
   { href: "/alerts", name: "Alerts", kicker: "Telegram, webhooks, email", shape: "burst", color: "#FFB547" },
-  { href: "/vault", name: "Protected vault", kicker: "Devnet demo", shape: "lock", color: "#B6FF3B" },
-  { href: "/demo", name: "Demo console", kicker: "Run the devnet demo", shape: "lattice", color: "#D27DFF" },
-  { href: "/docs", name: "Documentation", kicker: "How it works, how grades are computed, how to use it", shape: "shield", color: "#8B7CFF" },
+  {
+    href: "/docs",
+    name: "Documentation",
+    kicker: "How it works, how grades are computed, how to use it",
+    shape: "shield",
+    color: "#8B7CFF",
+  },
   { href: "/docs/api", name: "API", kicker: "REST, SSE, webhooks, SDK", shape: "terrain", color: "#5AA8FF" },
 ] as const;
 
@@ -33,26 +61,20 @@ export const steps = [
   {
     num: "01",
     name: "Map",
-    shape: "graph",
-    color: "#2BFFB0",
     title: "Who controls each protocol",
     text: "For each major protocol we read the upgrade authority, the multisig behind it, how many signers must approve a change, and how long that change waits. Each fact links to the account it came from.",
   },
   {
     num: "02",
     name: "Watch",
-    shape: "radar",
-    color: "#7CF3FF",
     title: "Changes as they happen",
     text: "We subscribe to those accounts and signers. A removed timelock or lowered threshold shows up seconds after it confirms. Signers' durable nonce accounts are scanned hourly. We warn after a change lands; we cannot undo it.",
   },
   {
     num: "03",
     name: "Warn",
-    shape: "burst",
-    color: "#FF5A3D",
     title: "Alerts and onchain scores",
-    text: "Alerts go to Telegram, a webhook or email, written in plain English. Scores are also stored onchain, so a vault can act without waiting for a person. Our devnet demo vault does this.",
+    text: "Alerts go to Telegram, a webhook or email, written in plain English. Scores are also stored onchain, so a vault program can act without waiting for a person.",
   },
 ] as const;
 
@@ -79,20 +101,22 @@ export const layers: (Capability & { href: string; cta: string; color: string })
     color: "#FF5A3D",
     href: "/alerts",
     cta: "Set up alerts",
-    summary: "Alerts on Telegram, signed webhooks or email when a protocol's controls weaken. There is also a versioned API and a live event stream.",
+    summary:
+      "Alerts on Telegram, signed webhooks or email when a protocol's controls weaken. There is also a versioned API and a live event stream.",
   },
   {
     id: "registry",
     code: "03",
     chapter: "act",
-    title: "Onchain registry & vault",
+    title: "Onchain registry",
     vis: "code",
     color: "#B6FF3B",
-    href: "/vault",
-    cta: "Try the protected vault",
-    summary: "Scores and risk flags are stored in accounts any Solana program can read. The demo vault exits its position when a protocol's flags turn red.",
+    href: "/docs#onchain",
+    cta: "Read how programs use it",
+    summary:
+      "Scores and risk flags are stored in accounts any Solana program can read, so a vault can pull deposits out the moment a protocol's flags turn red.",
     codeLines: [
-      "  #[account(seeds = [b\"risk\", id.as_ref()], bump,",
+      '  #[account(seeds = [b"risk", id.as_ref()], bump,',
       "            seeds::program = overwatch_registry::ID)]",
       "  pub risk: Account<'info, RiskRecord>,",
       "",
@@ -108,7 +132,8 @@ export const layers: (Capability & { href: string; cta: string; color: string })
     color: "#FFB547",
     href: "/case-study",
     cta: "Replay the Drift timeline",
-    summary: "If controls weaken within 14 days of a signer creating durable nonce accounts, the alert is rated critical. That is the sequence that came before the $285M Drift loss. The replay is a backtest of current rules on the public record.",
+    summary:
+      "If controls weaken within 14 days of a signer creating durable nonce accounts, the alert is rated critical. That is the sequence that came before the $285M Drift loss. The replay is a backtest of current rules on the public record.",
     term: [
       ["i", "2026-03-23 signer-A, signer-B → durable nonce"],
       ["w", "SIGNER_NONCE_ACCOUNT_CREATED · CRITICAL (2/5 ≥ 2)"],
@@ -139,14 +164,19 @@ export const flagBits = [
 
 /** "What does this mean?" tooltips. */
 export const GLOSSARY: Record<string, string> = {
-  multisig: "A wallet that needs several people to approve a transaction, for example 3 of 5. Safer than one key, if enough different people must sign.",
-  timelock: "A mandatory waiting period between approving a change and it taking effect. It gives depositors time to withdraw if something bad is approved.",
+  multisig:
+    "A wallet that needs several people to approve a transaction, for example 3 of 5. Safer than one key, if enough different people must sign.",
+  timelock:
+    "A mandatory waiting period between approving a change and it taking effect. It gives depositors time to withdraw if something bad is approved.",
   "durable nonce":
     "A Solana feature that lets a transaction be signed now and submitted any time later. Normal transactions expire in about a minute. The Drift attacker collected pre-signed durable-nonce transactions from signers days in advance.",
-  "upgrade authority": "The key that can replace a program's code. Whoever holds it can change the rules, including how your deposit can be withdrawn.",
+  "upgrade authority":
+    "The key that can replace a program's code. Whoever holds it can change the rules, including how your deposit can be withdrawn.",
   threshold: "How many signers of a multisig must approve a change.",
-  "config authority": "A Squads setting that lets one key change the multisig's signers, threshold and timelock instantly, without a vote.",
+  "config authority":
+    "A Squads setting that lets one key change the multisig's signers, threshold and timelock instantly, without a vote.",
   "permanent delegate": "A Token-2022 power that lets the issuer move or burn tokens from any holder's account.",
-  oracle: "The price feed a protocol uses to value collateral. A stale or manipulated oracle can let attackers borrow against fake value.",
+  oracle:
+    "The price feed a protocol uses to value collateral. A stale or manipulated oracle can let attackers borrow against fake value.",
   pda: "Program Derived Address: an address controlled by a program rather than a private key.",
 };

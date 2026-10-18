@@ -13,7 +13,12 @@ const enc = new TextEncoder();
 export const protocolIdBytes = (slug: string) => sha256(enc.encode(slug));
 
 function onCurve(b: Uint8Array) {
-  try { ed25519.ExtendedPoint.fromHex(b); return true; } catch { return false; }
+  try {
+    ed25519.ExtendedPoint.fromHex(b);
+    return true;
+  } catch {
+    return false;
+  }
 }
 export function findPda(seeds: Uint8Array[], programId: string): [string, number] {
   const pid = bs58.decode(programId);
@@ -21,7 +26,10 @@ export function findPda(seeds: Uint8Array[], programId: string): [string, number
     const parts = [...seeds, Uint8Array.of(bump), pid, enc.encode("ProgramDerivedAddress")];
     const buf = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
     let o = 0;
-    for (const p of parts) { buf.set(p, o); o += p.length; }
+    for (const p of parts) {
+      buf.set(p, o);
+      o += p.length;
+    }
     const h = sha256(buf);
     if (!onCurve(h)) return [bs58.encode(h), bump];
   }
@@ -29,28 +37,56 @@ export function findPda(seeds: Uint8Array[], programId: string): [string, number
 }
 
 export const configPda = (programId = REGISTRY_PROGRAM_ID) => findPda([enc.encode("config")], programId)[0];
-export const riskPda = (slug: string, programId = REGISTRY_PROGRAM_ID) => findPda([enc.encode("risk"), protocolIdBytes(slug)], programId)[0];
+export const riskPda = (slug: string, programId = REGISTRY_PROGRAM_ID) =>
+  findPda([enc.encode("risk"), protocolIdBytes(slug)], programId)[0];
 
 export interface RiskRecord {
-  protocolId: Uint8Array; score: number; grade: (typeof GRADES)[number]; flags: bigint; lastEventSlot: bigint;
-  updatedSlot: bigint; publisher: string; version: number; red: boolean;
+  protocolId: Uint8Array;
+  score: number;
+  grade: (typeof GRADES)[number];
+  flags: bigint;
+  lastEventSlot: bigint;
+  updatedSlot: bigint;
+  publisher: string;
+  version: number;
+  red: boolean;
 }
 
 export function decodeRiskRecord(data: Uint8Array): RiskRecord {
-  if (data.length < 8 + 32 + 2 + 24 + 32 + 4 + 1 || !RISK_RECORD_DISCRIMINATOR.every((b, i) => data[i] === b)) throw new Error("not a RiskRecord");
+  if (data.length < 8 + 32 + 2 + 24 + 32 + 4 + 1 || !RISK_RECORD_DISCRIMINATOR.every((b, i) => data[i] === b))
+    throw new Error("not a RiskRecord");
   const dv = new DataView(data.buffer, data.byteOffset, data.byteLength);
   const flags = dv.getBigUint64(42, true);
   return {
-    protocolId: data.slice(8, 40), score: data[40]!, grade: GRADES[data[41]!] ?? "F", flags,
-    lastEventSlot: dv.getBigUint64(50, true), updatedSlot: dv.getBigUint64(58, true),
-    publisher: bs58.encode(data.subarray(66, 98)), version: dv.getUint32(98, true), red: (flags & RED_MASK) !== 0n,
+    protocolId: data.slice(8, 40),
+    score: data[40]!,
+    grade: GRADES[data[41]!] ?? "F",
+    flags,
+    lastEventSlot: dv.getBigUint64(50, true),
+    updatedSlot: dv.getBigUint64(58, true),
+    publisher: bs58.encode(data.subarray(66, 98)),
+    version: dv.getUint32(98, true),
+    red: (flags & RED_MASK) !== 0n,
   };
 }
 
 /** Fetch & decode a protocol's RiskRecord from any RPC (verifies owner). */
-export async function fetchRiskRecord(rpcUrl: string, slug: string, programId = REGISTRY_PROGRAM_ID): Promise<RiskRecord | null> {
+export async function fetchRiskRecord(
+  rpcUrl: string,
+  slug: string,
+  programId = REGISTRY_PROGRAM_ID,
+): Promise<RiskRecord | null> {
   const address = riskPda(slug, programId);
-  const r = await fetch(rpcUrl, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getAccountInfo", params: [address, { encoding: "base64" }] }) });
+  const r = await fetch(rpcUrl, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "getAccountInfo",
+      params: [address, { encoding: "base64" }],
+    }),
+  });
   const j = (await r.json()) as { result?: { value: { owner: string; data: [string, string] } | null } };
   const v = j.result?.value;
   if (!v) return null;

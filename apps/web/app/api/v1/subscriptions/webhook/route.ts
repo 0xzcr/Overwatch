@@ -13,7 +13,8 @@ const body = z.object({
 });
 
 async function handlePOST(req: NextRequest) {
-  const g = await guard(req); if (!("tier" in g)) return g;
+  const g = await guard(req);
+  if (!("tier" in g)) return g;
   const p = body.safeParse(await req.json().catch(() => null));
   if (!p.success) return err(400, p.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "));
   const bad = await webhookUrlProblem(p.data.url);
@@ -25,8 +26,19 @@ async function handlePOST(req: NextRequest) {
     ids = r.ids;
   }
   const secret = `whsec_${randomBytes(24).toString("hex")}`;
-  const [row] = await db().insert(subscriptions).values({ channel: "webhook", target: p.data.url, minSeverity: p.data.min_severity, protocolIds: ids, secret }).returning();
-  return ok({ id: row!.id, url: row!.target, min_severity: row!.minSeverity, protocols: p.data.protocols ?? "all", secret, signature_header: "x-overwatch-signature", algorithm: "HMAC-SHA256(hex) of raw body" });
+  const [row] = await db()
+    .insert(subscriptions)
+    .values({ channel: "webhook", target: p.data.url, minSeverity: p.data.min_severity, protocolIds: ids, secret })
+    .returning();
+  return ok({
+    id: row!.id,
+    url: row!.target,
+    min_severity: row!.minSeverity,
+    protocols: p.data.protocols ?? "all",
+    secret,
+    signature_header: "x-overwatch-signature",
+    algorithm: "HMAC-SHA256(hex) of raw body",
+  });
 }
 
 export const POST = withDb(handlePOST);

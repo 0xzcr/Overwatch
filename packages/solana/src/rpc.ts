@@ -10,7 +10,11 @@ export interface RpcOptions {
 }
 
 export class RpcError extends Error {
-  constructor(message: string, public code?: number, public data?: unknown) {
+  constructor(
+    message: string,
+    public code?: number,
+    public data?: unknown,
+  ) {
     super(message);
   }
 }
@@ -87,18 +91,27 @@ export class Rpc {
 
   async getAccount(address: string, slice?: { offset: number; length: number }): Promise<RawAccount | null> {
     const r = withCtx(accountInfoSchema.nullable()).parse(
-      await this.call("getAccountInfo", [address, { encoding: "base64", commitment: "confirmed", ...(slice ? { dataSlice: slice } : {}) }]),
+      await this.call("getAccountInfo", [
+        address,
+        { encoding: "base64", commitment: "confirmed", ...(slice ? { dataSlice: slice } : {}) },
+      ]),
     );
     return r.value ? toRaw(address, r.value) : null;
   }
 
   /** Batched getMultipleAccounts (max 100 per call). */
-  async getMultipleAccounts(addresses: string[], slice?: { offset: number; length: number }): Promise<(RawAccount | null)[]> {
+  async getMultipleAccounts(
+    addresses: string[],
+    slice?: { offset: number; length: number },
+  ): Promise<(RawAccount | null)[]> {
     const out: (RawAccount | null)[] = [];
     for (let i = 0; i < addresses.length; i += 100) {
       const chunk = addresses.slice(i, i + 100);
       const r = withCtx(z.array(accountInfoSchema.nullable())).parse(
-        await this.call("getMultipleAccounts", [chunk, { encoding: "base64", commitment: "confirmed", ...(slice ? { dataSlice: slice } : {}) }]),
+        await this.call("getMultipleAccounts", [
+          chunk,
+          { encoding: "base64", commitment: "confirmed", ...(slice ? { dataSlice: slice } : {}) },
+        ]),
       );
       r.value.forEach((v, j) => out.push(v ? toRaw(chunk[j]!, v) : null));
     }
@@ -112,18 +125,33 @@ export class Rpc {
   ): Promise<RawAccount[]> {
     const r = z
       .array(z.object({ pubkey: z.string(), account: accountInfoSchema }))
-      .parse(await this.call("getProgramAccounts", [program, { encoding: "base64", commitment: "confirmed", filters, ...(slice ? { dataSlice: slice } : {}) }]));
+      .parse(
+        await this.call("getProgramAccounts", [
+          program,
+          { encoding: "base64", commitment: "confirmed", filters, ...(slice ? { dataSlice: slice } : {}) },
+        ]),
+      );
     return r.map((x) => toRaw(x.pubkey, x.account));
   }
 
   async getSignaturesForAddress(address: string, opts: { before?: string; limit?: number } = {}) {
     return z
-      .array(z.object({ signature: z.string(), slot: z.number(), blockTime: z.number().nullable().optional(), err: z.unknown() }))
+      .array(
+        z.object({
+          signature: z.string(),
+          slot: z.number(),
+          blockTime: z.number().nullable().optional(),
+          err: z.unknown(),
+        }),
+      )
       .parse(await this.call("getSignaturesForAddress", [address, { limit: 1000, ...opts, commitment: "confirmed" }]));
   }
 
   async getTransaction(signature: string): Promise<ParsedTx | null> {
-    const r = await this.call("getTransaction", [signature, { encoding: "json", maxSupportedTransactionVersion: 0, commitment: "confirmed" }]);
+    const r = await this.call("getTransaction", [
+      signature,
+      { encoding: "json", maxSupportedTransactionVersion: 0, commitment: "confirmed" },
+    ]);
     return r ? txSchema.parse(r) : null;
   }
 }
@@ -131,12 +159,21 @@ export class Rpc {
 export const txSchema = z.object({
   slot: z.number(),
   blockTime: z.number().nullable().optional(),
-  meta: z.object({ err: z.unknown(), loadedAddresses: z.object({ writable: z.array(z.string()), readonly: z.array(z.string()) }).optional() }).nullable(),
+  meta: z
+    .object({
+      err: z.unknown(),
+      loadedAddresses: z.object({ writable: z.array(z.string()), readonly: z.array(z.string()) }).optional(),
+    })
+    .nullable(),
   transaction: z.object({
     signatures: z.array(z.string()),
     message: z.object({
       accountKeys: z.array(z.string()),
-      header: z.object({ numRequiredSignatures: z.number(), numReadonlySignedAccounts: z.number(), numReadonlyUnsignedAccounts: z.number() }),
+      header: z.object({
+        numRequiredSignatures: z.number(),
+        numReadonlySignedAccounts: z.number(),
+        numReadonlyUnsignedAccounts: z.number(),
+      }),
       instructions: z.array(z.object({ programIdIndex: z.number(), accounts: z.array(z.number()), data: z.string() })),
       recentBlockhash: z.string(),
     }),
@@ -145,16 +182,26 @@ export const txSchema = z.object({
 export type ParsedTx = z.infer<typeof txSchema>;
 
 function toRaw(address: string, v: z.infer<typeof accountInfoSchema>): RawAccount {
-  return { address, owner: v.owner, lamports: v.lamports, executable: v.executable, data: Uint8Array.from(Buffer.from(v.data[0], "base64")) };
+  return {
+    address,
+    owner: v.owner,
+    lamports: v.lamports,
+    executable: v.executable,
+    data: Uint8Array.from(Buffer.from(v.data[0], "base64")),
+  };
 }
 
 export function mainnetRpc(): Rpc {
   const key = process.env.HELIUS_API_KEY;
-  const url = process.env.SOLANA_MAINNET_RPC_URL || (key ? `https://mainnet.helius-rpc.com/?api-key=${key}` : "https://api.mainnet-beta.solana.com");
+  const url =
+    process.env.SOLANA_MAINNET_RPC_URL ||
+    (key ? `https://mainnet.helius-rpc.com/?api-key=${key}` : "https://api.mainnet-beta.solana.com");
   return new Rpc({ url, minIntervalMs: key ? 20 : 120 });
 }
 export function devnetRpc(): Rpc {
   const key = process.env.HELIUS_API_KEY;
-  const url = process.env.SOLANA_DEVNET_RPC_URL || (key ? `https://devnet.helius-rpc.com/?api-key=${key}` : "https://api.devnet.solana.com");
+  const url =
+    process.env.SOLANA_DEVNET_RPC_URL ||
+    (key ? `https://devnet.helius-rpc.com/?api-key=${key}` : "https://api.devnet.solana.com");
   return new Rpc({ url, minIntervalMs: key ? 20 : 120 });
 }

@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { PublicKey } from "@solana/web3.js";
-import { configPda, riskPda, decodeRiskRecord, protocolIdBytes, RISK_RECORD_DISCRIMINATOR, REGISTRY_PROGRAM_ID, verifyWebhook } from "../src";
+import {
+  configPda,
+  riskPda,
+  decodeRiskRecord,
+  protocolIdBytes,
+  RISK_RECORD_DISCRIMINATOR,
+  REGISTRY_PROGRAM_ID,
+  verifyWebhook,
+} from "../src";
 import { RegistryIx, VaultIx } from "../src/tx";
 import { createHmac } from "node:crypto";
 
@@ -9,12 +17,15 @@ describe("sdk", () => {
     const p = new PublicKey(REGISTRY_PROGRAM_ID);
     expect(configPda()).toBe(PublicKey.findProgramAddressSync([Buffer.from("config")], p)[0].toBase58());
     expect(riskPda("drift")).toBe(new RegistryIx().risk("drift").toBase58());
-    expect(Buffer.from(protocolIdBytes("drift")).toString("hex")).toBe("0b7a461fefbb68e518e51884369a4b88baffdb40b7e578921f3f88649ebc6494");
+    expect(Buffer.from(protocolIdBytes("drift")).toString("hex")).toBe(
+      "0b7a461fefbb68e518e51884369a4b88baffdb40b7e578921f3f88649ebc6494",
+    );
   });
   it("decodes a RiskRecord layout", () => {
     const d = new Uint8Array(8 + 32 + 2 + 24 + 32 + 4 + 1);
     d.set(RISK_RECORD_DISCRIMINATOR);
-    d[40] = 42; d[41] = 3;
+    d[40] = 42;
+    d[41] = 3;
     new DataView(d.buffer).setBigUint64(42, 1n << 10n, true);
     new DataView(d.buffer).setUint32(98, 7, true);
     const r = decodeRiskRecord(d);

@@ -2,12 +2,28 @@ import Link from "next/link";
 import type { FeedItem } from "./data";
 import { Addr, Badge } from "./ui";
 
-const sevTone = (s: string) => (s === "CRITICAL" ? "bad" : s === "HIGH" ? "warn" : s === "INFO" ? "ok" : "dim") as "bad" | "warn" | "ok" | "dim";
+const sevTone = (s: string) =>
+  (s === "CRITICAL" ? "bad" : s === "HIGH" ? "warn" : s === "INFO" ? "ok" : "dim") as "bad" | "warn" | "ok" | "dim";
 
 /** Governance timeline: weakening changes in amber/red, strengthening changes in green. */
-export function Timeline({ events, network, showProtocol = false, empty }: { events: FeedItem[]; network: "mainnet" | "devnet"; showProtocol?: boolean; empty?: string }) {
+export function Timeline({
+  events,
+  network,
+  showProtocol = false,
+  empty,
+}: {
+  events: FeedItem[];
+  network: "mainnet" | "devnet";
+  showProtocol?: boolean;
+  empty?: string;
+}) {
   if (!events.length)
-    return <p className="page-note">{empty ?? "No governance changes recorded yet. The current state is the baseline; the next change appears here after it confirms onchain."}</p>;
+    return (
+      <p className="page-note">
+        {empty ??
+          "No governance changes recorded yet. The current state is the baseline; the next change appears here after it confirms onchain."}
+      </p>
+    );
   return (
     <ol className="tl">
       {events.map((e) => (
@@ -16,7 +32,7 @@ export function Timeline({ events, network, showProtocol = false, empty }: { eve
           <div className="tl__meta mono">
             <Badge tone={sevTone(e.severity)}>{e.severity}</Badge>
             <time>{new Date(e.blockTime ?? e.detectedAt).toUTCString().replace(" GMT", " UTC")}</time>
-            {e.source !== "live" && <Badge tone={e.source === "demo" ? "accent" : "dim"}>{e.source}</Badge>}
+            {e.source === "backfill" && <Badge tone="dim">history</Badge>}
             {e.labels.map((l) => (
               <Badge key={l} tone="bad">
                 {l}

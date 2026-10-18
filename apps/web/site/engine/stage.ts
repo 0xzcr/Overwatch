@@ -213,9 +213,22 @@ export class Stage {
   private turbTween: gsap.core.Timeline | null = null;
 
   private uniforms!: {
-    uShapes: U<THREE.DataTexture>; uRows: U<number>; uFrom: U<number>; uTo: U<number>; uMix: U<number>; uTurb: U<number>;
-    uTime: U<number>; uSize: U<number>; uPixelRatio: U<number>; uPointer: U<THREE.Vector3>; uPointerForce: U<number>;
-    uScan: U<number>; uJitter: U<number>; uColorA: U<THREE.Vector3>; uColorB: U<THREE.Vector3>; uOpacity: U<number>;
+    uShapes: U<THREE.DataTexture>;
+    uRows: U<number>;
+    uFrom: U<number>;
+    uTo: U<number>;
+    uMix: U<number>;
+    uTurb: U<number>;
+    uTime: U<number>;
+    uSize: U<number>;
+    uPixelRatio: U<number>;
+    uPointer: U<THREE.Vector3>;
+    uPointerForce: U<number>;
+    uScan: U<number>;
+    uJitter: U<number>;
+    uColorA: U<THREE.Vector3>;
+    uColorB: U<THREE.Vector3>;
+    uOpacity: U<number>;
   };
   private dustUniforms = { uTime: { value: 0 }, uScroll: { value: 0 }, uPixelRatio: { value: 1 } };
   private arcs = new THREE.Group();
@@ -237,7 +250,12 @@ export class Stage {
     this.dpr = Math.min(window.devicePixelRatio || 1, lowPower ? 1.5 : 1.75);
     this.snapshotSlot = SHAPE_NAMES.length;
 
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: true, powerPreference: "high-performance" });
+    this.renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: false,
+      alpha: true,
+      powerPreference: "high-performance",
+    });
     this.renderer.setPixelRatio(this.dpr);
     this.renderer.setClearColor(0x000000, 0);
     this.camera.position.set(0, 0, 10);
@@ -367,7 +385,9 @@ export class Stage {
     const r = mulberry(303);
     const pickLand = () => {
       for (let i = 0; i < 200; i++) {
-        const u = r() * 2 - 1, t = r() * Math.PI * 2, s = Math.sqrt(1 - u * u);
+        const u = r() * 2 - 1,
+          t = r() * Math.PI * 2,
+          s = Math.sqrt(1 - u * u);
         const p = new THREE.Vector3(s * Math.cos(t), s * Math.sin(t), u);
         if (land(p.x, p.y, p.z) > 0.2) return p;
       }
@@ -383,7 +403,13 @@ export class Stage {
       const lift = 0.25 + a.angleTo(b) * 0.35;
       for (let k = 0; k <= segs; k++) {
         const t = k / segs;
-        pts.push(a.clone().lerp(b, t).normalize().multiplyScalar(GLOBE_R * (1.01 + Math.sin(t * Math.PI) * lift)));
+        pts.push(
+          a
+            .clone()
+            .lerp(b, t)
+            .normalize()
+            .multiplyScalar(GLOBE_R * (1.01 + Math.sin(t * Math.PI) * lift)),
+        );
       }
       const geo = new THREE.BufferGeometry().setFromPoints(pts);
       geo.setAttribute("aT", new THREE.BufferAttribute(new Float32Array(pts.map((_, k) => k / segs)), 1));
@@ -418,8 +444,16 @@ export class Stage {
         pts.push(new THREE.Vector3(Math.cos(a) * radius, Math.sin(a) * radius, 0));
       }
       const geo = new THREE.BufferGeometry().setFromPoints(pts);
-      const common = { color: 0x9fffe0, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false };
-      const mat = dash ? new THREE.LineDashedMaterial({ ...common, dashSize: dash, gapSize: dash * 1.6 }) : new THREE.LineBasicMaterial(common);
+      const common = {
+        color: 0x9fffe0,
+        transparent: true,
+        opacity,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      };
+      const mat = dash
+        ? new THREE.LineDashedMaterial({ ...common, dashSize: dash, gapSize: dash * 1.6 })
+        : new THREE.LineBasicMaterial(common);
       mat.userData.base = opacity;
       this.hudMats.push(mat);
       const line = new THREE.Line(geo, mat);
@@ -430,13 +464,25 @@ export class Stage {
     for (let i = 0; i < 72; i++) {
       const a = (i / 72) * Math.PI * 2;
       const l = i % 6 === 0 ? 0.2 : 0.08;
-      ticks.push(new THREE.Vector3(Math.cos(a) * 4.2, Math.sin(a) * 4.2, 0), new THREE.Vector3(Math.cos(a) * (4.2 + l), Math.sin(a) * (4.2 + l), 0));
+      ticks.push(
+        new THREE.Vector3(Math.cos(a) * 4.2, Math.sin(a) * 4.2, 0),
+        new THREE.Vector3(Math.cos(a) * (4.2 + l), Math.sin(a) * (4.2 + l), 0),
+      );
     }
-    const tickMat = new THREE.LineBasicMaterial({ color: 0x9fffe0, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false });
+    const tickMat = new THREE.LineBasicMaterial({
+      color: 0x9fffe0,
+      transparent: true,
+      opacity: 0.22,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
     tickMat.userData.base = 0.22;
     this.hudMats.push(tickMat);
     this.hudSpinA.add(ring(2.55, 0.05, 0.35));
-    this.hudSpinB.add(ring(3.9, 0.3, 0.18), new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(ticks), tickMat));
+    this.hudSpinB.add(
+      ring(3.9, 0.3, 0.18),
+      new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(ticks), tickMat),
+    );
     this.hud.add(this.hudSpinA, this.hudSpinB, ring(4.6, 0, 0.06));
     this.hud.position.z = -0.5;
     this.hud.visible = false;
@@ -444,7 +490,8 @@ export class Stage {
   }
 
   resize() {
-    const w = window.innerWidth, h = window.innerHeight;
+    const w = window.innerWidth,
+      h = window.innerHeight;
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
@@ -517,11 +564,22 @@ export class Stage {
     const st = this.state;
     if (opts.front) {
       const TAU = Math.PI * 2;
-      gsap.to(st, { rotY: Math.round(st.rotY / TAU) * TAU, autoRotate: 0, duration: Math.max(0.01, duration * 0.9), ease: "power3.inOut" });
+      gsap.to(st, {
+        rotY: Math.round(st.rotY / TAU) * TAU,
+        autoRotate: 0,
+        duration: Math.max(0.01, duration * 0.9),
+        ease: "power3.inOut",
+      });
     } else {
       gsap.to(st, { autoRotate: opts.autoRotate ?? 0.08, duration: 1.5, ease: "power2.out" });
     }
-    gsap.to(st, { tiltX: opts.tiltX ?? 0, rotZ: opts.rotZ ?? 0, sway: opts.sway ?? 0, duration: 1.5, ease: "power2.out" });
+    gsap.to(st, {
+      tiltX: opts.tiltX ?? 0,
+      rotZ: opts.rotZ ?? 0,
+      sway: opts.sway ?? 0,
+      duration: 1.5,
+      ease: "power2.out",
+    });
     gsap.to(u.uOpacity, { value: opts.opacity ?? 1, duration: 1.2 });
     gsap.to(u.uJitter, { value: opts.jitter ?? 0, duration: 0.6 });
 
@@ -602,7 +660,11 @@ export class Stage {
     this.spin.rotation.set(s.tiltX - this.pointerSmooth.y * 0.32, s.rotY + sway + this.pointerSmooth.x * 0.45, s.rotZ);
 
     // pointer projected onto the z=0 plane
-    const v = this.v3.set(this.pointerSmooth.x, this.pointerSmooth.y, 0.5).unproject(this.camera).sub(this.camera.position).normalize();
+    const v = this.v3
+      .set(this.pointerSmooth.x, this.pointerSmooth.y, 0.5)
+      .unproject(this.camera)
+      .sub(this.camera.position)
+      .normalize();
     const dist = -this.camera.position.z / v.z;
     u.uPointer.value.copy(this.camera.position).addScaledVector(v, dist);
     const force = this.pointerActive && !this.reducedMotion ? 1 : 0;
@@ -617,7 +679,11 @@ export class Stage {
       this.hud.rotation.set(-this.pointerSmooth.y * 0.15, this.pointerSmooth.x * 0.2, 0);
     }
 
-    this.camera.position.set(this.pointerSmooth.x * 0.15, this.pointerSmooth.y * 0.1, 10 + Math.min(Math.abs(this.scrollV) * 0.004, 0.8));
+    this.camera.position.set(
+      this.pointerSmooth.x * 0.15,
+      this.pointerSmooth.y * 0.1,
+      10 + Math.min(Math.abs(this.scrollV) * 0.004, 0.8),
+    );
     this.camera.lookAt(0, 0, 0);
 
     if (this.composer) this.composer.render();
