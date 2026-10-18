@@ -166,7 +166,7 @@ export function Footer() {
       </div>
       <div className="footer__base">
         <span>© 2026 Overwatch</span>
-        <span>Mainnet reads are read-only. The registry, vault and demo run on devnet.</span>
+        <span>Built on Solana for Solana.</span>
         <a href="#top" data-cursor="Top">
           Back to top ↑
         </a>
