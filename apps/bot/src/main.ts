@@ -8,7 +8,7 @@ import { mainnetRpc } from "@overwatch/solana";
 import { deliverPending } from "./deliver";
 
 const log = (m: string) => console.log(`${new Date().toISOString()} [bot] ${m}`);
-const SITE = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://overwatch-chi.vercel.app";
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const bot = token ? new Bot(token) : null;
 const SEVS = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
