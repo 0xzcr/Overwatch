@@ -1,7 +1,7 @@
 [package]
 name = "overwatch_vault"
 version = "0.1.0"
-description = "DEMO protected vault: permissionless auto-exit when the Overwatch registry turns red. Simulated strategies only."
+description = "Protected vault: permissionless auto-exit when the Overwatch registry turns red. Simulated strategies only."
 edition.workspace = true
 rust-version.workspace = true
 

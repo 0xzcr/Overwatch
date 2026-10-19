@@ -4,7 +4,7 @@
     "name": "overwatch_vault",
     "version": "0.1.0",
     "spec": "0.1.0",
-    "description": "DEMO protected vault: permissionless auto-exit when the Overwatch registry turns red. Simulated strategies only."
+    "description": "Protected vault: permissionless auto-exit when the Overwatch registry turns red. Simulated strategies only."
   },
   "instructions": [
     {
@@ -485,7 +485,7 @@
     {
       "name": "reset_position",
       "docs": [
-        "Manager can re-arm a shielded position once the protocol is no longer red (demo reset)."
+        "Manager can re-arm a shielded position once the protocol is no longer red (after a reset)."
       ],
       "discriminator": [
         26,

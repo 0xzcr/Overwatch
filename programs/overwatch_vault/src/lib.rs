@@ -1,4 +1,4 @@
-//! DEMO vault. Positions are SIMULATED allocations (token accounts held by the vault), not real protocol integrations.
+//! Protected vault. Positions are SIMULATED allocations (token accounts held by the vault), not real protocol integrations.
 //! `check_and_exit` is permissionless: anyone can pull a position back to idle when the protocol's
 //! Overwatch `RiskRecord` is red (`flags & RED_MASK != 0`) or its score is below `vault.min_score`.
 use anchor_lang::prelude::*;
@@ -144,7 +144,7 @@ pub mod overwatch_vault {
         Ok(())
     }
 
-    /// Manager can re-arm a shielded position once the protocol is no longer red (demo reset).
+    /// Manager can re-arm a shielded position once the protocol is no longer red (after a reset).
     pub fn reset_position(ctx: Context<ResetPosition>) -> Result<()> {
         let r = &ctx.accounts.risk;
         require!(

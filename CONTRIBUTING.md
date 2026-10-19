@@ -16,7 +16,7 @@ variable, walks through the common kinds of change step by step, and covers depl
 8. [Code conventions](#8-code-conventions)
 9. [Tests](#9-tests)
 10. [Recipes for common changes](#10-recipes-for-common-changes)
-11. [The devnet registry, vault and demo](#11-the-devnet-registry-vault-and-demo)
+11. [The devnet registry and vault](#11-the-devnet-registry-and-vault)
 12. [Deploying](#12-deploying)
 13. [Troubleshooting](#13-troubleshooting)
 14. [Reporting security issues](#14-reporting-security-issues)
@@ -53,7 +53,7 @@ Four rules are non-negotiable, because the whole product rests on them:
 | Docker      | any recent       | a local Postgres via `docker compose`                                         |
 | Git         | any              |                                                                               |
 | Rust        | stable           | only for the onchain programs in `programs/`                                  |
-| Solana CLI  | stable (Agave)   | only for the onchain programs and the devnet demo                             |
+| Solana CLI  | stable (Agave)   | only for the onchain programs                                                 |
 | Anchor CLI  | 1.1.2            | only for the onchain programs (`cargo install --git https://github.com/solana-foundation/anchor --tag v1.1.2 anchor-cli --locked`) |
 
 Optional accounts: a free [Helius](https://helius.dev) API key (strongly recommended), a Telegram bot token from
@@ -105,7 +105,7 @@ matter which directory they run from. A variable already set in your shell is ne
 | `HELIUS_API_KEY` | empty | When set, mainnet and devnet RPC and websockets go to Helius, request pacing drops from 120ms to 20ms, and the indexer subscribes at 50 per second instead of 4. |
 | `SOLANA_MAINNET_RPC_URL` | empty | Explicit mainnet HTTP endpoint. **It takes priority over `HELIUS_API_KEY`**, so leave it empty to use Helius. |
 | `SOLANA_MAINNET_WS_URL` | empty | Explicit mainnet websocket endpoint. Same priority rule. |
-| `SOLANA_DEVNET_RPC_URL` | empty | Explicit devnet HTTP endpoint (demo, registry, vault). |
+| `SOLANA_DEVNET_RPC_URL` | empty | Explicit devnet HTTP endpoint (registry publishing). |
 | `SOLANA_DEVNET_WS_URL` | empty | Explicit devnet websocket endpoint. |
 
 ### Database
@@ -133,16 +133,13 @@ matter which directory they run from. A variable already set in your shell is ne
 | `INDEXER_PORT` | `8787` | Port for `GET /health`. |
 | `NONCE_PROGRAM_SUBSCRIBE` | empty | `true` forces real-time `programSubscribe` for signer nonce accounts on the public mainnet RPC (which normally rejects it; with Helius it is always on). |
 
-### Devnet registry, vault and demo
+### Devnet registry and vault
 
 | Variable | Default | What it does |
 | --- | --- | --- |
 | `REGISTRY_PROGRAM_ID` | the deployed devnet registry | The indexer publishes scores here; protocol pages read the onchain record. Unset it to turn publishing off. |
-| `VAULT_PROGRAM_ID` | the deployed devnet vault | Used by the keeper and the demo scripts. |
+| `VAULT_PROGRAM_ID` | the deployed devnet vault | The vault program the SDK's `VaultIx` targets. |
 | `PUBLISHER_KEYPAIR_PATH` | `./keys/publisher-keypair.json` | Key allowed to write to the registry. |
-| `DEMO_ADMIN_KEYPAIR_PATH` | `./keys/demo-admin-keypair.json` | Admin of the demo protocol's multisig. |
-| `DEMO_MODE` | `false` | `true` lets the keeper re-arm the demo vault after a reset. |
-| `FUNDER_KEYPAIR_PATH` | empty | A funded devnet key used instead of the airdrop faucet. |
 
 Set automatically by the platform, never by hand: `VERCEL` (shrinks the connection pool on Vercel) and `NODE_ENV`.
 
@@ -169,7 +166,6 @@ Useful one-off scripts (all in `scripts/`, all read-only against mainnet unless 
 | `pnpm fixtures:capture` | Re-captures real account bytes into `fixtures/` for the decoder tests. |
 | `pnpm fixtures:idl` | Re-fetches protocol Anchor IDLs into `fixtures/idl/` for the adapter tests. |
 | `pnpm probe <id…>` | Low-level check that program IDs exist and are upgradeable. |
-| `pnpm demo <action>` | **Devnet transactions.** See [section 11](#11-the-devnet-registry-vault-and-demo). |
 
 ## 6. The database
 
@@ -236,7 +232,6 @@ prevents data loss, security, accessibility.
   server-only entry point; never re-export it from `packages/core/src/index.ts`.
 - `packages/db` owns all SQL. Apps call its functions; they do not hand-write queries.
 - `apps/web/lib/*` is server-only (`import "server-only"` where it touches the database).
-- `packages/demo` is devnet-only and refuses mainnet RPC URLs. Nothing on the website depends on it.
 
 **Style:** TypeScript strict mode, ESM everywhere, Prettier (120 columns, double quotes, trailing commas). Names say
 what a thing is. Comments explain _why_, in one line, only when the code cannot. A shortcut with a known limit gets a
@@ -252,7 +247,7 @@ and what to do. Every claim must be checkable.
 
 | Where | Run | What it covers |
 | --- | --- | --- |
-| `packages/core/test/` | `pnpm --filter @overwatch/core test` | Decoders against real captured bytes (`fixtures/`), admin adapters against real IDLs, every rule and severity, scoring and flags, the backfill replay classifier, the webhook URL guard, the rehearsal model. Runs with coverage. |
+| `packages/core/test/` | `pnpm --filter @overwatch/core test` | Decoders against real captured bytes (`fixtures/`), admin adapters against real IDLs, every rule and severity, scoring and flags, the backfill replay classifier, the webhook URL guard. Runs with coverage. |
 | `packages/sdk/test/` | `pnpm --filter @overwatch/sdk test` | PDA derivation, RiskRecord decoding, webhook signature verification. |
 | `apps/bot/test/` | `pnpm --filter @overwatch/bot test` | Alert formatting and retry backoff. |
 | `scripts/dev/pipeline-smoke.ts` | `pnpm smoke:pipeline` | The database pipeline end to end (needs Postgres). |
@@ -347,32 +342,20 @@ Adapters decode a protocol's own config account (admin key, limits, listed colla
 4. Data comes from loaders in `site/data.ts`, which fall back to the snapshot when the database is down. Keep that
    behaviour for anything a visitor sees.
 
-## 11. The devnet registry, vault and demo
+## 11. The devnet registry and vault
 
-These run on **devnet only**; `packages/demo` refuses any RPC URL containing "mainnet". None of it is on the website.
+These run on **devnet only**; the indexer's devnet connection refuses any RPC URL containing "mainnet". None of it is
+on the website.
 
-**Programs.** `anchor build` builds `overwatch_registry`, `overwatch_vault` and `demo_protocol` into `target/deploy/`.
-The registry and vault are already deployed on devnet at the IDs in `.env.example`. To deploy your own:
-`anchor deploy --provider.cluster devnet`, then set `REGISTRY_PROGRAM_ID` and `VAULT_PROGRAM_ID`.
+**Programs.** `anchor build` builds `overwatch_registry` and `overwatch_vault` into `target/deploy/`. Both are already
+deployed on devnet at the IDs in `.env.example`. To deploy your own: `anchor deploy --provider.cluster devnet`, then set
+`REGISTRY_PROGRAM_ID` and `VAULT_PROGRAM_ID`.
 
-**Keys.** `keys/` (git-ignored) needs `demo-admin-keypair.json`, `publisher-keypair.json`, `signer-a-keypair.json`,
-`signer-b-keypair.json`, `signer-c-keypair.json` and `attacker-keypair.json`. Create each with
-`solana-keygen new --no-bip39-passphrase -o keys/<name>.json`. Never commit keys; never reuse them on mainnet.
+**Keys.** `keys/` (git-ignored) needs `publisher-keypair.json`. Create it with
+`solana-keygen new --no-bip39-passphrase -o keys/publisher-keypair.json`. Never commit keys; never reuse them on mainnet.
 
 **Publishing.** When the publisher key exists, the indexer writes each protocol's score and flags to the registry
-(at most once a minute per protocol, immediately for critical changes). Without keys it logs once and carries on.
-
-**The demo protocol.** `pnpm demo setup` creates a 2-of-3 Squads multisig with a two-day timelock, deploys
-`demo_protocol` behind it, initialises the vault with a funded position, and registers `overwatch-demo` in the
-database. Then:
-
-```sh
-pnpm demo remove-timelock       # CRITICAL: the indexer alerts, the registry goes red, the keeper calls check_and_exit
-pnpm demo lower-threshold
-pnpm demo create-signer-nonce   # the "Drift pattern"
-pnpm demo transfer-authority
-pnpm demo reset                 # restores the controls; with DEMO_MODE=true the keeper re-arms the vault
-```
+(at most once a minute per protocol, immediately for critical changes). Without the key it logs once and carries on.
 
 ## 12. Deploying
 

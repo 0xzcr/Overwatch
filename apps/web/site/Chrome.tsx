@@ -96,7 +96,7 @@ export function Chrome() {
             ))}
           </ol>
           <div className="menu__foot">
-            <span>Mainnet data is read-only. The registry, vault and demo run on devnet.</span>
+            <span>Mainnet data is read-only. The onchain registry runs on devnet.</span>
           </div>
         </div>
       </div>

@@ -3,7 +3,7 @@ import { z } from "zod";
 export const protocolConfigSchema = z.object({
   slug: z.string().regex(/^[a-z0-9-]+$/),
   name: z.string(),
-  category: z.enum(["lending", "perps", "dex", "lst", "aggregator", "yield", "infra", "demo"]),
+  category: z.enum(["lending", "perps", "dex", "lst", "aggregator", "yield", "infra"]),
   defillama_slug: z.string().nullable().optional(),
   website: z.string().url(),
   docs_sources: z.array(z.string()).default([]),
@@ -23,7 +23,7 @@ export const protocolConfigSchema = z.object({
   oracles: z.array(z.string()).default([]),
   notes: z.string().optional(),
   verified: z.boolean().default(false),
-  source: z.enum(["config", "demo"]).default("config"),
+  source: z.enum(["config"]).default("config"),
   network: z.enum(["mainnet", "devnet"]).default("mainnet"),
 });
 export type ProtocolConfig = z.infer<typeof protocolConfigSchema>;

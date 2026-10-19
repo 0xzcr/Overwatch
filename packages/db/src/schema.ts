@@ -77,7 +77,7 @@ export const events = pgTable(
     slot: bigint("slot", { mode: "number" }),
     blockTime: timestamp("block_time", { withTimezone: true }),
     txSignature: text("tx_signature"),
-    source: text("source").notNull(), // live | backfill | demo | reconstructed
+    source: text("source").notNull(), // live | backfill | reconstructed
     detectedAt: timestamp("detected_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -186,14 +186,5 @@ export const onchainPublishes = pgTable("onchain_publishes", {
   slot: bigint("slot", { mode: "number" }),
   status: text("status").notNull(),
   kind: text("kind").notNull().default("registry"), // registry | shield
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
-
-export const demoActions = pgTable("demo_actions", {
-  id: serial("id").primaryKey(),
-  action: text("action").notNull(),
-  status: text("status").notNull(),
-  txSignatures: jsonb("tx_signatures").notNull().default([]),
-  log: text("log"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

@@ -1,5 +1,5 @@
 [workspace]
-members = ["programs/overwatch_registry", "programs/overwatch_vault", "programs/demo_protocol"]
+members = ["programs/overwatch_registry", "programs/overwatch_vault"]
 resolver = "2"
 
 [workspace.package]

@@ -36,7 +36,7 @@ describe("sdk", () => {
     const k = PublicKey.unique();
     const ix = new RegistryIx().upsertRisk(k, "drift", 50, 2, 3n, 9);
     expect(ix.data.length).toBe(8 + 32 + 2 + 8 + 8);
-    expect(new VaultIx(k).checkAndExit(k, "demo").keys).toHaveLength(7);
+    expect(new VaultIx(k).checkAndExit(k, "proto").keys).toHaveLength(7);
   });
   it("verifies webhook signatures", async () => {
     const body = '{"a":1}';

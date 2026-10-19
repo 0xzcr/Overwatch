@@ -265,7 +265,7 @@ function toggles(u: Capability) {
       : u.chapter === "watch"
         ? ["squads.pending", "WEAKENING"]
         : u.chapter === "act"
-          ? ["demo.devnet", "ARMED"]
+          ? ["registry.devnet", "ARMED"]
           : ["subscription", "HIGH+"];
   return `
   <div class="vz vz-toggles">

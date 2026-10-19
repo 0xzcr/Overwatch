@@ -1,6 +1,6 @@
 /**
  * Overwatch indexer: account watchers + tx stream + reconciler → snapshots → rules → score → publish.
- * Mainnet is read-only. Devnet is used for the demo protocol and the onchain registry/vault.
+ * Mainnet is read-only. Devnet is used only for the onchain registry.
  */
 import "@overwatch/db/env";
 import { createServer } from "node:http";
@@ -77,7 +77,7 @@ const health = {
 };
 
 async function loadProtocols() {
-  return (await db().select().from(protocols)).filter((p) => p.verified || p.source === "demo");
+  return (await db().select().from(protocols)).filter((p) => p.verified);
 }
 
 /** Debounced per-protocol refresh: re-read all accounts, diff, score, publish. */
@@ -122,7 +122,7 @@ async function refresh(slug: string, why: string, scanNonces: boolean) {
     const tx = s.tx;
     s.tx = undefined;
     const r = await ingestSnapshot(row, snapshot, {
-      source: row.source === "demo" ? "demo" : "live",
+      source: "live",
       txSignature: tx?.sig ?? null,
       blockTime: tx?.blockTime ?? null,
     });
@@ -189,7 +189,7 @@ async function inspectSignerTx(row: Row, signer: string, signature: string) {
         slot: tx.slot,
         blockTime: tx.blockTime ? new Date(tx.blockTime * 1000) : null,
         txSignature: signature,
-        source: row.source === "demo" ? "demo" : "live",
+        source: "live",
       })
       .onConflictDoNothing()
       .returning();
@@ -289,7 +289,7 @@ async function main() {
   await reconcile(true);
   setInterval(() => void reconcile(false), 5 * 60_000);
   setInterval(() => void reconcile(true), 60 * 60_000);
-  // pick up newly registered protocols (e.g. demo setup) quickly
+  // pick up newly registered protocols quickly
   setInterval(async () => {
     for (const row of await loadProtocols())
       if (!state.has(row.slug)) {

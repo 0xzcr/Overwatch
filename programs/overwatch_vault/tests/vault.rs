@@ -347,13 +347,13 @@ fn deposit_withdraw_math() {
 fn allocation_limits_withdraw_and_manager_only() {
     let mut e = setup(40);
     e.deposit(100_000).unwrap();
-    e.allocate("demo", 80_000).unwrap();
+    e.allocate("proto", 80_000).unwrap();
     let v: Vault = read(&e.svm, &e.vault);
     assert_eq!(v.total_allocated, 80_000);
     assert!(e.withdraw(50_000).is_err(), "only 20k idle");
     e.withdraw(20_000).unwrap();
     // non-manager can't allocate
-    let p = pid("demo");
+    let p = pid("proto");
     let pos = pos_pda(&e.vault, &p);
     let i = Instruction::new_with_bytes(
         vid(),
@@ -382,27 +382,27 @@ fn allocation_limits_withdraw_and_manager_only() {
 fn check_and_exit_only_when_red_and_idempotent() {
     let mut e = setup(40);
     e.deposit(100_000).unwrap();
-    e.allocate("demo", 70_000).unwrap();
+    e.allocate("proto", 70_000).unwrap();
     // green: score 85, no red flags (NO_TIMELOCK alone is not red)
-    e.publish("demo", 85, 1 << 1, 10);
-    assert!(e.check_and_exit("demo").is_err(), "not red");
+    e.publish("proto", 85, 1 << 1, 10);
+    assert!(e.check_and_exit("proto").is_err(), "not red");
     // red via NO_TIMELOCK_LOW_THRESHOLD
-    e.publish("demo", 60, (1 << 1) | (1 << 2) | (1 << 10), 11);
-    let logs = e.check_and_exit("demo").unwrap();
+    e.publish("proto", 60, (1 << 1) | (1 << 2) | (1 << 10), 11);
+    let logs = e.check_and_exit("proto").unwrap();
     assert!(
         logs.iter().any(|l| l.contains("Program data:")),
         "ShieldTriggered event emitted"
     );
-    let pos: Position = read(&e.svm, &pos_pda(&e.vault, &pid("demo")));
+    let pos: Position = read(&e.svm, &pos_pda(&e.vault, &pid("proto")));
     assert!(pos.shielded);
     assert_eq!(pos.allocated, 0);
     assert_eq!(token_amount(&e.svm, &e.idle), 100_000);
     let v: Vault = read(&e.svm, &e.vault);
     assert_eq!(v.total_allocated, 0);
     // idempotent
-    e.check_and_exit("demo").unwrap();
+    e.check_and_exit("proto").unwrap();
     assert!(
-        e.allocate("demo", 1).is_err(),
+        e.allocate("proto", 1).is_err(),
         "shielded positions can't be re-allocated"
     );
     // users can now fully withdraw
@@ -422,18 +422,18 @@ fn exits_when_score_below_min() {
 fn rejects_wrong_owner_and_wrong_pda_risk_record() {
     let mut e = setup(40);
     e.deposit(10_000).unwrap();
-    e.allocate("demo", 5_000).unwrap();
+    e.allocate("proto", 5_000).unwrap();
     e.allocate("other", 1_000).unwrap();
     e.publish("other", 0, 1, 1); // red record but for another protocol
-                                 // Wrong PDA: pass "other"'s (red) record for "demo"'s position
-    let i = e.exit_ix("demo", risk_pda(&pid("other")));
+                                 // Wrong PDA: pass "other"'s (red) record for "proto"'s position
+    let i = e.exit_ix("proto", risk_pda(&pid("other")));
     let u = e.user.insecure_clone();
     assert!(send(&mut e.svm, &[i], &[&u]).is_err(), "wrong PDA");
     // Wrong owner: forge a byte-identical RiskRecord at the right address but owned by the system program
-    let forged_addr = risk_pda(&pid("demo"));
+    let forged_addr = risk_pda(&pid("proto"));
     let mut acct = e.svm.get_account(&risk_pda(&pid("other"))).unwrap();
     acct.owner = system_program::ID;
     e.svm.set_account(forged_addr, acct).unwrap();
-    assert!(e.check_and_exit("demo").is_err(), "wrong owner");
+    assert!(e.check_and_exit("proto").is_err(), "wrong owner");
     let _ = AccountMeta::new_readonly(forged_addr, false);
 }

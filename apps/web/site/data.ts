@@ -221,10 +221,10 @@ function headline(cards: ProtoCard[], live: boolean, views: ProtocolView[] | nul
   };
 }
 
-/** Mainnet protocols (demo excluded) plus the headline numbers. */
+/** Mainnet protocols plus the headline numbers. */
 export async function loadProtocols() {
   const views = await liveViews();
-  const mainnet = views?.filter((p) => p.source !== "demo" && p.network === "mainnet") ?? null;
+  const mainnet = views?.filter((p) => p.network === "mainnet") ?? null;
   const live = !!mainnet?.length;
   const cards = sortCards(live && mainnet ? mainnet.map(fromView) : fallbackCards());
   return { live, cards, headline: headline(cards, live, live ? mainnet : null) };
@@ -250,7 +250,7 @@ export type FeedItem = Pick<
 
 export async function loadEvents(limit = 200, minSeverity?: string): Promise<{ live: boolean; events: FeedItem[] }> {
   try {
-    // The devnet demo protocol is a backend test fixture; the public feed shows mainnet history and live catches only.
+    // the public feed shows onchain history and live catches only
     const events = await withTimeout(() =>
       getEvents({ limit, sources: ["live", "backfill"], ...(minSeverity ? { minSeverity } : {}) }),
     );
@@ -262,7 +262,7 @@ export async function loadEvents(limit = 200, minSeverity?: string): Promise<{ l
 
 export async function loadProtocol(slug: string) {
   const views = await liveViews();
-  const view = views?.find((p) => p.slug === slug && p.source !== "demo") ?? null;
+  const view = views?.find((p) => p.slug === slug) ?? null;
   if (view) {
     let events: FeedItem[] = [];
     try {

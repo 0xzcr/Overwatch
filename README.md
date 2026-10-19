@@ -77,10 +77,9 @@ packages/
   solana/     minimal read-only JSON-RPC client and reconnecting websocket manager
   db/         Postgres schema (Drizzle), queries, and the ingest pipeline
   sdk/        TypeScript SDK: API client, webhook verification, registry and vault instructions
-  demo/       devnet-only tooling for the demo protocol, registry publishing and the vault keeper
-programs/     Anchor programs: overwatch_registry, overwatch_vault, demo_protocol
+programs/     Anchor programs: overwatch_registry, overwatch_vault
 config/       protocols.yaml, the curated watch list
-scripts/      seed, backfill, inspect, stats, fixtures and the demo CLI
+scripts/      seed, backfill, inspect, stats and fixtures
 fixtures/     real account bytes and IDLs captured from mainnet, used by the tests
 ```
 

@@ -1902,17 +1902,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 
 [[package]]
-name = "overwatch_demo_protocol"
-version = "0.1.0"
-dependencies = [
- "solana-account-info",
- "solana-msg",
- "solana-program-entrypoint",
- "solana-program-error",
- "solana-pubkey 3.0.0",
-]
-
-[[package]]
 name = "overwatch_registry"
 version = "0.1.0"
 dependencies = [

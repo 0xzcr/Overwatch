@@ -15,8 +15,8 @@ Honest list of what's incomplete. Items here show as "coming soon" in the UI whe
 
 - **Indexer and bot are not hosted yet.** They run locally; deploy them to Fly with `fly.indexer.toml` and
   `fly.bot.toml` (region `syd`, next to the database) so alerts keep flowing.
-- **Onchain publishing** needs the devnet keypairs in `keys/` (or a Fly volume); without them the registry is not
-  updated and the vault keeper is off.
+- **Onchain publishing** needs the devnet publisher keypair in `keys/` (or a Fly volume); without it the registry is
+  not updated.
 - **Slow first request** on a fresh Vercel instance (many seconds, then about one second warm). Cause not pinned down.
 
 ## Hardening

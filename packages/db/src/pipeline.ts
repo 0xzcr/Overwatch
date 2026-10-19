@@ -18,7 +18,7 @@ export async function ingestSnapshot(
   p: ProtocolRow,
   snap: ControlSnapshot,
   o: {
-    source: "live" | "backfill" | "demo";
+    source: "live" | "backfill";
     txSignature?: string | null;
     blockTime?: string | null;
     force?: boolean;
@@ -32,9 +32,7 @@ export async function ingestSnapshot(
     .where(eq(snapshots.protocolId, p.id))
     .orderBy(desc(snapshots.createdAt), desc(snapshots.id))
     .limit(1);
-  // demo protocols start a fresh "epoch" on reset so old demo events stop counting as recent
-  const resetAt = (p.config as { demoResetAt?: string } | null)?.demoResetAt;
-  const since = new Date(Math.max(Date.now() - 30 * DAY, resetAt ? Date.parse(resetAt) : 0));
+  const since = new Date(Date.now() - 30 * DAY);
   const historyRows = await d
     .select()
     .from(events)

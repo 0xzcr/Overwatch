@@ -102,7 +102,6 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
             <Grade grade={p.grade} score={p.score} size="lg" />
             <div className="detail__badges">
               {p.verified ? <Badge tone="ok">verified onchain</Badge> : <Badge tone="warn">unverified</Badge>}
-              {p.source === "demo" && <Badge tone="accent">demo · devnet</Badge>}
               {p.red && <Badge tone="bad">red</Badge>}
             </div>
           </div>

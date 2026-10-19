@@ -2,7 +2,7 @@
  * Offline end-to-end check of the alert pipeline, no RPC needed: Postgres → rules engine → events + scores →
  * NOTIFY (what /api/v1/stream relays) → webhook delivery with an HMAC signature.
  *
- * It registers a throwaway protocol, ingests the demo model's baseline and a "timelock removed" snapshot through
+ * It registers a throwaway protocol, ingests a baseline (2-of-3 Squads, 2-day timelock) and a "timelock removed" snapshot through
  * the same ingestSnapshot() the indexer uses, runs the bot's delivery worker once, checks a local receiver got a
  * correctly signed CRITICAL alert, then deletes everything it created.
  *
@@ -11,7 +11,7 @@
 import { createHmac } from "node:crypto";
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
-import { DEMO_BASELINE, demoSnapshot, applyDemoAction } from "@overwatch/core";
+import type { ControlSnapshot } from "@overwatch/core";
 import { db, sql, direct, protocols, subscriptions, deliveries, ingestSnapshot, eq, CHANNEL } from "@overwatch/db";
 import { deliverPending } from "../../apps/bot/src/deliver";
 
@@ -20,6 +20,45 @@ process.env.WEBHOOK_ALLOW_PRIVATE_URLS = "true";
 
 const SLUG = "pipeline-smoke";
 const SECRET = "whsec_pipeline_smoke";
+const SIGNERS = ["signer-a", "signer-b", "signer-c"];
+/** A 2-of-3 Squads v4 vault holding the upgrade authority, with the given timelock. */
+const snapshot = (timeLockSec: number, slot: number): ControlSnapshot => ({
+  protocol: SLUG,
+  slot,
+  takenAt: new Date().toISOString(),
+  programs: [
+    {
+      programId: "smoke-program",
+      label: "smoke program",
+      programDataAddress: "smoke-program-data",
+      lastDeploySlot: 0,
+      upgradeAuthority: "smoke-multisig-vault",
+      authorityKind: "SQUADS_V4_VAULT",
+      authorityOwner: null,
+      multisig: "smoke-multisig",
+    },
+  ],
+  multisigs: [
+    {
+      address: "smoke-multisig",
+      version: "v4",
+      vaultIndex: 0,
+      role: "upgrade_authority",
+      threshold: 2,
+      members: SIGNERS.map((key) => ({ key, permissions: 7 })),
+      timeLockSec,
+      configAuthority: "smoke-admin",
+      transactionIndex: 0,
+      staleTransactionIndex: 0,
+      pending: [],
+    },
+  ],
+  nonces: [],
+  mints: [],
+  oracles: [],
+  admin: [],
+  verified: true,
+});
 const fail = (m: string): never => {
   throw new Error(m);
 };
@@ -52,7 +91,7 @@ try {
       name: "Pipeline Smoke Protocol",
       category: "lending",
       network: "devnet",
-      source: "demo",
+      source: "config",
       config: {},
       verified: true,
     })
@@ -62,15 +101,9 @@ try {
     .values({ channel: "webhook", target: url, minSeverity: "HIGH", protocolIds: [p!.id], secret: SECRET })
     .returning();
 
-  // 2. Baseline, then the same change the demo's "Remove timelock" button makes.
-  const at = new Date().toISOString();
-  const base = await ingestSnapshot(p!, { ...demoSnapshot(DEMO_BASELINE, at), protocol: SLUG }, { source: "demo" });
-  const weakened = applyDemoAction(DEMO_BASELINE, "remove-timelock").next;
-  const r = await ingestSnapshot(
-    p!,
-    { ...demoSnapshot(weakened, at), protocol: SLUG, slot: 1 },
-    { source: "demo", txSignature: null },
-  );
+  // 2. Baseline, then the timelock removed.
+  const base = await ingestSnapshot(p!, snapshot(172_800, 0), { source: "live" });
+  const r = await ingestSnapshot(p!, snapshot(0, 1), { source: "live", txSignature: null });
   console.log(
     `baseline score ${base.score.score} ${base.score.grade} · after change ${r.score.score} ${r.score.grade}${r.score.red ? " (red)" : ""}`,
   );

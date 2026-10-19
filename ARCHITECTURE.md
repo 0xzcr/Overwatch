@@ -3,7 +3,7 @@
 This document explains the whole system: what it reads, how it decides, where data lives, how alerts travel, and how
 the website and onchain programs fit in. It is written so that someone who has never seen the code can understand all
 of it, and so that someone changing the code knows which other parts a change touches. Paths are relative to the
-repository root. Section 22 walks through four complete scenarios end to end; if you prefer learning from examples,
+repository root. Section 21 walks through four complete scenarios end to end; if you prefer learning from examples,
 start there and come back.
 
 ## Contents
@@ -25,14 +25,13 @@ start there and come back.
 15. [The front-end engine](#15-the-front-end-engine)
 16. [The onchain programs](#16-the-onchain-programs)
 17. [The SDK](#17-the-sdk)
-18. [The devnet demo package](#18-the-devnet-demo-package)
-19. [Security model](#19-security-model)
-20. [Performance and reliability](#20-performance-and-reliability)
-21. [Deployment topology](#21-deployment-topology)
-22. [End-to-end walkthroughs](#22-end-to-end-walkthroughs)
-23. [Testing and CI](#23-testing-and-ci)
-24. [Known limitations and open issues](#24-known-limitations-and-open-issues)
-25. [Glossary](#25-glossary)
+18. [Security model](#18-security-model)
+19. [Performance and reliability](#19-performance-and-reliability)
+20. [Deployment topology](#20-deployment-topology)
+21. [End-to-end walkthroughs](#21-end-to-end-walkthroughs)
+22. [Testing and CI](#22-testing-and-ci)
+23. [Known limitations and open issues](#23-known-limitations-and-open-issues)
+24. [Glossary](#24-glossary)
 
 ---
 
@@ -70,14 +69,14 @@ happen. It warns after a change lands onchain; it cannot stop or undo it.
                      ┌──────────────────────────────┐            ┌─────────────────────────────┐
                      │ programs, ProgramData,       │            │ overwatch_registry (scores) │
                      │ Squads multisigs, proposals, │            │ overwatch_vault (exits)     │
-                     │ nonce accounts, mints,       │            │ demo_protocol + its multisig│
+                     │ nonce accounts, mints,       │            │                             │
                      │ oracles, admin configs       │            └──────────────▲──────────────┘
-                     └──────┬───────────────▲───────┘                           │ upsert_risk / check_and_exit
+                     └──────┬───────────────▲───────┘                           │ upsert_risk
               websockets    │               │ HTTP JSON-RPC                     │
          (account/logs/program subscribe)   │ (getMultipleAccounts, gPA, …)     │
                      ┌──────▼───────────────┴───────┐                           │
                      │   apps/indexer  (Fly, syd)   │───────────────────────────┘
-                     │   packages/core: decode,     │      publisher + keeper (only with devnet keys)
+                     │   packages/core: decode,     │      publisher (only with a devnet key)
                      │   diff, score                │
                      └──────┬───────────────────────┘
                             │ packages/db: ingestSnapshot()
@@ -105,9 +104,8 @@ happen. It warns after a change lands onchain; it cannot stop or undo it.
 | Indexer | `apps/indexer` | Fly (one process) | subscribes to every watched account, refreshes snapshots, ingests, publishes onchain |
 | Bot + worker | `apps/bot` | Fly (one process) | Telegram commands; delivers pending alerts to Telegram, webhooks, email |
 | Website + API | `apps/web` | Vercel (serverless, Sydney) | every page, the REST API, the live SSE stream |
-| Onchain programs | `programs/` | Solana devnet | registry of scores; a vault that exits red protocols; a demo protocol |
+| Onchain programs | `programs/` | Solana devnet | registry of scores; a vault that exits red protocols |
 | SDK | `packages/sdk` | integrators | API client, webhook verification, registry/vault PDAs and instructions |
-| Demo tooling | `packages/demo`, `scripts/demo.ts` | developer machine | devnet setup and scripted weakening for demonstrations |
 
 ## 3. Repository layout
 
@@ -125,19 +123,18 @@ between packages; Next.js transpiles them via `transpilePackages` and the worker
 │   │   ├── lib/                server-only helpers: DB view models, API helpers, control graph builder
 │   │   ├── e2e/                Playwright smoke tests
 │   │   └── public/             favicon
-│   ├── indexer/src/            main.ts (watchers, reconciler, health), publisher.ts (registry + keeper), log.ts
+│   ├── indexer/src/            main.ts (watchers, reconciler, health), publisher.ts (registry), devnet.ts, log.ts
 │   └── bot/src/                main.ts (Telegram commands), deliver.ts (worker), format.ts (message formats)
 ├── packages/
 │   ├── core/src/               types, decoders/, adapters/, constants/, collect, classify, rules, scoring, hash,
-│   │                           drift (reconstruction), rehearsal (offline demo model), net (webhook URL guard)
+│   │                           drift (reconstruction), net (webhook URL guard)
 │   ├── solana/src/             rpc.ts (JSON-RPC client), ws.ts (websocket subscriptions)
 │   ├── db/src/                 env.ts, client.ts, schema.ts, queries.ts, pipeline.ts, migrate.ts
 │   ├── db/migrations/          SQL migrations generated by drizzle-kit
 │   ├── sdk/src/ + idl/         api.ts, registry.ts, tx.ts; the programs' Anchor IDLs
-│   └── demo/src/               env.ts (devnet connection, keys, state), index.ts (actions), tx.ts (send)
-├── programs/                   Anchor workspace: overwatch_registry, overwatch_vault, demo_protocol (+ LiteSVM tests)
+├── programs/                   Anchor workspace: overwatch_registry, overwatch_vault (+ LiteSVM tests)
 ├── config/protocols.yaml       the curated watch list
-├── scripts/                    seed, backfill, inspect, discover, tvl, stats, capture-fixtures, demo, dev/*
+├── scripts/                    seed, backfill, inspect, discover, tvl, stats, capture-fixtures, dev/*
 ├── fixtures/                   captured mainnet account bytes and Anchor IDLs (test inputs)
 ├── docs/submission/            headline-stats.md (snapshot numbers the site falls back to)
 ├── Dockerfile.worker           one image for indexer and bot (APP build arg)
@@ -206,7 +203,7 @@ reason }` per rule that fired) and `red` (whether any red-mask flag is set). See
 Validated by `zod` in `packages/core/src/config.ts`: `slug`, `name`, `category`, optional `defillama_slug`, `website`,
 `docs_sources`, `programs[] {id,label}`, `multisigs[] {address, vault_index, role, discovered_via}`,
 `admin_accounts[]`, `collateral_mints[]`, `oracles[]`, `verified` (always false in the file; the seed decides),
-`source` (`config` or `demo`), `network` (`mainnet` or `devnet`).
+`source` (`config`), `network` (`mainnet` or `devnet`).
 
 ### 4.5 Severities
 
@@ -456,10 +453,10 @@ connection).
 
 | Table | One row per | Key columns |
 | --- | --- | --- |
-| `protocols` | watched protocol | `slug` (unique), `name`, `category`, `network`, `source` (`config`/`demo`), `config` (the YAML entry, JSON), `verified`, `verification` (problems found by the seed), `tvl_usd` (display only) |
+| `protocols` | watched protocol | `slug` (unique), `name`, `category`, `network`, `source` (`config`), `config` (the YAML entry, JSON), `verified`, `verification` (problems found by the seed), `tvl_usd` (display only) |
 | `watched_accounts` | account the seed decided to watch | `protocol_id`, `address`, `kind` (program, programdata, multisig, admin, mint, oracle), `verified` |
 | `snapshots` | **distinct** control state | `protocol_id`, `slot`, `content_hash`, `data` (the full `ControlSnapshot`) |
-| `events` | change | `protocol_id`, `type`, `severity`, `weakening`, `title`, `explanation`, `labels`, `before`/`after`, `slot`, `block_time`, `tx_signature`, `source` (`live`, `backfill`, `demo`, `reconstructed`), `detected_at`. Unique index `(protocol_id, type, tx_signature, title)` makes re-ingesting idempotent. |
+| `events` | change | `protocol_id`, `type`, `severity`, `weakening`, `title`, `explanation`, `labels`, `before`/`after`, `slot`, `block_time`, `tx_signature`, `source` (`live`, `backfill`, `reconstructed`), `detected_at`. Unique index `(protocol_id, type, tx_signature, title)` makes re-ingesting idempotent. |
 | `scores` | score computation that changed something | `protocol_id`, `score`, `grade`, `flags` (bigint), `breakdown` (deductions JSON), `computed_at` |
 | `signers` | (signer, multisig) pair | first/last seen; feeds nonce watching |
 | `nonce_accounts` | nonce account ever seen | `address`, `authority`, `first_seen_slot`, `closed_at` |
@@ -467,7 +464,6 @@ connection).
 | `deliveries` | (subscription, event) to deliver | `status` (`pending`, `delivered`, `failed`), `attempts`, `last_error`, `next_attempt_at`, `delivered_at` |
 | `api_keys` | API key | `key_hash` (SHA-256; the key itself is never stored), `owner`, `tier`, `rate_limit` |
 | `onchain_publishes` | registry write or vault shield | `protocol_id`, `tx_signature`, `score`, `flags`, `slot`, `status`, `kind` (`registry`, `shield`) |
-| `demo_actions` | devnet demo action | action log (devnet tooling only) |
 
 ### 8.2 Connections (`packages/db/src/client.ts`)
 
@@ -495,11 +491,11 @@ every page loads from the tables first.
 ## 9. The ingest pipeline
 
 `ingestSnapshot(protocolRow, snapshot, { source, txSignature, blockTime, force })` in `packages/db/src/pipeline.ts` is
-the single path by which new control state enters the system. The indexer, the seed, the smoke test and the demo all
+the single path by which new control state enters the system. The indexer, the seed and the smoke test all
 call it. Step by step:
 
 1. Hash the snapshot (5.9) and load the protocol's latest stored snapshot.
-2. Load the protocol's events from the last 30 days (or since the demo's last reset) as `history`.
+2. Load the protocol's events from the last 30 days as `history`.
 3. **If the hash changed** (or there was no previous snapshot): insert the snapshot; if there was a previous one, run
    `diffSnapshots(prev, next, ctx)` stamping events with the snapshot slot and, when known, the triggering transaction's
    signature and block time; insert each event (`ON CONFLICT DO NOTHING` against the dedupe index).
@@ -516,8 +512,7 @@ rows, events, alerts or notifications.
 
 ## 10. The indexer
 
-`apps/indexer/src/main.ts` is one long-running Node process. It watches every **verified** protocol (and the devnet demo
-protocol), keeps each one's snapshot fresh, and runs the pipeline.
+`apps/indexer/src/main.ts` is one long-running Node process. It watches every **verified** protocol, keeps each one's snapshot fresh, and runs the pipeline.
 
 ### 10.1 Startup and timers
 
@@ -560,15 +555,13 @@ When a watched signer appears in a transaction's logs, the indexer fetches the t
   built on a durable nonce: signed in advance and held. It inserts a `SIGNER_DURABLE_NONCE_TX` HIGH event, notifies,
   and enqueues deliveries directly.
 
-### 10.5 Publishing and the keeper (`publisher.ts`)
+### 10.5 Publishing (`publisher.ts`)
 
-Only active when `REGISTRY_PROGRAM_ID` is set and the devnet keypairs load. For each protocol it publishes at most once
-a minute (immediately when critical), never re-sends an unchanged score, and computes `last_event_slot` as the larger of
-the newest stored event slot and the slot already onchain, because the registry rejects updates that go backwards
-(16.1). After publishing for the demo protocol, the **keeper** reads the demo vault's position: if the protocol is red
-and the position is not shielded, it calls the permissionless `check_and_exit`; if it is no longer red and
-`DEMO_MODE=true`, it re-arms the position. Every publish and shield is recorded in `onchain_publishes` and notified. If
-the keypairs are missing it logs the reason once and stays off.
+Only active when `REGISTRY_PROGRAM_ID` is set and the devnet publisher keypair loads (`devnet.ts`, which refuses
+mainnet RPC URLs). For each protocol it publishes at most once a minute (immediately when critical), never re-sends an
+unchanged score, and computes `last_event_slot` as the larger of the newest stored event slot and the slot already
+onchain, because the registry rejects updates that go backwards (16.1). Every publish is recorded in
+`onchain_publishes` and notified. If the keypair is missing it logs the reason once and stays off.
 
 ## 11. Seeding, verification and history
 
@@ -610,7 +603,7 @@ anyone. Backfilled events in the last 30 days do count towards `recent_weakening
 
 `inspect.ts` (control report for any program), `tvl.ts` (DefiLlama TVL), `headline-stats.ts` + `stats-lib.ts` (the
 numbers in `docs/submission/headline-stats.md`), `capture-fixtures.ts` and `dev/idl.ts` (refresh test fixtures),
-`dev/probe.ts` (check program IDs), `dev/pipeline-smoke.ts` (the pipeline test), `demo.ts` (devnet demo actions),
+`dev/probe.ts` (check program IDs), `dev/pipeline-smoke.ts` (the pipeline test),
 `lib.ts` (watch-list loading and table printing).
 
 ## 12. Alerts: the bot and the delivery worker
@@ -638,7 +631,7 @@ Every 2 seconds it takes up to 50 `deliveries` that are `pending` and due (`next
 subscription, event and protocol, and sends each:
 
 - **Telegram:** `sendMessage` with HTML from `telegramHtml()`.
-- **Webhook:** the URL is re-checked by `webhookUrlProblem()` (19.3) on **every** send, because a hostname's DNS can
+- **Webhook:** the URL is re-checked by `webhookUrlProblem()` (18.3) on **every** send, because a hostname's DNS can
   change after signup. The body is `webhookPayload()` (`{version, event: {id, protocol, protocol_name, type, severity,
   title, explanation, labels, tx_signature, slot, network, detected_at}}`), signed as
   `x-overwatch-signature: hex(HMAC-SHA256(subscription secret, raw body))`, POSTed with a 10-second timeout and
@@ -730,7 +723,7 @@ every database call in `withTimeout` (5 seconds, long enough for a fresh TLS con
 back to a **dated mainnet snapshot** (October 11, 2026, from `docs/submission/headline-stats.md`) when the database is
 unreachable, so the site never breaks and always says which data it is showing. On a production deploy with no
 `DATABASE_URL` at all it skips the attempt and serves the snapshot immediately. The live feed shows only `live` and
-`backfill` events; the devnet demo protocol is hidden from every page.
+`backfill` events.
 
 ### 14.4 Styling
 
@@ -800,10 +793,6 @@ An example of reacting to the registry: a vault that pulls deposits out of a pro
   marks it `shielded`, and emits `ShieldTriggered`. The vault only ever reads the registry; it never trusts a signature
   from Overwatch.
 
-### 16.3 `demo_protocol`
-
-A program that only logs a message. What matters is who can upgrade it: the demo multisig the devnet tooling controls.
-
 ## 17. The SDK
 
 `packages/sdk` (`@overwatch/sdk`, plus `@overwatch/sdk/tx`):
@@ -817,19 +806,9 @@ A program that only logs a message. What matters is who can upgrade it: the demo
   `checkAndExit`, `resetPosition`, PDAs), `decodePosition`, `decodeVault`, the `ShieldTriggered` discriminator. These
   build raw instructions from the IDLs in `packages/sdk/idl/` with `@solana/web3.js` as a peer dependency.
 
-## 18. The devnet demo package
+## 18. Security model
 
-`packages/demo` exists to demonstrate the full loop on devnet: create a Squads multisig with a two-day timelock, deploy
-`demo_protocol` behind it, register `overwatch-demo` in the database, fund a vault position, then weaken the multisig on
-purpose (`removeTimelock`, `lowerThreshold`, `createSignerNonce`, `transferAuthority`) and `reset`. Its `connection()`
-refuses any URL containing "mainnet". `env.ts` loads the six keypairs from `keys/` and the demo state from
-`keys/demo-state.json`. The indexer's publisher imports its connection, keys and `rearmVault`. It is driven by
-`pnpm demo <action>` (`scripts/demo.ts`). `packages/core/src/rehearsal.ts` is an offline model of the same actions used
-by the pipeline smoke test and its unit tests.
-
-## 19. Security model
-
-### 19.1 What is trusted
+### 18.1 What is trusted
 
 - **Mainnet is read-only.** Nothing in this repository can sign a mainnet transaction.
 - **Facts are re-derivable.** Every event and score carries the account address and slot. Multisig mappings are proven
@@ -838,7 +817,7 @@ by the pipeline smoke test and its unit tests.
   multisig). The vault trusts only the registry account, checked by owner and PDA.
 - **Keys** live in `keys/` locally and on a Fly volume in production; never in the repository or the image.
 
-### 19.2 The API surface
+### 18.2 The API surface
 
 - All inputs are validated; unknown protocol slugs are rejected.
 - Rate limits per IP and per API key; API keys are stored hashed.
@@ -846,7 +825,7 @@ by the pipeline smoke test and its unit tests.
 - Supabase's Data API must stay off: tables have no row-level security, and subscriptions contain chat ids, emails and
   webhook secrets.
 
-### 19.3 Webhooks
+### 18.3 Webhooks
 
 Webhook URLs are attacker-controlled input that the servers will call, so `webhookUrlProblem()`
 (`packages/core/src/net.ts`, server-only) refuses:
@@ -865,7 +844,7 @@ development only.
 Each webhook has its own secret; payloads are signed with HMAC-SHA256 over the raw body. The signature does not include
 a timestamp, so a captured request could be replayed (see section 24).
 
-## 20. Performance and reliability
+## 19. Performance and reliability
 
 - **Batched reads:** snapshots use `getMultipleAccounts` and header slices; nonce scans run hourly, not per refresh.
 - **No duplicate work:** content hashing means unchanged state writes nothing; refreshes are debounced and coalesced.
@@ -878,7 +857,7 @@ a timestamp, so a captured request could be replayed (see section 24).
 - **Cold starts:** the first request to a fresh Vercel instance can take many seconds (function start plus new database
   connections); warm requests take about one second.
 
-## 21. Deployment topology
+## 20. Deployment topology
 
 | Piece | Where | Config |
 | --- | --- | --- |
@@ -891,9 +870,9 @@ a timestamp, so a captured request could be replayed (see section 24).
 `Dockerfile.worker` installs only the selected app's dependency graph and runs it with `tsx`; keypairs are mounted at
 runtime.
 
-## 22. End-to-end walkthroughs
+## 21. End-to-end walkthroughs
 
-### 22.1 A multisig removes its timelock; a depositor's phone buzzes
+### 21.1 A multisig removes its timelock; a depositor's phone buzzes
 
 1. Signers execute a Squads configuration transaction setting the timelock to 0 on a watched multisig.
 2. The indexer's `logsSubscribe` on that multisig fires with the signature; its `accountSubscribe` on the multisig
@@ -913,7 +892,7 @@ runtime.
 9. With devnet keys configured, the publisher writes the red score to the registry immediately, and any vault holding a
    position in that protocol can be exited by anyone calling `check_and_exit`.
 
-### 22.2 A visitor opens `/events`
+### 21.2 A visitor opens `/events`
 
 1. The server component calls `loadEvents(200)` and `loadProtocols()` in parallel; each goes through `withTimeout` to
    `lib/data.ts` → `@overwatch/db` queries over the transaction pooler.
@@ -921,7 +900,7 @@ runtime.
    "Live" once connected.
 3. Filters (severity, protocol, hide code deploys) work on the client. New events arrive via SSE and are prepended.
 
-### 22.3 A developer creates a webhook
+### 21.3 A developer creates a webhook
 
 1. `POST /api/v1/subscriptions/webhook {url, min_severity: "HIGH", protocols: ["drift"]}`.
 2. Rate limit; `zod` validation; `webhookUrlProblem(url)` resolves the host and refuses internal addresses; unknown slugs
@@ -932,7 +911,7 @@ runtime.
 5. From then on, matching events are delivered by the worker (12.2). The developer verifies each with
    `verifyWebhook(rawBody, header, secret)`.
 
-### 22.4 Adding a protocol
+### 21.4 Adding a protocol
 
 1. Add the entry to `config/protocols.yaml`; `pnpm seed <slug>` proves the multisig mapping by PDA derivation and stores
    the baseline snapshot and score (no events: it is the baseline).
@@ -940,10 +919,10 @@ runtime.
 3. Within 15 seconds the running indexer notices the new verified protocol, subscribes to its accounts and signers, and
    runs a refresh with a nonce scan.
 
-## 23. Testing and CI
+## 22. Testing and CI
 
-- **Unit tests** (Vitest): `packages/core` (58 tests: decoders against real fixtures, adapters against real IDLs, every
-  rule, scoring and flags, the replay classifier, the webhook URL guard, the rehearsal model), `packages/sdk` (4),
+- **Unit tests** (Vitest): `packages/core` (53 tests: decoders against real fixtures, adapters against real IDLs, every
+  rule, scoring and flags, the replay classifier, the webhook URL guard), `packages/sdk` (4),
   `apps/bot` (3).
 - **Pipeline smoke test** (`pnpm smoke:pipeline`): the real database path end to end, without RPC.
 - **Browser tests** (Playwright, `apps/web/e2e/smoke.spec.ts`): navigation, the control map, the case-study replay, every
@@ -953,7 +932,7 @@ runtime.
   service, `format:check`, lint, typecheck, unit tests, pipeline smoke test) and a programs job (install Solana + Anchor,
   `anchor build`, `cargo test`).
 
-## 24. Known limitations and open issues
+## 23. Known limitations and open issues
 
 - Six watched protocols are controlled by program-owned PDAs or Realms governance that Overwatch does not decode yet;
   they carry the unmapped-control deduction and show as unverified.
@@ -967,9 +946,9 @@ runtime.
 - API rate-limit buckets live in memory per serverless instance.
 - The first request to a fresh Vercel instance is slow; the cause is not fully pinned down.
 - The indexer and bot must run as single instances; there is no leader election.
-- Without devnet keypairs, onchain publishing and the vault keeper are off.
+- Without the devnet publisher keypair, onchain publishing is off.
 
-## 25. Glossary
+## 24. Glossary
 
 | Term | Meaning |
 | --- | --- |
@@ -988,6 +967,5 @@ runtime.
 | **Drift pattern** | Weakening within 14 days of a signer creating a durable nonce account; always CRITICAL. |
 | **Backfill** | Reconstructing past events from transaction history. |
 | **Registry** | The onchain program storing each protocol's score and flags. |
-| **Keeper** | The indexer routine that calls `check_and_exit` when a registry update turns a protocol red. |
 | **Transaction / session pooler** | Supabase connection poolers: transaction mode shares connections per transaction (serverless); session mode holds a connection per client (`LISTEN`, migrations). |
 | **SSE** | Server-Sent Events: a one-way HTTP stream from server to browser. |

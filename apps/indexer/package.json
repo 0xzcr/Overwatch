@@ -13,7 +13,6 @@
   "dependencies": {
     "@overwatch/core": "workspace:*",
     "@overwatch/db": "workspace:*",
-    "@overwatch/demo": "workspace:*",
     "@overwatch/sdk": "workspace:*",
     "@overwatch/solana": "workspace:*",
     "@solana/web3.js": "^1.98.0",

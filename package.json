@@ -16,8 +16,6 @@
     "seed": "tsx scripts/seed-protocols.ts",
     "backfill": "tsx scripts/backfill.ts",
     "db:migrate": "pnpm --filter @overwatch/db migrate",
-    "demo": "tsx scripts/demo.ts",
-    "demo:setup": "tsx scripts/demo.ts setup",
     "stats": "tsx scripts/headline-stats.ts",
     "smoke:pipeline": "tsx scripts/dev/pipeline-smoke.ts",
     "format": "prettier --write \"**/*.{ts,tsx,js,mjs,css}\"",
@@ -44,7 +42,6 @@
     "@noble/curves": "^1.9.7",
     "@overwatch/core": "workspace:*",
     "@overwatch/db": "workspace:*",
-    "@overwatch/demo": "workspace:*",
     "@overwatch/solana": "workspace:*",
     "@solana/web3.js": "^1.99.0",
     "bs58": "^6.0.0"
