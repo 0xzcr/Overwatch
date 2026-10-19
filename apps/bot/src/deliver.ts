@@ -3,8 +3,7 @@ import { db, deliveries, subscriptions, events, protocols, eq, and, dsql } from 
 import type { Bot } from "grammy";
 import { webhookUrlProblem } from "@overwatch/core/net";
 import { telegramHtml, emailHtml, webhookPayload, backoffMs, MAX_ATTEMPTS, type AlertInput } from "./format";
-
-const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://overwatch-chi.vercel.app";
+import { SITE } from "./site";
 
 export async function deliverPending(bot: Bot | null, log: (m: string) => void) {
   const d = db();

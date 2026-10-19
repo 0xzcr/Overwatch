@@ -6,9 +6,9 @@ import { db, protocols, subscriptions, eq, and, listEvents, getProtocol } from "
 import { fmtDuration, type ControlSnapshot, type ProtocolConfig } from "@overwatch/core";
 import { mainnetRpc } from "@overwatch/solana";
 import { deliverPending } from "./deliver";
+import { SITE } from "./site";
 
 const log = (m: string) => console.log(`${new Date().toISOString()} [bot] ${m}`);
-const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://overwatch-chi.vercel.app";
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const bot = token ? new Bot(token) : null;
 const SEVS = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
