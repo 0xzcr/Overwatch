@@ -39,37 +39,70 @@ export function LiveFeed({
   const [min, setMin] = useState("INFO");
   const [proto, setProto] = useState("all");
   const [deploys, setDeploys] = useState(true);
-  const [status, setStatus] = useState<"connecting" | "live" | "offline">("connecting");
+  // "live" while either the stream or the polling fallback is getting through; a dropped stream reconnects on its own.
+  const [streamUp, setStreamUp] = useState(false);
+  const [polledAt, setPolledAt] = useState(0);
+  const [now, setNow] = useState(0);
   const [flash, setFlash] = useState<number | null>(null);
 
   useEffect(() => {
+    const add = (fresh: FeedItem[]) =>
+      setItems((x) => {
+        const seen = new Set(x.map((y) => y.id));
+        const news = fresh.filter((e) => !seen.has(e.id));
+        if (!news.length) return x;
+        setFlash(news[0]!.id);
+        window.setTimeout(() => setFlash(null), 4000);
+        return [...news, ...x].sort((a, b) => at(b).localeCompare(at(a))).slice(0, 300);
+      });
+
     const es = new EventSource("/api/v1/stream");
-    es.onopen = () => setStatus("live");
-    es.onerror = () => setStatus("offline");
+    es.onopen = () => setStreamUp(true);
+    es.onerror = () => setStreamUp(false);
     es.addEventListener("event", (ev) => {
       const d = JSON.parse((ev as MessageEvent).data) as Partial<FeedItem> & { id: number; at?: string };
-      const e: FeedItem = {
-        id: d.id,
-        slug: d.slug ?? "",
-        name: d.name ?? d.slug ?? "",
-        type: d.type ?? "",
-        severity: d.severity ?? "INFO",
-        weakening: d.weakening ?? d.severity !== "INFO",
-        title: d.title ?? "",
-        explanation: d.explanation ?? "",
-        labels: d.labels ?? [],
-        slot: d.slot ?? null,
-        txSignature: d.txSignature ?? null,
-        source: d.source ?? "live",
-        blockTime: null,
-        detectedAt: d.at ?? new Date().toISOString(),
-      };
-      setItems((x) => [e, ...x.filter((y) => y.id !== e.id)].slice(0, 300));
-      setFlash(e.id);
-      window.setTimeout(() => setFlash(null), 4000);
+      add([
+        {
+          id: d.id,
+          slug: d.slug ?? "",
+          name: d.name ?? d.slug ?? "",
+          type: d.type ?? "",
+          severity: d.severity ?? "INFO",
+          weakening: d.weakening ?? d.severity !== "INFO",
+          title: d.title ?? "",
+          explanation: d.explanation ?? "",
+          labels: d.labels ?? [],
+          slot: d.slot ?? null,
+          txSignature: d.txSignature ?? null,
+          source: d.source ?? "live",
+          blockTime: null,
+          detectedAt: d.at ?? new Date().toISOString(),
+        },
+      ]);
     });
-    return () => es.close();
+
+    const poll = async () => {
+      try {
+        const r = await fetch("/api/feed", { cache: "no-store" });
+        if (!r.ok) return;
+        const j = (await r.json()) as { events: FeedItem[] };
+        add(j.events);
+        setPolledAt(Date.now());
+      } catch {
+        /* the next poll or the stream will catch up */
+      }
+    };
+    void poll();
+    const pollId = window.setInterval(() => void poll(), 20_000);
+    setNow(Date.now());
+    const tickId = window.setInterval(() => setNow(Date.now()), 5_000);
+    return () => {
+      es.close();
+      window.clearInterval(pollId);
+      window.clearInterval(tickId);
+    };
   }, []);
+  const status = streamUp || (polledAt && now - polledAt < 65_000) ? "live" : polledAt ? "syncing" : "connecting";
 
   const shown = useMemo(
     () =>
@@ -97,8 +130,7 @@ export function LiveFeed({
     <div className="evlog">
       <div className="evlog__bar">
         <span className={`evlog__status mono is-${status}`}>
-          <i aria-hidden="true" />
-          {status === "live" ? "Live" : status === "offline" ? "Offline · retrying" : "Connecting"}
+          {status === "live" ? "Live" : status === "syncing" ? "Syncing" : "Connecting"}
         </span>
         <span className="evlog__count mono">
           {shown.length} {shown.length === 1 ? "event" : "events"}
