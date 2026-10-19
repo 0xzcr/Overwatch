@@ -107,6 +107,23 @@
     margin-right: 6px;
   }
 }
+/* phones: brand, burger and the alerts button must fit in one 60px bar */
+@media (max-width: 480px) {
+  .nav__word {
+    letter-spacing: 0.14em;
+  }
+  .nav__menu > span:first-child {
+    display: none;
+  }
+  .nav .btn--sm {
+    padding: 0 10px;
+  }
+}
+@media (max-width: 360px) {
+  .nav__word {
+    display: none;
+  }
+}
 
 /* ------------------------------------------------------------ hero additions */
 .hero__src {
@@ -592,6 +609,9 @@ a.addr:hover {
   gap: clamp(32px, 5vw, 72px);
   align-items: start;
 }
+.detail__grid > * {
+  min-width: 0;
+}
 .detail__side {
   display: grid;
   gap: clamp(36px, 6vh, 64px);
@@ -640,6 +660,7 @@ a.addr:hover {
 }
 .facts__signers td {
   padding: 7px 8px 7px 0;
+  overflow-wrap: anywhere;
   border-top: 1px solid var(--line);
 }
 .facts__mint {
@@ -1780,8 +1801,24 @@ html[data-page="inner"] .grain {
   }
   /* the grade is what a depositor needs; category gives way so it is visible without sideways scroll */
   .lb__table th:nth-child(2),
-  .lb__table td:nth-child(2) {
+  .lb__table td:nth-child(2),
+  .lb__table th:nth-child(3),
+  .lb__table td:nth-child(3) {
     display: none;
+  }
+  .lb__table {
+    min-width: 820px;
+  }
+  /* the protocol name stays pinned while the controls scroll sideways */
+  .lb__table th:first-child,
+  .lb__table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: rgb(var(--panel-rgb));
   }
 }
 
@@ -1873,9 +1910,39 @@ html[data-page="inner"] .grain {
 }
 @media (max-width: 900px) {
   .docs {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .docs__body {
+    overflow-wrap: anywhere;
   }
   .docs__toc {
     position: static;
+  }
+}
+
+/* ------------------------------------------------------------ phones: protocol detail */
+@media (max-width: 640px) {
+  .facts__card {
+    padding: 16px;
+  }
+  .facts__rows {
+    grid-template-columns: minmax(96px, 120px) minmax(0, 1fr);
+    gap: 8px 12px;
+    font-size: 13px;
+  }
+  .facts__rows > span {
+    overflow-wrap: anywhere;
+  }
+}
+
+/* ------------------------------------------------------------ phones: docs tables scroll inside the column */
+.docs > * {
+  min-width: 0;
+}
+@media (max-width: 640px) {
+  .dtable {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
   }
 }

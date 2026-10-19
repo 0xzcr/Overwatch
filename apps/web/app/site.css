@@ -594,13 +594,9 @@ section {
 .menu__bg {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    270deg,
-    rgba(var(--bg-rgb), 0.99) 0%,
-    rgba(var(--bg-rgb), 0.95) 52%,
-    rgba(var(--bg-rgb), 0.55) 64%,
-    rgba(var(--bg-rgb), 0.15) 100%
-  );
+  /* opaque, so page content never shows through the open menu */
+  background: rgba(var(--bg-rgb), 0.97);
+  backdrop-filter: blur(14px);
   clip-path: inset(0 0 0 100%);
   transition: clip-path 0.8s var(--ease);
 }
