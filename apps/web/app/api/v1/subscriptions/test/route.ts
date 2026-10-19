@@ -3,15 +3,18 @@ import { z } from "zod";
 import { db, subscriptions, eq } from "@overwatch/db";
 import { webhookUrlProblem } from "@overwatch/core/net";
 import { signPayload } from "@/lib/webhook";
-import { ok, err, withDb } from "@/lib/api";
+import { guard, hit, sameSecret, ok, err, withDb } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 /** Test-fire a webhook: sends a signed sample payload and reports the receiver's status. */
 async function handlePOST(req: NextRequest) {
+  const g = await guard(req);
+  if (!("tier" in g)) return g;
   const p = z.object({ id: z.number().int(), secret: z.string() }).safeParse(await req.json().catch(() => null));
   if (!p.success) return err(400, "id and secret required");
   const [s] = await db().select().from(subscriptions).where(eq(subscriptions.id, p.data.id));
-  if (!s || s.secret !== p.data.secret) return err(404, "subscription not found");
+  if (!s || s.channel !== "webhook" || !sameSecret(s.secret, p.data.secret)) return err(404, "subscription not found");
+  if (!(await hit(`test-fire:${s.id}`, 10, 3600)).ok) return err(429, "at most 10 test alerts per webhook per hour");
   // Re-checked at send time: the host's DNS may have changed since the webhook was created.
   const bad = await webhookUrlProblem(s.target);
   if (bad) return ok({ delivered: false, error: `refused: url ${bad}` });

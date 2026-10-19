@@ -1161,8 +1161,12 @@ a.addr:hover {
 .method-tag.is-get {
   color: var(--mint);
 }
-.method-tag.is-post {
+.method-tag.is-post,
+.method-tag.is-patch {
   color: var(--amber);
+}
+.method-tag.is-delete {
+  color: var(--bad);
 }
 .grades {
   display: flex;

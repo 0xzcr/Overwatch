@@ -9,7 +9,7 @@ export const databaseUrl = () => process.env.DATABASE_URL || LOCAL;
 /** Long-lived sessions (LISTEN, migrations), which a transaction pooler can't hold. Defaults to DATABASE_URL. */
 export const directUrl = () => process.env.DIRECT_URL || databaseUrl();
 
-function connect(url: string, max: number) {
+export function connect(url: string, max: number) {
   const { hostname, port, searchParams } = new URL(url);
   const local = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
   const txPooler = port === "6543";

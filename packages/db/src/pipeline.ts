@@ -141,7 +141,10 @@ export async function ingestSnapshot(
 
 export async function enqueueDeliveries(protocolId: number, eventId: number, severity: string) {
   const d = db();
-  const subs = await d.select().from(subscriptions).where(eq(subscriptions.active, true));
+  const subs = await d
+    .select()
+    .from(subscriptions)
+    .where(and(eq(subscriptions.active, true), eq(subscriptions.confirmed, true)));
   for (const s of subs) {
     if (!severitiesAtLeast(s.minSeverity).includes(severity)) continue;
     if (s.protocolIds && s.protocolIds.length && !s.protocolIds.includes(protocolId)) continue;

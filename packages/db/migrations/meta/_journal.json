@@ -15,6 +15,13 @@
       "when": 1792390766760,
       "tag": "0001_remove_demo",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792401969843,
+      "tag": "0002_api_hardening",
+      "breakpoints": true
     }
   ]
 }

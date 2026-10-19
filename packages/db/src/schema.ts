@@ -140,6 +140,9 @@ export const subscriptions = pgTable(
     secret: text("secret"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     active: boolean("active").notNull().default(true),
+    // email subscriptions stay unconfirmed (and get no alerts) until the owner clicks the link sent to them
+    confirmed: boolean("confirmed").notNull().default(true),
+    confirmToken: text("confirm_token").unique(),
   },
   (t) => [index("subs_channel_target").on(t.channel, t.target)],
 );
@@ -173,6 +176,14 @@ export const apiKeys = pgTable("api_keys", {
   tier: text("tier").notNull().default("free"),
   rateLimit: integer("rate_limit").notNull().default(60),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+});
+
+/** Fixed-window counters shared by every server instance (API rate limits, sign-up limits). */
+export const rateLimits = pgTable("rate_limits", {
+  bucket: text("bucket").primaryKey(),
+  n: integer("n").notNull(),
+  resetAt: timestamp("reset_at", { withTimezone: true }).notNull(),
 });
 
 export const onchainPublishes = pgTable("onchain_publishes", {

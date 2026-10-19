@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const SEV = ["MEDIUM", "HIGH", "CRITICAL"];
 type Out = { text: string; ok: boolean } | null;
@@ -39,6 +39,12 @@ export function AlertsForms({
   const [out, setOut] = useState<Out>(null);
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
+  // the confirmation link in the email lands back here with ?email=confirmed|invalid
+  useEffect(() => {
+    const state = new URLSearchParams(window.location.search).get("email");
+    if (state === "confirmed") setOut({ text: "Email confirmed. Alerts will now reach your inbox.", ok: true });
+    else if (state === "invalid") setOut({ text: "That confirmation link is invalid or was already used.", ok: false });
+  }, []);
   const toggle = (s: string) => setSel((x) => (x.includes(s) ? x.filter((y) => y !== s) : [...x, s]));
 
   const create = async () => {
@@ -52,7 +58,10 @@ export function AlertsForms({
     if (r.error || !r.data) setOut({ text: r.error ?? "Could not create the webhook.", ok: false });
     else {
       setCreated({ id: Number(r.data.id), secret: String(r.data.secret) });
-      setOut({ text: "Webhook created. Copy the secret now; it won't be shown again.", ok: true });
+      setOut({
+        text: `Webhook #${String(r.data.id)} created. Copy the secret now; it won't be shown again. It also lets you change or delete the webhook through the API.`,
+        ok: true,
+      });
     }
     setBusy(false);
   };
@@ -74,7 +83,11 @@ export function AlertsForms({
       min_severity: sev,
       protocols: sel.length ? sel : undefined,
     });
-    setOut(r.error ? { text: r.error, ok: false } : { text: "Email subscription saved.", ok: true });
+    setOut(
+      r.error
+        ? { text: r.error, ok: false }
+        : { text: "Almost done: open the email we just sent and click the link to start receiving alerts.", ok: true },
+    );
     setBusy(false);
   };
 
@@ -183,7 +196,7 @@ export function AlertsForms({
         </div>
         {created && (
           <p className="mono form-card__secret">
-            secret: <b>{created.secret}</b>
+            id: <b>{created.id}</b> · secret: <b>{created.secret}</b>
           </p>
         )}
         {out && <p className={`mono form-card__out ${out.ok ? "ok" : "bad"}`}>{out.text}</p>}
