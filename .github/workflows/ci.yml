@@ -33,6 +33,7 @@ jobs:
           sh -c "$(curl -sSfL https://release.anza.xyz/v4.2.2/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           cargo install --git https://github.com/solana-foundation/anchor --tag v1.1.2 anchor-cli --locked
-      # keypairs are not committed, so skip the program ID check
-      - run: anchor build --ignore-keys
+      # keypairs are not committed, so skip the program ID check; the vault's tests embed the registry, so build it first
+      - run: anchor build --ignore-keys -p overwatch_registry
+      - run: anchor build --ignore-keys -p overwatch_vault
       - run: cargo test -p overwatch_registry -p overwatch_vault
