@@ -163,7 +163,13 @@ if (bot) {
       "Overwatch reads who can change the Solana protocols holding your deposits. Watch a protocol and you get a message after its controls weaken onchain: a removed timelock, a lowered threshold, a new single key.",
     ),
   ]).catch((e) => log(`bot profile: ${(e as Error).message}`));
-  void bot.start({ onStart: (me) => log(`telegram bot @${me.username} running`) });
+  // bot.start rejects on fatal polling errors (network loss, a second instance on the same token). Exit so the host restarts us.
+  bot
+    .start({ onStart: (me) => log(`telegram bot @${me.username} running`) })
+    .catch((e) => {
+      log(`polling stopped: ${(e as Error).message}`);
+      process.exit(1);
+    });
 } else {
   log("TELEGRAM_BOT_TOKEN not set: bot disabled; delivery worker still sends webhooks/email");
 }
