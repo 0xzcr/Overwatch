@@ -1091,6 +1091,70 @@ a.addr:hover {
 .form-card__out {
   font-size: 12.5px;
 }
+.notice {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent);
+  background: rgba(var(--bg-rgb), 0.6);
+  color: var(--chrome);
+  font-size: 12.5px;
+}
+.notice-band {
+  padding-top: 24px;
+  padding-bottom: 0;
+}
+
+/* navbar drop-down: slides down from under the left edge of the nav */
+.nav-drop {
+  position: fixed;
+  top: 60px;
+  left: var(--gutter);
+  z-index: 59;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(360px, calc(100vw - 2 * var(--gutter)));
+  padding: 8px 10px 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  background: var(--bg);
+  color: var(--chrome);
+  font-size: 12px;
+  animation: nav-drop 0.45s var(--ease, ease) both;
+}
+.nav-drop__close {
+  margin-left: auto;
+  padding: 2px 4px;
+  color: var(--dim);
+  font: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.nav-drop__close:hover {
+  color: var(--ink);
+}
+@keyframes nav-drop {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-drop {
+    animation: none;
+  }
+}
 .form-card__out a {
   color: inherit;
   text-decoration: underline;

@@ -2,6 +2,13 @@
 
 /** Public origin for canonical URLs, social cards and structured data. */
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://overwatch-chi.vercel.app").replace(/\/$/, "");
+
+/**
+ * Shown on the landing page, under the navbar and on /alerts while monitoring is down. Clear it to hide the notice.
+ * The date is when the indexer last checked the protocols (signers.last_seen: 2026-10-20 08:17 UTC).
+ */
+export const MAINTENANCE_NOTICE =
+  "Live monitoring is paused: our indexer stopped on 20 October, so protocol data, events and alerts after that date are missing. An updated Overwatch is coming soon.";
 export const REPO_URL = "https://github.com/0xzcr/Overwatch";
 
 export type Vis =

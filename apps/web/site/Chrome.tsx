@@ -4,6 +4,7 @@ import { cssVars } from "./ui";
 import { Logo, LogoMark } from "./Logo";
 import { NavLinks } from "./NavLinks";
 import { NavClock } from "./NavClock";
+import { MaintenanceDrop } from "./MaintenanceDrop";
 
 /** Persistent chrome: boot sequence, WebGL canvas, cursor, nav, menu and dock. Rendered once in the root layout. */
 export function Chrome() {
@@ -73,6 +74,7 @@ export function Chrome() {
             <span>Get alerts</span>
           </Link>
         </div>
+        <MaintenanceDrop />
       </header>
 
       <div className="menu" id="menu" aria-hidden="true" role="dialog" aria-label="Site menu">

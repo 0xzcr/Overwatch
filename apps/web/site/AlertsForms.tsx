@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { MAINTENANCE_NOTICE } from "./content";
 
 const SEV = ["MEDIUM", "HIGH", "CRITICAL"];
 type Out = { text: string; ok: boolean } | null;
@@ -102,13 +103,15 @@ export function AlertsForms({
             subscribes you to protocols you hold.
           </p>
           {bot ? (
-            <a
-              href={`https://t.me/${bot}${preselect ? `?start=watch_${preselect}` : ""}`}
-              className="btn btn--glow btn--sm"
-              data-cursor="Open"
-            >
-              <span>Open @{bot}</span>
-            </a>
+            <>
+              {/* shortcut: bot is switched off during maintenance; restore the <a href> link when it is back */}
+              <span className="btn btn--glow btn--sm is-disabled" aria-disabled="true">
+                <span>Open @{bot}</span>
+              </span>
+              <p className="notice mono">
+                <span className="badge badge--warn">maintenance</span> {MAINTENANCE_NOTICE}
+              </p>
+            </>
           ) : (
             <span className="path__cta dim">The bot isn&apos;t connected on this deployment.</span>
           )}

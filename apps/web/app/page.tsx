@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { layers, steps } from "@/site/content";
+import { layers, steps, MAINTENANCE_NOTICE } from "@/site/content";
 import { visual } from "@/site/visuals";
 import { AsciiEye } from "@/site/AsciiEye";
 import { Vis, cssVars, stage } from "@/site/ui";
@@ -41,6 +41,14 @@ export default function Home() {
           </p>
         </div>
       </section>
+
+      {MAINTENANCE_NOTICE && (
+        <div className="page-block notice-band">
+          <p className="notice mono">
+            <span className="badge badge--warn">maintenance</span> {MAINTENANCE_NOTICE}
+          </p>
+        </div>
+      )}
 
       {/* HOW IT WORKS */}
       <section
