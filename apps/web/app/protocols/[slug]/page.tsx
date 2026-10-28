@@ -9,7 +9,14 @@ import { ControlGraph } from "@/site/ControlGraph";
 import { Timeline } from "@/site/Timeline";
 import { Addr, Badge, Grade, PageHero, SectionHead, Term, stage } from "@/site/ui";
 
-export const dynamic = "force-dynamic";
+// Cached and rebuilt in the background at most every 30 s: the data only changes when the indexer writes,
+// so visitors get a ready page instead of waiting on the database.
+export const revalidate = 30;
+
+/** No pages are built ahead of time; each protocol page is built on its first visit, then cached like the rest. */
+export async function generateStaticParams() {
+  return [];
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const slug = (await params).slug;

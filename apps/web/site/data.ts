@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import {
   DRIFT_STEPS,
   DRIFT_SOURCES,
@@ -169,20 +170,27 @@ function fromView(p: ProtocolView): ProtoCard {
 const NO_DB = process.env.NODE_ENV === "production" && !process.env.DATABASE_URL;
 // Long enough for a fresh TLS connection to a distant database region (~3.5s measured), short enough that a dead one
 // falls back to the snapshot before the page feels hung.
-const withTimeout = <T>(run: () => Promise<T>, ms = 5000): Promise<T> =>
+// `next build` pre-renders the cached pages, and its first connection can take 5s+ (5.3s measured). Nobody is waiting
+// on a build, so give it longer; otherwise the deploy would ship the snapshot until the first background refresh.
+const BUILDING = process.env.NEXT_PHASE === "phase-production-build";
+const withTimeout = <T>(run: () => Promise<T>, ms = BUILDING ? 20_000 : 5000): Promise<T> =>
   NO_DB
     ? Promise.reject(new Error("no database configured"))
     : Promise.race([run(), new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
 
-/** Live protocol views, or null when the database is unreachable. */
-async function liveViews(): Promise<ProtocolView[] | null> {
+/**
+ * Live protocol views, or null when the database is unreachable.
+ * Wrapped in React's cache() so one page render reads the database once, even when both
+ * generateMetadata and the page itself ask for the protocols.
+ */
+const liveViews = cache(async (): Promise<ProtocolView[] | null> => {
   try {
     const views = await withTimeout(() => getProtocols());
     return views.length ? views : null;
   } catch {
     return null;
   }
-}
+});
 
 const sortCards = (xs: ProtoCard[]) =>
   xs.sort((a, b) => (b.score ?? -1) - (a.score ?? -1) || a.name.localeCompare(b.name));

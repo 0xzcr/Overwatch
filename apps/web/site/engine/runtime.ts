@@ -103,22 +103,23 @@ function createRuntime(): Runtime {
     // Boot copy only states what the page itself does; it never claims live infrastructure.
     const lines = ["overwatch · control-plane monitor for solana defi", "loading control map", "ready"];
     const prog = { v: 0 };
+    // Kept short on purpose: the overlay hides the whole landing page until it lifts, so every second here is load time.
     gsap
       .timeline({
         onComplete: () => {
           gsap.to(bootEl, {
             clipPath: "inset(0 0 100% 0)",
-            duration: 1.1,
+            duration: 0.6,
             ease: "expo.inOut",
             onComplete: () => bootEl.remove(),
           });
-          gsap.delayedCall(0.35, markReady);
-          gsap.from(".nav", { opacity: 0, y: -20, duration: 1, ease: "power2.out", delay: 0.55 });
+          gsap.delayedCall(0.15, markReady);
+          gsap.from(".nav", { opacity: 0, y: -20, duration: 1, ease: "power2.out", delay: 0.3 });
         },
       })
       .to(prog, {
         v: 100,
-        duration: 1.2,
+        duration: 0.4,
         ease: "power2.inOut",
         onUpdate: () => {
           if (bootPct) bootPct.textContent = String(Math.round(prog.v)).padStart(3, "0");

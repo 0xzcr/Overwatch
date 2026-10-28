@@ -4,7 +4,7 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { gsap } from "gsap";
-import { buildShapes, SHAPE_NAMES, globeLand, GLOBE_R, type ShapeName } from "./shapes";
+import { buildShape, SHAPE_NAMES, globeLand, GLOBE_R, type ShapeName } from "./shapes";
 import { mulberry } from "./rand";
 import { tone } from "../nightfall";
 
@@ -202,7 +202,10 @@ export class Stage {
   private count: number;
   private dpr: number;
   private rows = 0;
-  private shapeData: Float32Array[] = [];
+  // Filled in lazily: a slot stays empty until that shape is first needed (or built in idle time).
+  private shapeData: (Float32Array | undefined)[] = [];
+  // True when texData holds shapes the GPU copy of the texture does not have yet.
+  private texDirty = false;
   private snapshotData: Float32Array | null = null;
   private snapshotSlot: number;
   private texData!: Float32Array;
@@ -285,28 +288,59 @@ export class Stage {
     document.addEventListener("visibilitychange", () => (this.running = !document.hidden));
   }
 
+  /** Builds a shape's particle positions the first time it is needed and writes them into texData. */
+  private ensureShape(slot: number) {
+    if (this.shapeData[slot]) return;
+    const N = this.count;
+    const positions = buildShape(slot, N);
+    this.shapeData[slot] = positions;
+    const base = slot * this.rows * TEX_W * 4;
+    for (let i = 0; i < N; i++) {
+      const o = base + i * 4;
+      this.texData[o] = positions[i * 3] ?? 0;
+      this.texData[o + 1] = positions[i * 3 + 1] ?? 0;
+      this.texData[o + 2] = positions[i * 3 + 2] ?? 0;
+      this.texData[o + 3] = 1;
+    }
+    this.texDirty = true;
+  }
+
+  /** Sends texData to the GPU, but only when a shape was added since the last upload. */
+  private uploadShapesIfDirty() {
+    if (!this.texDirty) return;
+    this.shapeTex.needsUpdate = true;
+    this.texDirty = false;
+  }
+
+  /** Builds the shapes nobody has asked for yet, one per idle moment, so later morphs don't stall. */
+  private buildRemainingShapesWhenIdle() {
+    // Safari has no requestIdleCallback; a short timeout is a fine stand-in.
+    const whenIdle = (fn: () => void) =>
+      typeof window.requestIdleCallback === "function" ? window.requestIdleCallback(fn) : window.setTimeout(fn, 50);
+    const step = () => {
+      const missing = SHAPE_NAMES.findIndex((_, slot) => !this.shapeData[slot]);
+      if (missing < 0) return this.uploadShapesIfDirty();
+      this.ensureShape(missing);
+      whenIdle(step);
+    };
+    whenIdle(step);
+  }
+
   private buildParticles() {
     const N = this.count;
     const rows = Math.ceil(N / TEX_W);
     this.rows = rows;
-    this.shapeData = buildShapes(N);
     const slots = SHAPE_NAMES.length + 1;
     const data = new Float32Array(TEX_W * rows * slots * 4);
-    this.shapeData.forEach((arr, s) => {
-      for (let i = 0; i < N; i++) {
-        const o = (s * rows * TEX_W + i) * 4;
-        data[o] = arr[i * 3] ?? 0;
-        data[o + 1] = arr[i * 3 + 1] ?? 0;
-        data[o + 2] = arr[i * 3 + 2] ?? 0;
-        data[o + 3] = 1;
-      }
-    });
     this.texData = data;
     const tex = new THREE.DataTexture(data, TEX_W, rows * slots, THREE.RGBAFormat, THREE.FloatType);
     tex.minFilter = THREE.NearestFilter;
     tex.magFilter = THREE.NearestFilter;
-    tex.needsUpdate = true;
     this.shapeTex = tex;
+    // Only the starting shape is built up front; building all of them blocked the page for 100 ms+ at startup.
+    this.ensureShape(SHAPE_NAMES.indexOf("scatter"));
+    this.uploadShapesIfDirty();
+    this.buildRemainingShapesWhenIdle();
 
     const geo = new THREE.BufferGeometry();
     const idx = new Float32Array(N);
@@ -530,6 +564,8 @@ export class Stage {
   morph(name: ShapeName, opts: MorphOptions = {}) {
     const idx = SHAPE_NAMES.indexOf(name);
     if (idx < 0) return;
+    this.ensureShape(idx);
+    this.uploadShapesIfDirty();
     const u = this.uniforms;
     const duration = this.reducedMotion ? 0.01 : (opts.duration ?? 2.2);
 
@@ -607,12 +643,22 @@ export class Stage {
     gsap.fromTo(this.uniforms.uScan, { value: 4 }, { value: -4, duration: 1.6, ease: "power1.inOut" });
   }
 
+  /** Inner pages show the stage dimmed behind data, so it runs lighter there: ~30 fps and no bloom. */
+  private isInnerPage() {
+    return document.documentElement.dataset.page === "inner";
+  }
+
   start() {
-    const loop = () => {
+    let lastFrameAt = 0;
+    const loop = (now: number) => {
       requestAnimationFrame(loop);
-      if (this.running) this.frame();
+      if (!this.running) return;
+      // On inner pages, skip every other display frame (60 Hz screen -> ~30 fps). The 2 ms slack absorbs timer jitter.
+      if (this.isInnerPage() && now - lastFrameAt < 1000 / 30 - 2) return;
+      lastFrameAt = now;
+      this.frame();
     };
-    loop();
+    requestAnimationFrame(loop);
   }
 
   private v3 = new THREE.Vector3();
@@ -644,7 +690,9 @@ export class Stage {
 
   private frame() {
     const raw = this.clock.getDelta();
-    this.adapt(raw);
+    const inner = this.isInnerPage();
+    // The quality check measures fps; the deliberate 30 fps cap on inner pages must not read as a slow GPU.
+    if (!inner) this.adapt(raw);
     const dt = Math.min(raw, 0.05);
     const t = this.clock.elapsedTime;
     const u = this.uniforms;
@@ -686,7 +734,8 @@ export class Stage {
     );
     this.camera.lookAt(0, 0, 0);
 
-    if (this.composer) this.composer.render();
+    // Bloom is the most expensive pass; behind dimmed data pages it is barely visible, so skip it there.
+    if (this.composer && !inner) this.composer.render();
     else this.renderer.render(this.scene, this.camera);
   }
 }

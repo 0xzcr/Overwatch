@@ -2,7 +2,9 @@ import { loadProtocols } from "@/site/data";
 import { Leaderboard } from "@/site/Leaderboard";
 import { PageHero, stage } from "@/site/ui";
 
-export const dynamic = "force-dynamic";
+// Cached and rebuilt in the background at most every 30 s: the data only changes when the indexer writes,
+// so visitors get a ready page instead of waiting on the database.
+export const revalidate = 30;
 export const metadata = {
   title: "Control map",
   alternates: { canonical: "/protocols" },

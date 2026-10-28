@@ -2,7 +2,9 @@ import { loadEvents, loadProtocols } from "@/site/data";
 import { LiveFeed } from "@/site/LiveFeed";
 import { PageHero, stage } from "@/site/ui";
 
-export const dynamic = "force-dynamic";
+// Cached and rebuilt in the background at most every 30 s: the data only changes when the indexer writes,
+// so visitors get a ready page instead of waiting on the database.
+export const revalidate = 30;
 export const metadata = { title: "Live events", alternates: { canonical: "/events" } };
 
 export default async function Events() {

@@ -536,6 +536,11 @@ export const SHAPES = {
 export type ShapeName = keyof typeof SHAPES;
 export const SHAPE_NAMES = Object.keys(SHAPES) as ShapeName[];
 
-export function buildShapes(count: number): Float32Array[] {
-  return SHAPE_NAMES.map((name, i) => SHAPES[name](count, mulberry(1000 + i * 31)));
+/**
+ * One shape's particle positions. The seed depends only on the shape's slot, so a shape comes out
+ * identical no matter when it is built.
+ */
+export function buildShape(slot: number, count: number): Float32Array {
+  const name = SHAPE_NAMES[slot] as ShapeName;
+  return SHAPES[name](count, mulberry(1000 + slot * 31));
 }
