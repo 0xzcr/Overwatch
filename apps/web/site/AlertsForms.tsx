@@ -102,9 +102,9 @@ export function AlertsForms({
             <span className="mono">/status kamino-lend</span>. <span className="mono">/wallet &lt;address&gt;</span>{" "}
             subscribes you to protocols you hold.
           </p>
-          {bot ? (
+          {bot && MAINTENANCE_NOTICE ? (
             <>
-              {/* shortcut: bot is switched off during maintenance; restore the <a href> link when it is back */}
+              {/* During maintenance the bot link is switched off and the notice explains why. */}
               <span className="btn btn--glow btn--sm is-disabled" aria-disabled="true">
                 <span>Open @{bot}</span>
               </span>
@@ -112,6 +112,14 @@ export function AlertsForms({
                 <span className="badge badge--warn">maintenance</span> {MAINTENANCE_NOTICE}
               </p>
             </>
+          ) : bot ? (
+            <a
+              href={`https://t.me/${bot}${preselect ? `?start=watch_${preselect}` : ""}`}
+              className="btn btn--glow btn--sm"
+              data-cursor="Open"
+            >
+              <span>Open @{bot}</span>
+            </a>
           ) : (
             <span className="path__cta dim">The bot isn&apos;t connected on this deployment.</span>
           )}
