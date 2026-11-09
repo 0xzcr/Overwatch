@@ -40,31 +40,28 @@ export interface Capability {
 }
 
 export const pages = [
-  { href: "/", name: "Overview", kicker: "What Overwatch does", shape: "orb", color: "#2BFFB0" },
+  { href: "/", name: "Overview", kicker: "What Overwatch does", color: "#2BFFB0" },
   {
     href: "/protocols",
     name: "Control map",
     kicker: "Grades for the top Solana protocols",
-    shape: "globe",
     color: "#2BFFB0",
   },
   {
     href: "/events",
     name: "Live events",
     kicker: "Control changes as they land onchain",
-    shape: "radar",
     color: "#7CF3FF",
   },
-  { href: "/case-study", name: "Case study", kicker: "The Drift exploit, replayed", shape: "knot", color: "#FF5A3D" },
-  { href: "/alerts", name: "Alerts", kicker: "Telegram, webhooks, email", shape: "burst", color: "#FFB547" },
+  { href: "/case-study", name: "Case study", kicker: "The Drift exploit, replayed", color: "#FF5A3D" },
+  { href: "/alerts", name: "Alerts", kicker: "Telegram, webhooks, email", color: "#FFB547" },
   {
     href: "/docs",
     name: "Documentation",
     kicker: "How it works, how grades are computed, how to use it",
-    shape: "shield",
     color: "#8B7CFF",
   },
-  { href: "/docs/api", name: "API", kicker: "REST, SSE, webhooks, SDK", shape: "terrain", color: "#5AA8FF" },
+  { href: "/docs/api", name: "API", kicker: "REST, SSE, webhooks, SDK", color: "#5AA8FF" },
 ] as const;
 
 export const steps = [

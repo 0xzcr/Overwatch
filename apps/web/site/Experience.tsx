@@ -4,12 +4,10 @@ import { usePathname } from "next/navigation";
 
 const engine = () => Promise.all([import("./engine/runtime"), import("./engine/page")]);
 
-/** Boots the persistent WebGL runtime once, then (re)initialises page animations on every route change. */
+/** Boots the persistent runtime (smooth scroll, menu, dock) once, then (re)initialises page animations on every route change. */
 export function Experience() {
   const pathname = usePathname();
   useEffect(() => {
-    // CSS dims the particle stage on every page except the landing page.
-    document.documentElement.dataset.page = pathname === "/" ? "home" : "inner";
     let dispose: (() => void) | undefined;
     let cancelled = false;
     void engine().then(([{ getRuntime }, { initPage }]) => {

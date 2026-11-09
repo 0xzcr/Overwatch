@@ -1,6 +1,6 @@
 import { loadEvents, loadProtocols } from "@/site/data";
 import { LiveFeed } from "@/site/LiveFeed";
-import { PageHero, stage, JsonLd, breadcrumbs, pageMetadata, DATASET_COMMON } from "@/site/ui"; // SEO component
+import { PageHero, JsonLd, breadcrumbs, pageMetadata, DATASET_COMMON } from "@/site/ui"; // SEO component
 import { SITE_URL } from "@/site/content"; // SEO component
 
 // Cached and rebuilt in the background at most every 30 s: the data only changes when the indexer writes,
@@ -49,21 +49,8 @@ export default async function Events() {
         dock="Live events"
         lines={["Live events"]}
         lede="Every change to who controls a watched protocol: caught live, or found in the last 180 days of onchain history. Open a row for what it means and the transaction."
-        stageAttrs={stage("radar", {
-          colorA: "#7CF3FF",
-          colorB: "#3b4dff",
-          x: 2.6,
-          y: 0.3,
-          yNarrow: 1.4,
-          opacity: 0.3,
-          autoRotate: 0.06,
-        })}
       />
-      <section
-        className="page-block"
-        data-dock="Feed"
-        {...stage("radar", { colorA: "#7CF3FF", colorB: "#1b2340", opacity: 0.1, scale: 1.4, autoRotate: 0.03 })}
-      >
+      <section className="page-block" data-dock="Feed">
         <LiveFeed initial={events} live={live} protocols={cards.map((p) => ({ slug: p.slug, name: p.name }))} />
       </section>
     </>

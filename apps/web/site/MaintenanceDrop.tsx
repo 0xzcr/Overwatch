@@ -10,7 +10,12 @@ export function MaintenanceDrop() {
     <div className="nav-drop mono" role="status">
       <span className="badge badge--warn">maintenance</span>
       <span>{MAINTENANCE_NOTICE}</span>
-      <button className="nav-drop__close" onClick={() => setOpen(false)} aria-label="Dismiss notice" data-cursor="Close">
+      <button
+        className="nav-drop__close"
+        onClick={() => setOpen(false)}
+        aria-label="Dismiss notice"
+        data-cursor="Close"
+      >
         ✕
       </button>
     </div>

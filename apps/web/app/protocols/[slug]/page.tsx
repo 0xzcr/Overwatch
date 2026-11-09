@@ -8,7 +8,7 @@ import { buildGraph, type GEdge, type GNode } from "@/lib/graph";
 import { loadProtocol, SNAPSHOT_LABEL, type ProtoCard } from "@/site/data";
 import { ControlGraph } from "@/site/ControlGraph";
 import { Timeline } from "@/site/Timeline";
-import { Addr, Badge, Grade, PageHero, SectionHead, Term, stage, JsonLd, breadcrumbs, pageMetadata } from "@/site/ui"; // SEO component
+import { Addr, Badge, Grade, PageHero, SectionHead, Term, JsonLd, breadcrumbs, pageMetadata } from "@/site/ui"; // SEO component
 
 // Cached and rebuilt in the background at most every 30 s: the data only changes when the indexer writes,
 // so visitors get a ready page instead of waiting on the database.
@@ -84,7 +84,6 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
       ])
     : null;
   const bot = process.env.TELEGRAM_BOT_USERNAME;
-  const tone = p.grade === "A" || p.grade === "B" ? "#2BFFB0" : p.grade === "C" ? "#FFB547" : "#FF5A3D";
 
   return (
     <>
@@ -141,24 +140,9 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
             </div>
           </div>
         }
-        stageAttrs={stage("graph", {
-          colorA: tone,
-          colorB: "#1d6bff",
-          x: 2.6,
-          y: 0.4,
-          yNarrow: 1.5,
-          scale: 0.85,
-          opacity: 1,
-          front: true,
-          sway: 0.4,
-        })}
       />
 
-      <section
-        className="page-block"
-        data-dock="Control graph"
-        {...stage("graph", { colorA: tone, colorB: "#1b2340", opacity: 0.22, scale: 1.4, autoRotate: 0.04 })}
-      >
+      <section className="page-block" data-dock="Control graph">
         <SectionHead title={<>Who can move your money</>} />
         <ControlGraph nodes={graph.nodes} edges={graph.edges} network={net} summary={!s} />
       </section>

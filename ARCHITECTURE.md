@@ -72,10 +72,10 @@ happen. It warns after a change lands onchain; it cannot stop or undo it.
                      │ nonce accounts, mints,       │            │                             │
                      │ oracles, admin configs       │            └──────────────▲──────────────┘
                      └──────┬───────────────▲───────┘                           │ upsert_risk
-              websockets    │               │ HTTP JSON-RPC                     │
-         (account/logs/program subscribe)   │ (getMultipleAccounts, gPA, …)     │
+     HTTP JSON-RPC polling  │               │ (getMultipleAccounts,             │
+   (+ optional websockets)  │               │  getSignaturesForAddress, gPA, …) │
                      ┌──────▼───────────────┴───────┐                           │
-                     │   apps/indexer  (Fly, syd)   │───────────────────────────┘
+                     │ apps/indexer (Railway, sgp)  │───────────────────────────┘
                      │   packages/core: decode,     │      publisher (only with a devnet key)
                      │   diff, score                │
                      └──────┬───────────────────────┘
@@ -88,7 +88,7 @@ happen. It warns after a change lands onchain; it cannot stop or undo it.
               └──────┬───────────────────────┬─────────┘                             │
                      │ pending deliveries    │ queries                               │
             ┌────────▼─────────┐   ┌─────────▼───────────────────────────────────────▼──┐
-            │ apps/bot (Fly)   │   │ apps/web (Vercel, syd1)                             │
+            │ apps/bot(Railway)│   │ apps/web (Vercel, syd1)                             │
             │ Telegram bot +   │   │ pages: control map, protocol pages, live events,   │
             │ delivery worker  │   │ case study, alerts, docs · API /api/v1 · SSE stream │
             └──┬────────┬──────┘   └──────────────────────────┬─────────────────────────┘
@@ -99,10 +99,10 @@ happen. It warns after a change lands onchain; it cannot stop or undo it.
 | Component | Lives in | Runs on | Does |
 | --- | --- | --- | --- |
 | Core logic | `packages/core` | anywhere (pure) | decoders, snapshot collection, rules, scoring, hashing, Drift reconstruction |
-| Solana I/O | `packages/solana` | servers | paced JSON-RPC client, reconnecting websocket subscriptions |
+| Solana I/O | `packages/solana` | servers | JSON-RPC client with endpoint failover and history-depth routing; optional websocket subscriptions |
 | Storage | `packages/db` | servers | schema, connection handling, queries, the ingest pipeline |
-| Indexer | `apps/indexer` | Fly (one process) | subscribes to every watched account, refreshes snapshots, ingests, publishes onchain |
-| Bot + worker | `apps/bot` | Fly (one process) | Telegram commands; delivers pending alerts to Telegram, webhooks, email |
+| Indexer | `apps/indexer` | Railway (one process) | polls every watched account and signer, refreshes snapshots, ingests, publishes onchain |
+| Bot + worker | `apps/bot` | Railway (one process) | Telegram commands; delivers pending alerts to Telegram, webhooks, email |
 | Website + API | `apps/web` | Vercel (serverless, Sydney) | every page, the REST API, the live SSE stream |
 | Onchain programs | `programs/` | Solana devnet | registry of scores; a vault that exits red protocols |
 | SDK | `packages/sdk` | integrators | API client, webhook verification, registry/vault PDAs and instructions |
@@ -119,26 +119,26 @@ between packages; Next.js transpiles them via `transpilePackages` and the worker
 │   ├── web/                    Next.js 15 (App Router), React 19
 │   │   ├── app/                routes: pages and /api/v1 route handlers, site.css + pages.css
 │   │   ├── site/               shared UI components, copy (content.ts), data loaders (data.ts), engine/
-│   │   │   └── engine/         persistent WebGL + scroll runtime and per-page animation wiring
+│   │   │   └── engine/         persistent scroll/menu runtime and per-page animation wiring
 │   │   ├── lib/                server-only helpers: DB view models, API helpers, control graph builder
 │   │   ├── e2e/                Playwright smoke tests
-│   │   └── public/             favicon
-│   ├── indexer/src/            main.ts (watchers, reconciler, health), publisher.ts (registry), devnet.ts, log.ts
+│   │   └── public/             favicons, IndexNow key
+│   ├── indexer/src/            main.ts (sweeps, reconciler, health), poll.ts (polling + cursors), publisher.ts, devnet.ts, log.ts
 │   └── bot/src/                main.ts (Telegram commands), deliver.ts (worker), format.ts (message formats)
 ├── packages/
 │   ├── core/src/               types, decoders/, adapters/, constants/, collect, classify, rules, scoring, hash,
 │   │                           drift (reconstruction), net (webhook URL guard)
-│   ├── solana/src/             rpc.ts (JSON-RPC client), ws.ts (websocket subscriptions)
+│   ├── solana/src/             rpc.ts (JSON-RPC client with failover), ws.ts (optional websocket subscriptions)
 │   ├── db/src/                 env.ts, client.ts, schema.ts, queries.ts, pipeline.ts, migrate.ts
 │   ├── db/migrations/          SQL migrations generated by drizzle-kit
 │   ├── sdk/src/ + idl/         api.ts, registry.ts, tx.ts; the programs' Anchor IDLs
 ├── programs/                   Anchor workspace: overwatch_registry, overwatch_vault (+ LiteSVM tests)
 ├── config/protocols.yaml       the curated watch list
-├── scripts/                    seed, backfill, inspect, discover, tvl, stats, capture-fixtures, dev/*
+├── scripts/                    seed, backfill, inspect, discover, tvl, stats, indexnow, capture-fixtures, dev/*
 ├── fixtures/                   captured mainnet account bytes and Anchor IDLs (test inputs)
-├── docs/submission/            headline-stats.md (snapshot numbers the site falls back to)
+├── docs/                       headline-stats.md (snapshot numbers the site falls back to)
 ├── Dockerfile.worker           one image for indexer and bot (APP build arg)
-├── fly.indexer.toml, fly.bot.toml, vercel.json, docker-compose.yml
+├── vercel.json, docker-compose.yml
 └── .github/workflows/ci.yml    formatting, lint, typecheck, unit tests, pipeline smoke test, Anchor build + tests
 ```
 
@@ -216,15 +216,17 @@ Validated by `zod` in `packages/core/src/config.ts`: `slug`, `name`, `category`,
 
 **`Rpc` (`rpc.ts`)** is a deliberately small JSON-RPC client, read-only by design:
 
-- **Pacing:** consecutive requests are spaced at least `minIntervalMs` apart: 20ms with a Helius key, 120ms on the
-  public RPC.
+- **Pacing:** consecutive requests are spaced at least `minIntervalMs` apart: 20ms for a lone Helius endpoint, 120ms
+  otherwise.
 - **Retries:** HTTP 429 and 5xx retry with exponential backoff and jitter (`(429 ? 1500 : 400)ms × 2^attempt`, capped at
   30s). JSON-RPC errors that cannot succeed on retry (bad params, blocked methods) surface immediately as `RpcError`.
 - **Methods:** `getSlot`, `getAccount`, `getMultipleAccounts` (batched; optional `dataSlice`), `getProgramAccounts`
   (with filters), `getSignaturesForAddress`, `getTransaction`. Responses are validated with `zod` and account data is
   decoded from base64 into `Uint8Array`.
-- **Endpoints:** `mainnetRpc()` / `devnetRpc()` pick an explicit `SOLANA_*_RPC_URL`, else Helius (from
-  `HELIUS_API_KEY`), else the public endpoint. An explicit URL always wins.
+- **Endpoints:** `mainnetRpc()` / `devnetRpc()` take a comma-separated `SOLANA_*_RPC_URLS` list, else a single
+  `SOLANA_*_RPC_URL`, else Helius (from `HELIUS_API_KEY`), else the public endpoint. With several endpoints a request
+  fails over between them; an endpoint that times out or returns 429/5xx rests for a minute, and history calls go to
+  the shallowest endpoint that still reaches the slot they need (section 10.2).
 
 **`WsSubscriptions` (`ws.ts`)** manages one websocket per network (Node 22's global `WebSocket`):
 
@@ -631,7 +633,7 @@ anyone. Backfilled events in the last 30 days do count towards `recent_weakening
 ### 11.4 Other scripts
 
 `inspect.ts` (control report for any program), `tvl.ts` (DefiLlama TVL), `headline-stats.ts` + `stats-lib.ts` (the
-numbers in `docs/submission/headline-stats.md`), `capture-fixtures.ts` and `dev/idl.ts` (refresh test fixtures),
+numbers in `docs/headline-stats.md`), `indexnow.ts` (pings search engines with the sitemap after a deploy), `capture-fixtures.ts` and `dev/idl.ts` (refresh test fixtures),
 `dev/probe.ts` (check program IDs), `dev/pipeline-smoke.ts` (the pipeline test),
 `lib.ts` (watch-list loading and table printing).
 
@@ -721,7 +723,7 @@ Next.js 15 App Router, React 19, server components by default. Deployed on Verce
 `app/layout.tsx` loads the fonts (Archivo Variable for display headings, IBM Plex Sans for text, IBM Plex Mono for
 technical text; all self-hosted via `@fontsource`), the two stylesheets, and renders on every page:
 
-- `Chrome` (`site/Chrome.tsx`): skip link, the boot overlay, the WebGL `<canvas class="stage">`, vignette/grid/grain
+- `Chrome` (`site/Chrome.tsx`): skip link, the boot overlay, vignette and grid
   layers, the custom cursor, the navbar (logo, `NavLinks`, the GMT `NavClock`, menu button, "Get alerts"), the
   slide-in menu (from `content.ts` `pages`), the section dock, a toast area, and shared SVG symbols.
 - `Experience` (`site/Experience.tsx`): a client component that lazy-loads the animation engine (section 15) and
@@ -749,7 +751,7 @@ technical text; all self-hosted via `@fontsource`), the two stylesheets, and ren
 `lib/data.ts` (server-only) turns database rows into view models (`ProtocolView`: authority labels, worst-case
 threshold, minimum timelock, nonce-exposed signer count, flags as names). `site/data.ts` is what pages call. It wraps
 every database call in `withTimeout` (5 seconds, long enough for a fresh TLS connection to a distant region) and falls
-back to a **dated mainnet snapshot** (October 11, 2026, from `docs/submission/headline-stats.md`) when the database is
+back to a **dated mainnet snapshot** (October 11, 2026, from `docs/headline-stats.md`) when the database is
 unreachable, so the site never breaks and always says which data it is showing. On a production deploy with no
 `DATABASE_URL` at all it skips the attempt and serves the snapshot immediately. The live feed shows only `live` and
 `backfill` events.
@@ -760,34 +762,26 @@ Two stylesheets. `app/site.css` holds design tokens on `:root` (colours, the `--
 radii, gutter) and the landing/chrome components; `app/pages.css` holds inner-page components (tables, the event log,
 docs, forms) and the hero. Colours are tokens (`--bg` pure black, `--ink`, `--chrome`, `--dim`, `--mint` = the red
 accent, `--warn` amber, `--bad` red-orange, `--ok` bone white). Some markup carries the original accent hexes; CSS
-rules under `html[data-time="night"]` and `tone()` in `site/nightfall.ts` (for WebGL) map them to the red palette.
+rules under `html[data-time="night"]` and `tone()` in `site/nightfall.ts` (for canvas drawing) map them to the red
+palette.
 
 ## 15. The front-end engine
 
 `apps/web/site/engine/` gives the site its motion. It is plain TypeScript (no React), loaded lazily by `Experience`.
 
 - **`runtime.ts`** is created once per browser session and survives client-side navigation. It owns Lenis smooth
-  scrolling (driven by the GSAP ticker so ScrollTrigger stays in sync), the WebGL `Stage`, the boot sequence (landing
-  page only, once per session via `sessionStorage`), the custom cursor, the menu, the dock, toasts and small effects
-  (`scramble`, `magnetic`). It exposes a `Runtime` object with `morph(shape, options)`.
-- **`page.ts`** runs on every route and returns a disposer. It reads `data-stage="<shape>"` and `data-stage-opts` from
-  sections and creates ScrollTriggers that morph the particles as each section enters; wires reveals, count-ups and the
-  pinned horizontal "What you get" track; selects the hero title one character at a time as you scroll away; and drives
-  the Drift replay. On inner pages and for reduced motion it runs in "calm" mode: no intros, reveals or tilt.
-- **`stage.ts`** is a Three.js scene: 42,000 particles (18,000 on low-power devices) whose target positions for every
-  shape are precomputed into one float texture (256 wide); the vertex shader mixes between two rows of it with a
-  per-particle delay, adds idle drift, swirl, pointer repulsion, a scan line and optional "alarm" jitter; an
-  `UnrealBloomPass` adds glow. Extra layers: background dust, animated arcs, and HUD rings. Colours pass through
-  `tone()`.
-- **`shapes.ts`** generates the point clouds: `orb`, `radar`, `lattice`, `shield`, `burst`, `graph`, `lock`, `knot`,
-  `terrain`, `globe` (with land masses), `wordmark` (the word OVERWATCH sampled from canvas text) and `scatter`.
-  `rand.ts` provides the seeded generator so shapes are deterministic.
-- **`AsciiEye.tsx`** (the landing hero) is separate from the stage: a 2D canvas that renders a rotating sphere of
-  monospaced characters drawn from Solana-looking strings. Each character cell maps to a point on the sphere; a gaze
-  vector (following the pointer, wandering when idle) decides the red iris and the empty pupil; it blinks, draws a
-  tracking box around the pupil with a leader line to a readout, and shows the real mainnet slot (from
-  `/api/v1/status`, estimated forward at ~400ms per slot). It pauses offscreen and draws one still frame for
-  reduced motion.
+  scrolling (driven by the GSAP ticker so ScrollTrigger stays in sync), the boot sequence (landing page only, once per
+  session via `sessionStorage`), the custom cursor, the menu, the dock, toasts and small effects (`scramble`,
+  `magnetic`).
+- **`page.ts`** runs on every route and returns a disposer. It wires reveals, count-ups and the pinned horizontal
+  "What you get" track; selects the hero title one character at a time as you scroll away; and drives the Drift replay
+  (arrow keys step it while it is on screen). On inner pages and for reduced motion it runs in "calm" mode: no intros,
+  reveals or tilt.
+- **`AsciiEye.tsx`** (the landing hero) is a 2D canvas that renders a rotating sphere of monospaced characters drawn
+  from Solana-looking strings. Each character cell maps to a point on the sphere; a gaze vector (following the pointer,
+  wandering when idle) decides the red iris and the empty pupil; it blinks, draws a tracking box around the pupil with
+  a leader line to a readout, and shows the real mainnet slot (from `/api/v1/status`, estimated forward at ~400ms per
+  slot). It redraws sharply at any browser zoom, pauses offscreen and draws one still frame for reduced motion.
 
 ## 16. The onchain programs
 
@@ -844,7 +838,7 @@ An example of reacting to the registry: a vault that pulls deposits out of a pro
   by PDA derivation, not trusted from configuration.
 - **The registry trusts its publishers** (up to five keys, chosen by the admin; in production the admin should be a
   multisig). The vault trusts only the registry account, checked by owner and PDA.
-- **Keys** live in `keys/` locally and on a Fly volume in production; never in the repository or the image.
+- **Keys** live in `keys/` locally and are mounted at runtime in production; never in the repository or the image.
 
 ### 18.2 The API surface
 
@@ -877,8 +871,10 @@ a timestamp, so a captured request could be replayed (see section 24).
 
 - **Batched reads:** snapshots use `getMultipleAccounts` and header slices; nonce scans run hourly, not per refresh.
 - **No duplicate work:** content hashing means unchanged state writes nothing; refreshes are debounced and coalesced.
-- **Pacing and backoff** on RPC; reconnection with backoff on websockets.
-- **Regional placement:** database, serverless functions and workers all in Sydney; a query is a local round trip.
+- **Pacing, backoff and failover** on RPC; downtime is replayed from saved cursors; reconnection with backoff on
+  websockets when they are on.
+- **Regional placement:** database and serverless functions in Sydney; the workers in Singapore (the nearest region
+  on the Railway plan), a short hop from the database.
 - **Connection economy:** the transaction pooler for serverless traffic, a small pool per instance, pipelining off;
   the session pooler only for `LISTEN` and migrations.
 - **Graceful degradation:** pages fall back to the dated snapshot after 5 seconds; the API answers 503 JSON; the status
@@ -891,22 +887,22 @@ a timestamp, so a captured request could be replayed (see section 24).
 | Piece | Where | Config |
 | --- | --- | --- |
 | Website + API | Vercel, functions in `syd1` | `vercel.json`; env: `DATABASE_URL` (transaction pooler), `DIRECT_URL` (session pooler), `HELIUS_API_KEY`, `TELEGRAM_BOT_USERNAME`, `REGISTRY_PROGRAM_ID` |
-| Indexer | Fly app `overwatch-indexer`, region `syd` | `fly.indexer.toml`, `Dockerfile.worker` (`APP=indexer`), health check on `/health`, keys volume at `/app/keys` |
-| Bot + delivery worker | Fly app `overwatch-bot`, region `syd`, exactly one instance | `fly.bot.toml`, `Dockerfile.worker` (`APP=bot`) |
+| Indexer | Railway project `overwatch`, service `indexer`, Singapore, one replica, restarts on failure | `Dockerfile.worker` with `APP=indexer`; env: `DATABASE_URL`, `DIRECT_URL`, `SOLANA_MAINNET_RPC_URLS`, `HELIUS_API_KEY`, `INDEXER_WEBSOCKETS=false`; `/health` on `INDEXER_PORT` |
+| Bot + delivery worker | Railway service `bot`, Singapore, exactly one replica, restarts on failure | `Dockerfile.worker` with `APP=bot`; env: `DATABASE_URL`, `DIRECT_URL`, `TELEGRAM_BOT_TOKEN`, `NEXT_PUBLIC_SITE_URL` |
 | Database | Supabase, Sydney (`ap-southeast-2`) | Data API off; transaction pooler (6543) + session pooler (5432) |
 | Programs | Solana devnet | `Anchor.toml` |
 
-`Dockerfile.worker` installs only the selected app's dependency graph and runs it with `tsx`; keypairs are mounted at
-runtime.
+`Dockerfile.worker` installs only the selected app's dependency graph and runs it with `tsx`; Railway passes the `APP`
+variable as a build argument (`RAILWAY_DOCKERFILE_PATH=Dockerfile.worker`). Keypairs are mounted at runtime.
 
 ## 21. End-to-end walkthroughs
 
 ### 21.1 A multisig removes its timelock; a depositor's phone buzzes
 
 1. Signers execute a Squads configuration transaction setting the timelock to 0 on a watched multisig.
-2. The indexer's `logsSubscribe` on that multisig fires with the signature; its `accountSubscribe` on the multisig
-   account fires with the new data. `trigger()` debounces both into one refresh 400ms later, stamped with the
-   signature.
+2. Within 15 seconds the account sweep sees the multisig account's bytes change and triggers a refresh; within a
+   minute the transaction sweep finds the signature on the multisig address and stamps the change with it.
+   `trigger()` debounces both into one refresh.
 3. `refresh()` → `collectSnapshot()` reads programs, multisigs (now `timeLockSec: 0`), proposals, mints, oracles.
 4. `ingestSnapshot()`: the hash differs, so the snapshot is stored; `diffSnapshots()` emits `TIMELOCK_REMOVED`
    (CRITICAL, weakening); if a signer created a nonce account in the last 14 days, it is escalated and labelled
@@ -945,13 +941,14 @@ runtime.
 1. Add the entry to `config/protocols.yaml`; `pnpm seed <slug>` proves the multisig mapping by PDA derivation and stores
    the baseline snapshot and score (no events: it is the baseline).
 2. `pnpm backfill <slug>` loads its history (events only, no alerts).
-3. Within 15 seconds the running indexer notices the new verified protocol, subscribes to its accounts and signers, and
-   runs a refresh with a nonce scan.
+3. Within 15 seconds the running indexer notices the new verified protocol, adds its accounts and signers to the
+   sweeps, and runs a refresh with a nonce scan.
 
 ## 22. Testing and CI
 
 - **Unit tests** (Vitest): `packages/core` (53 tests: decoders against real fixtures, adapters against real IDLs, every
-  rule, scoring and flags, the replay classifier, the webhook URL guard), `packages/sdk` (4),
+  rule, scoring and flags, the replay classifier, the webhook URL guard), `packages/solana` (12: failover, cooldown,
+  history-depth routing), `apps/indexer` (14: account fingerprints, cursors, downtime replay), `packages/sdk` (4),
   `apps/bot` (3).
 - **Pipeline smoke test** (`pnpm smoke:pipeline`): the real database path end to end, without RPC.
 - **Browser tests** (Playwright, `apps/web/e2e/smoke.spec.ts`): navigation, the control map, the case-study replay, every

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FLAG, RED_MASK, ORACLE_PROGRAMS } from "@overwatch/core";
-import { PageHero, Term, stage, JsonLd, breadcrumbs, pageMetadata, ORGANIZATION_ID } from "@/site/ui"; // SEO component
+import { PageHero, Term, JsonLd, breadcrumbs, pageMetadata, ORGANIZATION_ID } from "@/site/ui"; // SEO component
 import { SITE_URL } from "@/site/content"; // SEO component
 
 const DESCRIPTION = // SEO component
@@ -169,15 +169,6 @@ export default function Docs() {
         dock="Docs"
         lines={["Documentation"]}
         lede="What Overwatch watches, exactly how a grade is computed, and how depositors, builders and protocols use it. Every claim here is checkable against the code and the chain."
-        stageAttrs={stage("graph", {
-          colorA: "#5AA8FF",
-          colorB: "#2BFFB0",
-          x: 2.6,
-          y: 0.4,
-          yNarrow: 1.5,
-          scale: 0.85,
-          opacity: 1,
-        })}
       />
 
       <section className="page-block docs" data-dock="Docs">

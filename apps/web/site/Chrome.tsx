@@ -87,7 +87,7 @@ export function Chrome() {
           <ol className="menu__list">
             {pages.map((p) => (
               <li key={p.href} style={cssVars({ "--c": p.color })}>
-                <Link href={p.href} data-shape={p.shape} data-color={p.color} data-cursor="Go">
+                <Link href={p.href} data-cursor="Go">
                   <span className="menu__name">{p.name}</span>
                   <span className="menu__kicker">{p.kicker}</span>
                   <span className="menu__count mono">→</span>

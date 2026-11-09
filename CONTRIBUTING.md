@@ -102,8 +102,10 @@ matter which directory they run from. A variable already set in your shell is ne
 
 | Variable | Default | What it does |
 | --- | --- | --- |
-| `HELIUS_API_KEY` | empty | When set, mainnet and devnet RPC and websockets go to Helius, request pacing drops from 120ms to 20ms, and the indexer subscribes at 50 per second instead of 4. |
-| `SOLANA_MAINNET_RPC_URL` | empty | Explicit mainnet HTTP endpoint. **It takes priority over `HELIUS_API_KEY`**, so leave it empty to use Helius. |
+| `SOLANA_MAINNET_RPC_URLS` | empty | Comma-separated mainnet endpoints from any provider. Requests fail over between them, and history lookups go to the shallowest endpoint that still reaches back far enough. Mix a fast node with an archive (e.g. `https://solana-rpc.publicnode.com,https://api.mainnet-beta.solana.com`). Takes priority over everything below. |
+| `SOLANA_DEVNET_RPC_URLS` | empty | The same for devnet. |
+| `HELIUS_API_KEY` | empty | When no explicit URL is set, mainnet and devnet RPC and websockets go to Helius, and request pacing drops from 120ms to 20ms. Optional: public endpoints are enough for polling. |
+| `SOLANA_MAINNET_RPC_URL` | empty | A single explicit mainnet HTTP endpoint. **It takes priority over `HELIUS_API_KEY`**, so leave it empty to use Helius. |
 | `SOLANA_MAINNET_WS_URL` | empty | Explicit mainnet websocket endpoint. Same priority rule. |
 | `SOLANA_DEVNET_RPC_URL` | empty | Explicit devnet HTTP endpoint (registry publishing). |
 | `SOLANA_DEVNET_WS_URL` | empty | Explicit devnet websocket endpoint. |
@@ -131,6 +133,9 @@ matter which directory they run from. A variable already set in your shell is ne
 | Variable | Default | What it does |
 | --- | --- | --- |
 | `INDEXER_PORT` | `8787` | Port for `GET /health`. |
+| `POLL_INTERVAL_MS` | `15000` | How often every watched account is read. |
+| `TX_POLL_INTERVAL_MS` | `60000` | How often each signer and multisig address is checked for new transactions. Free endpoints allow about 4 calls a second per method, so lower it only on a paid RPC. |
+| `INDEXER_WEBSOCKETS` | on | `false` runs on HTTP polling alone. Websockets only make changes show up a few seconds sooner. |
 | `NONCE_PROGRAM_SUBSCRIBE` | empty | `true` forces real-time `programSubscribe` for signer nonce accounts on the public mainnet RPC (which normally rejects it; with Helius it is always on). |
 
 ### Devnet registry and vault
@@ -148,7 +153,7 @@ Set automatically by the platform, never by hand: `VERCEL` (shrinks the connecti
 | Part | Command | Notes |
 | --- | --- | --- |
 | Website + API | `pnpm --filter @overwatch/web dev` | http://localhost:3000. Pages fall back to a dated snapshot if the database is unreachable. |
-| Indexer | `pnpm --filter @overwatch/indexer dev` | Watches every verified protocol. `curl localhost:8787/health` shows subscriptions, processed refreshes and errors. |
+| Indexer | `pnpm --filter @overwatch/indexer dev` | Watches every verified protocol. `curl localhost:8787/health` shows the last sweeps, processed refreshes and errors. |
 | Bot + delivery worker | `pnpm --filter @overwatch/bot dev` | Polls Telegram (one process per bot token, or Telegram rejects the second) and delivers pending alerts every 2 seconds. |
 | Everything at once | `pnpm dev` | Turborepo runs every app's `dev` task in parallel. |
 
@@ -161,7 +166,8 @@ Useful one-off scripts (all in `scripts/`, all read-only against mainnet unless 
 | `pnpm inspect <programId> [--devnet] [--multisig <addr>]` | Control report for **any** program: upgrade authority, its kind, and the multisig behind it. Use it before adding a protocol. |
 | `pnpm seed [slug…]` | Verify and store the watch list (or only the listed slugs). |
 | `pnpm backfill [slug…] [--days 180] [--max 400]` | Rebuild change history from past transactions. Writes events but never sends alerts. |
-| `pnpm stats` | Regenerates `docs/submission/headline-stats.md` from the database. |
+| `pnpm stats` | Regenerates `docs/headline-stats.md` from the database. |
+| `pnpm indexnow` | Tells Bing, Yandex and other IndexNow search engines about every sitemap URL. Run it after a production deploy that changes pages. |
 | `pnpm smoke:pipeline` | End-to-end pipeline check without RPC (writes to the database, then cleans up). |
 | `pnpm fixtures:capture` | Re-captures real account bytes into `fixtures/` for the decoder tests. |
 | `pnpm fixtures:idl` | Re-fetches protocol Anchor IDLs into `fixtures/idl/` for the adapter tests. |
@@ -249,6 +255,8 @@ and what to do. Every claim must be checkable.
 | --- | --- | --- |
 | `packages/core/test/` | `pnpm --filter @overwatch/core test` | Decoders against real captured bytes (`fixtures/`), admin adapters against real IDLs, every rule and severity, scoring and flags, the backfill replay classifier, the webhook URL guard. Runs with coverage. |
 | `packages/sdk/test/` | `pnpm --filter @overwatch/sdk test` | PDA derivation, RiskRecord decoding, webhook signature verification. |
+| `packages/solana/test/` | `pnpm --filter @overwatch/solana test` | RPC failover, endpoint cooldown and history-depth routing. |
+| `apps/indexer/test/` | `pnpm --filter @overwatch/indexer test` | Account fingerprints, signature cursors and replay after downtime. |
 | `apps/bot/test/` | `pnpm --filter @overwatch/bot test` | Alert formatting and retry backoff. |
 | `scripts/dev/pipeline-smoke.ts` | `pnpm smoke:pipeline` | The database pipeline end to end (needs Postgres). |
 | `apps/web/e2e/` | `pnpm --filter @overwatch/web e2e --workers=1` | Playwright smoke tests: landing → docs navigation, control map → protocol page, case-study replay, every main page renders, the red palette and the GMT clock. Needs the dev server on :3000. |
@@ -257,8 +265,7 @@ and what to do. Every claim must be checkable.
 Writing tests: new rule or scoring logic always gets a test in `packages/core/test/` using the helpers in
 `test/helpers.ts` (`snap()`, `ms()`, `ctx()`). New decoders get a real fixture: capture the account with
 `pnpm fixtures:capture` (add it to `scripts/capture-fixtures.ts` first) and assert against it, never against invented
-bytes. The headless browser in the e2e tests occasionally crashes on WebGL in CI-like environments ("Target page,
-context or browser has been closed"); rerun with `--last-failed` before assuming a regression.
+bytes.
 
 ## 10. Recipes for common changes
 
@@ -335,7 +342,8 @@ Adapters decode a protocol's own config account (admin key, limits, listed colla
 ### Add a page
 
 1. Create `apps/web/app/<route>/page.tsx`. Start with `<PageHero>` from `site/ui.tsx` and give sections a
-   `data-dock` name and a particle shape via `{...stage("shape", opts)}`.
+   `data-dock` name. Export `metadata = pageMetadata({ title, description, path })` and add a `<JsonLd>` block, both
+   from `site/ui.tsx`, and add the route to `app/sitemap.ts`.
 2. Add it to the menu in `site/content.ts` (`pages`) and, if it is a main page, to `site/NavLinks.tsx` and the footer in
    `site/Chrome.tsx`.
 3. Add it to the "pages render" test in `apps/web/e2e/smoke.spec.ts`.
@@ -359,8 +367,8 @@ deployed on devnet at the IDs in `.env.example`. To deploy your own: `anchor dep
 
 ## 12. Deploying
 
-Production is three pieces: the website on **Vercel**, the indexer and bot on **Fly**, and Postgres on **Supabase**,
-all in Sydney so queries stay local.
+Production is three pieces: the website on **Vercel** (Sydney), the indexer and bot on **Railway** (Singapore, the
+nearest region on its plan), and Postgres on **Supabase** (Sydney).
 
 ### Website (Vercel)
 
@@ -375,25 +383,39 @@ vercel env add REGISTRY_PROGRAM_ID production
 vercel --prod
 ```
 
+The Vercel project is linked to GitHub, so every push to `main` deploys the site.
+
 Do **not** add `WEBHOOK_ALLOW_PRIVATE_URLS` or the bot token to Vercel. Without `DATABASE_URL` the site still deploys
 and serves the snapshot. After deploying, check `https://<your-domain>/api/v1/status` reports `"database":"ok"`.
 
-### Indexer and bot (Fly)
+### Indexer and bot (Railway)
 
-Both use `Dockerfile.worker` with a build argument choosing the app. Keypairs are mounted from a volume, never baked
-into the image.
+Both are services in one Railway project and build from `Dockerfile.worker`; the `APP` variable picks the app (Railway
+passes service variables to the Docker build as build arguments). Keypairs are mounted at runtime, never baked into the
+image. Pipe secrets in through `--stdin` so they never land in your shell history.
 
 ```sh
-fly launch --config fly.indexer.toml --no-deploy
-fly volumes create overwatch_keys --region syd --size 1 --config fly.indexer.toml   # the config mounts it at /app/keys;
-                                                    # leave it empty unless you publish to the devnet registry
-fly secrets set DATABASE_URL=… DIRECT_URL=… HELIUS_API_KEY=… --config fly.indexer.toml
-fly deploy --config fly.indexer.toml
+railway login
+railway init --name overwatch            # once; then `railway link` in other checkouts
+railway add --service indexer
+railway add --service bot
 
-fly launch --config fly.bot.toml --no-deploy
-fly secrets set DATABASE_URL=… TELEGRAM_BOT_TOKEN=… NEXT_PUBLIC_SITE_URL=https://… --config fly.bot.toml
-fly deploy --config fly.bot.toml
+railway variable set --service indexer RAILWAY_DOCKERFILE_PATH=Dockerfile.worker APP=indexer INDEXER_WEBSOCKETS=false \
+  SOLANA_MAINNET_RPC_URLS=https://solana-rpc.publicnode.com,https://api.mainnet-beta.solana.com
+printf %s "$DATABASE_URL" | railway variable set --service indexer DATABASE_URL --stdin
+printf %s "$DIRECT_URL"   | railway variable set --service indexer DIRECT_URL --stdin
+
+railway variable set --service bot RAILWAY_DOCKERFILE_PATH=Dockerfile.worker APP=bot NEXT_PUBLIC_SITE_URL=https://…
+printf %s "$DATABASE_URL"       | railway variable set --service bot DATABASE_URL --stdin
+printf %s "$TELEGRAM_BOT_TOKEN" | railway variable set --service bot TELEGRAM_BOT_TOKEN --stdin
+
+railway up --service indexer --detach
+railway up --service bot --detach
 ```
+
+The services are not linked to GitHub: **run `railway up` again after changing worker code**. Keep each service in a
+single region with one replica; the current plan rejects a second region. Check the indexer with `railway logs --service
+indexer` (a `[transactions] took …s` line every minute means it is keeping up).
 
 Run exactly **one** bot instance: Telegram allows a single long-polling client per token. Stop any local bot first.
 
@@ -410,8 +432,10 @@ starts.
 | Live events says **"No event history on this deployment"** | The site cannot reach the database within 5 seconds, or `DATABASE_URL` is not set where it runs. Check `/api/v1/status`. |
 | **`max clients reached in session mode`** | `DATABASE_URL` points at Supabase's session pooler (15 clients). Use the transaction pooler (6543) for `DATABASE_URL` and the session pooler only as `DIRECT_URL`. |
 | Queries **hang** forever on the transaction pooler | Query pipelining on port 6543. `packages/db/src/client.ts` turns it off (`max_pipeline: 0`); don't remove that. |
-| Your **Helius key seems ignored** | An explicit `SOLANA_*_URL` wins over `HELIUS_API_KEY`. Leave those empty. |
-| The indexer's **mainnet websocket keeps reconnecting** | You are on the public RPC, which drops sockets that subscribe to many accounts. Set `HELIUS_API_KEY` (and leave `SOLANA_MAINNET_WS_URL` empty). |
+| Your **Helius key seems ignored** | An explicit `SOLANA_*_RPC_URLS` or `SOLANA_*_URL` wins over `HELIUS_API_KEY`. Leave those empty. |
+| The indexer's **mainnet websocket keeps reconnecting** | You are on the public RPC, which drops sockets that subscribe to many accounts. Set `INDEXER_WEBSOCKETS=false`: polling alone catches every change. |
+| The indexer logs **`no successful reconcile … exiting for a restart`** | Its watchdog saw no reconcile for 20 minutes (RPC outage, or the machine slept). The supervisor restarts it, and it replays what it missed from saved cursors. |
+| **Transaction sweeps take longer than a minute** | The endpoints are rate-limiting `getSignaturesForAddress`. Add another endpoint to `SOLANA_MAINNET_RPC_URLS` or raise `TX_POLL_INTERVAL_MS`. |
 | The bot logs **409 Conflict** | Another process is polling with the same bot token. Run one instance. |
 | `pnpm smoke:pipeline` fails with **expected event and score notifications** | `DIRECT_URL` (or `DATABASE_URL`) must support `LISTEN`; a transaction pooler alone cannot. |
 | Webhook creation says **"points to a private or internal address"** | Intended in production. Locally set `WEBHOOK_ALLOW_PRIVATE_URLS=true` to test against `127.0.0.1`. |

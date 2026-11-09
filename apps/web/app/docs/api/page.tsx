@@ -1,4 +1,4 @@
-import { PageHero, SectionHead, stage, JsonLd, breadcrumbs, pageMetadata, ORGANIZATION_ID } from "@/site/ui"; // SEO component
+import { PageHero, SectionHead, JsonLd, breadcrumbs, pageMetadata, ORGANIZATION_ID } from "@/site/ui"; // SEO component
 import { SITE_URL } from "@/site/content"; // SEO component
 
 const DESCRIPTION = // SEO component
@@ -69,30 +69,9 @@ export default function ApiDocs() {
             <span className="mono">retry-after</span>.
           </>
         }
-        stageAttrs={stage("terrain", {
-          colorA: "#5AA8FF",
-          colorB: "#8B7CFF",
-          x: 2.2,
-          y: -0.2,
-          yNarrow: 1.2,
-          scale: 0.9,
-          opacity: 1,
-          autoRotate: 0.06,
-        })}
       />
 
-      <section
-        className="page-block"
-        data-dock="Endpoints"
-        {...stage("terrain", {
-          colorA: "#5AA8FF",
-          colorB: "#1b2340",
-          opacity: 0.25,
-          y: -1.2,
-          scale: 1.3,
-          autoRotate: 0.02,
-        })}
-      >
+      <section className="page-block" data-dock="Endpoints">
         <SectionHead title="Endpoints" />
         <table className="dtable dtable--api">
           <tbody>

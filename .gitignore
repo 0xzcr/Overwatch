@@ -31,10 +31,6 @@ id.json
 keys/
 *.pem
 
-# Supabase CLI link state (the project ref and temp files are machine-local)
-supabase/.temp
-supabase/.branches
-
 # logs
 *.log
 logs

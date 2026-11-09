@@ -13,10 +13,14 @@ Honest list of what's incomplete. Items here show as "coming soon" in the UI whe
 
 ## Infrastructure
 
-- **Indexer and bot are not hosted yet.** They run locally; deploy them to Fly with `fly.indexer.toml` and
-  `fly.bot.toml` (region `syd`, next to the database) so alerts keep flowing.
-- **Onchain publishing** needs the devnet publisher keypair in `keys/` (or a Fly volume); without it the registry is
-  not updated.
+- **Onchain publishing is off in production.** The Railway indexer has no devnet publisher keypair, so the registry
+  is not updated. Mount `keys/publisher-keypair.json` into the indexer service to turn it on.
+- **Worker deploys are manual.** The Railway services are not linked to GitHub; run `railway up` after changing
+  indexer or bot code.
+- **History gap, Oct 19 – Nov 9, 2026.** No indexer was running then, and those weeks predate the saved cursors, so
+  they were not replayed. `pnpm backfill` can rebuild the events (it never sends alerts).
+- **Search engine registration.** Run `pnpm indexnow` after page changes; Google Search Console and Bing Webmaster
+  verification are not set up.
 - **Slow first request** on a fresh Vercel instance (many seconds, then about one second warm). Cause not pinned down.
 
 ## Hardening

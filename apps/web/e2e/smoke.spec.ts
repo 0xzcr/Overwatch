@@ -47,8 +47,8 @@ test.describe("red palette", () => {
     expect(
       await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--mint").trim()),
     ).toBe("#ff1f3d");
-    await expect(page.locator('link[rel="icon"]').last()).toHaveAttribute("href", "/favicon-night.svg");
-    // WebGL start-up can hold the main thread (and the clock's timer) for seconds in a software-rendered CI browser.
+    await expect(page.locator('link[rel="icon"][type="image/svg+xml"]')).toHaveAttribute("href", "/favicon-night.svg");
+    // The boot sequence can hold the main thread (and the clock's timer) for seconds in a software-rendered CI browser.
     await expect(page.locator("body")).not.toHaveClass(/is-loading/, { timeout: 15_000 });
     const clock = page.locator(".nav__status time");
     await expect(clock).toHaveText(/^\d{2}:\d{2}:\d{2}$/);

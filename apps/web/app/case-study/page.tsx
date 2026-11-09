@@ -1,6 +1,6 @@
 import { manifesto } from "@/site/content";
 import { driftReplay, driftSources, loadProtocols, warningDays } from "@/site/data";
-import { PageHero, Term, cssVars, stage, JsonLd, breadcrumbs, pageMetadata, ORGANIZATION_ID } from "@/site/ui"; // SEO component
+import { PageHero, Term, cssVars, JsonLd, breadcrumbs, pageMetadata, ORGANIZATION_ID } from "@/site/ui"; // SEO component
 import { SITE_URL } from "@/site/content"; // SEO component
 
 // Cached and rebuilt in the background at most every 30 s: the data only changes when the indexer writes,
@@ -42,25 +42,9 @@ export default async function CaseStudy() {
         dock="Case study"
         lines={["Drift lost $285M.", `${days} days of warning.`]}
         lede="The warning signs were onchain and public. No smart-contract bug was involved. The attacker collected pre-signed durable-nonce transactions from Security Council signers, waited, and used them to take admin. This replay is a backtest: Overwatch's current rules applied to the public record, reconstructed from incident reports. It is not a live catch."
-        stageAttrs={stage("knot", {
-          colorA: "#FFB547",
-          colorB: "#1b2340",
-          x: 3,
-          y: 0.6,
-          yNarrow: 1.5,
-          scale: 0.85,
-          autoRotate: 0.16,
-          jitter: 0.02,
-          opacity: 0.95,
-        })}
       />
 
-      <section
-        className="manifesto"
-        id="why"
-        data-dock="Why"
-        {...stage("scatter", { colorA: "#7CF3FF", colorB: "#2a2f5a", opacity: 0.55, autoRotate: 0.03 })}
-      >
+      <section className="manifesto" id="why" data-dock="Why">
         <div className="manifesto__pin">
           <p className="manifesto__text">
             {manifesto.split(" ").map((w, i) => (
@@ -75,21 +59,7 @@ export default async function CaseStudy() {
         </div>
       </section>
 
-      <section
-        className="stats"
-        id="numbers"
-        data-dock="The locks"
-        {...stage("lattice", {
-          colorA: "#7CF3FF",
-          colorB: "#8B7CFF",
-          opacity: 0.75,
-          x: 3.2,
-          y: 0.9,
-          scale: 0.85,
-          autoRotate: 0.14,
-          tiltX: 0.2,
-        })}
-      >
+      <section className="stats" id="numbers" data-dock="The locks">
         <header className="section-head">
           <h2 className="h2">
             {h.total} protocols. {h.tvl} in deposits.
@@ -131,7 +101,7 @@ export default async function CaseStudy() {
         </div>
       </section>
 
-      <section className="drift page-block" id="replay" data-dock="Replay" data-dock-color="#FF5A3D" data-stage="drift">
+      <section className="drift page-block" id="replay" data-dock="Replay" data-dock-color="#FF5A3D">
         <div className="drift__board">
           <div className="drift__clock">
             <p className="mono label">days of warning · backtest</p>

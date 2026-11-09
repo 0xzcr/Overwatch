@@ -28,7 +28,7 @@ rules. It is a **backtest** on a timeline reconstructed from public incident rep
 |                      |                                                                                                                                                  |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Control map**      | Grades (A–F, 0–100) for the top Solana protocols. Every point lost is an itemised deduction with a reason.                                       |
-| **Live events**      | Every change to who controls a watched protocol, caught live over websockets, plus 180 days of history rebuilt from chain data.                  |
+| **Live events**      | Every change to who controls a watched protocol, within a minute of landing onchain, plus 180 days of history rebuilt from chain data.           |
 | **Alerts**           | Telegram bot, HMAC-signed webhooks with retries, and email. Each alert says what changed, why it matters and what to do.                         |
 | **API**              | Versioned REST (`/api/v1`), a Server-Sent Events stream and a small TypeScript SDK.                                                              |
 | **Onchain registry** | Scores and risk flags published to Solana accounts (devnet), so any program can read them and act, e.g. a vault that exits when a protocol turns red. |
@@ -62,25 +62,27 @@ pnpm --filter @overwatch/indexer dev   # watches mainnet; health on http://local
 pnpm --filter @overwatch/bot dev       # Telegram bot + webhook/email delivery worker
 ```
 
-A free [Helius](https://helius.dev) key in `HELIUS_API_KEY` makes the indexer and the seed far more reliable than the
-public RPC. [CONTRIBUTING.md](CONTRIBUTING.md) has the full setup, every environment variable, and how to deploy.
+The indexer needs no particular provider: list any JSON-RPC endpoints in `SOLANA_MAINNET_RPC_URLS` and it fails over
+between them, or leave it empty for the public RPC. A free [Helius](https://helius.dev) key in `HELIUS_API_KEY` is
+optional and makes the seed faster. [CONTRIBUTING.md](CONTRIBUTING.md) has the full setup, every environment variable, and how to deploy.
 
 ## Repository
 
 ```
 apps/
   web/        Next.js 15 site and public API (Vercel)
-  indexer/    long-running mainnet watcher: websockets → snapshots → rules → scores → publish (Fly)
-  bot/        Telegram bot and the alert delivery worker for Telegram, webhooks and email (Fly)
+  indexer/    long-running mainnet watcher: polling → snapshots → rules → scores → publish (Railway)
+  bot/        Telegram bot and the alert delivery worker for Telegram, webhooks and email (Railway)
 packages/
   core/       pure logic: account decoders, rules engine, scoring, Squads/Token-2022 parsing (no I/O)
-  solana/     minimal read-only JSON-RPC client and reconnecting websocket manager
+  solana/     read-only JSON-RPC client with endpoint failover, plus optional websocket subscriptions
   db/         Postgres schema (Drizzle), queries, and the ingest pipeline
   sdk/        TypeScript SDK: API client, webhook verification, registry and vault instructions
 programs/     Anchor programs: overwatch_registry, overwatch_vault
 config/       protocols.yaml, the curated watch list
-scripts/      seed, backfill, inspect, stats and fixtures
+scripts/      seed, backfill, inspect, stats, indexnow and fixtures
 fixtures/     real account bytes and IDLs captured from mainnet, used by the tests
+docs/         headline-stats.md, the dated snapshot the site shows when the database is down
 ```
 
 [ARCHITECTURE.md](ARCHITECTURE.md) explains every part of this in depth: the data flow, account layouts, the rules,
@@ -109,4 +111,4 @@ protocol can never pay for a score.
 
 ## License
 
-No license has been chosen yet; all rights are reserved until one is added.
+[Apache 2.0](LICENSE).

@@ -1779,12 +1779,6 @@ a:focus-visible > .logo .dog__sheen {
 .hero--page ~ .manifesto .manifesto__text {
   font-size: clamp(24px, 2.6vw, 40px);
 }
-html[data-page="inner"] .stage {
-  opacity: 0.22;
-}
-html[data-page="inner"] .grain {
-  display: none;
-}
 @media (max-width: 900px) {
   .hero--page {
     padding-top: 92px;

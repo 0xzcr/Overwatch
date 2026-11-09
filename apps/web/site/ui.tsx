@@ -1,19 +1,9 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { Metadata } from "next"; // SEO component
-import type { MorphOptions, ShapeName } from "./engine/stage";
 import { GLOSSARY, SITE_URL, REPO_URL } from "./content"; // SEO component
 import { explorer, GRADE_WORD } from "@/lib/format";
 
 export const cssVars = (v: Record<string, string>) => v as CSSProperties;
-
-/** Markup attributes that tell the particle stage which shape to show while this section is in view. */
-export function stage(shape: ShapeName | "drift", opts: MorphOptions = {}, pulse = false) {
-  return {
-    "data-stage": shape,
-    "data-stage-opts": JSON.stringify(opts),
-    ...(pulse ? { "data-stage-pulse": "1" } : {}),
-  };
-}
 
 export function Vis({ html, className }: { html: string; className?: string }) {
   return <div className={className} dangerouslySetInnerHTML={{ __html: html }} />;
@@ -98,7 +88,6 @@ export function PageHero({
   lines,
   lede,
   aside,
-  stageAttrs,
   dock,
   compact = true,
 }: {
@@ -106,12 +95,11 @@ export function PageHero({
   lines: ReactNode[];
   lede?: ReactNode;
   aside?: ReactNode;
-  stageAttrs: ReturnType<typeof stage>;
   dock: string;
   compact?: boolean;
 }) {
   return (
-    <section className={`hero${compact ? " hero--page" : ""}`} id="top" data-dock={dock} {...stageAttrs}>
+    <section className={`hero${compact ? " hero--page" : ""}`} id="top" data-dock={dock}>
       <div className="hero__title-wrap">
         {eyebrow && <p className="hero__eyebrow mono">{eyebrow}</p>}
         <h1 className="hero__title hero__title--page">

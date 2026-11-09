@@ -2,7 +2,7 @@ import Link from "next/link";
 import { layers, steps, MAINTENANCE_NOTICE } from "@/site/content";
 import { visual } from "@/site/visuals";
 import { AsciiEye } from "@/site/AsciiEye";
-import { Vis, cssVars, stage, JsonLd, ORGANIZATION_ID } from "@/site/ui"; // SEO component
+import { Vis, cssVars, JsonLd, ORGANIZATION_ID } from "@/site/ui"; // SEO component
 import { SITE_URL } from "@/site/content"; // SEO component
 
 /** One span per character, so scrolling can select the title a letter at a time (see `.ch` in engine/page.ts). */
@@ -32,13 +32,8 @@ export default function Home() {
         }} // SEO component
       />
       {/* SEO component */}
-      {/* HERO: the particle stage stays hidden here; the eye is the text canvas */}
-      <section
-        className="hero hero--solo wd"
-        id="top"
-        data-dock="Intro"
-        {...stage("orb", { colorA: "#2BFFB0", colorB: "#3a5cff", opacity: 0, front: true, sway: 0 })}
-      >
+      {/* HERO: the eye is a text canvas */}
+      <section className="hero hero--solo wd" id="top" data-dock="Intro">
         <div className="wd__eye">
           <AsciiEye />
         </div>
@@ -68,12 +63,7 @@ export default function Home() {
       )}
 
       {/* HOW IT WORKS */}
-      <section
-        className="sec"
-        id="how"
-        data-dock="How it works"
-        {...stage("scatter", { colorA: "#2BFFB0", colorB: "#1b2340", opacity: 0.35 })}
-      >
+      <section className="sec" id="how" data-dock="How it works">
         <header className="section-head">
           <h2 className="h2">How it works</h2>
         </header>
@@ -90,19 +80,7 @@ export default function Home() {
       </section>
 
       {/* PRODUCT LAYERS */}
-      <section
-        className="headliners sec"
-        id="product"
-        data-dock="Product"
-        {...stage("terrain", {
-          colorA: "#5AA8FF",
-          colorB: "#2BFFB0",
-          opacity: 0.35,
-          y: -1.2,
-          scale: 1.3,
-          autoRotate: 0.02,
-        })}
-      >
+      <section className="headliners sec" id="product" data-dock="Product">
         <div className="headliners__pin">
           <header className="headliners__head">
             <h2 className="h2">What you get</h2>
@@ -126,22 +104,7 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section
-        className="cta sec"
-        id="cta"
-        data-dock="Get started"
-        {...stage("wordmark", {
-          colorA: "#2BFFB0",
-          colorB: "#7CF3FF",
-          y: 1.55,
-          yNarrow: 1.9,
-          scale: 0.95,
-          narrowScale: 0.5,
-          opacity: 0.8,
-          front: true,
-          sway: 0.12,
-        })}
-      >
+      <section className="cta sec" id="cta" data-dock="Get started">
         <div className="cta__head">
           <h2 className="cta__title">Get started</h2>
         </div>

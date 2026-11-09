@@ -1,4 +1,4 @@
-/** Generates docs/submission/headline-stats.md from the live DB (numbers for the pitch, timestamped). */
+/** Generates docs/headline-stats.md from the live DB (numbers for the pitch, timestamped). */
 import { writeFileSync } from "node:fs";
 import { listProtocols, listEvents, sql, repoRootPath } from "./stats-lib";
 import { fmtDuration, isOnCurve, type ControlSnapshot, type AdminFacts } from "@overwatch/core";
@@ -46,6 +46,6 @@ ${snaps.map(({ p, s }) => `| ${p.name} | ${p.score?.grade ?? "?"} ${p.score?.sco
 
 Drift case: the warning signs (durable nonce accounts tied to 2 of 5 signers) appeared **Mar 23, 2026**, 9 days before the Apr 1 drain (reconstructed from public incident reports; see /case/drift).
 `;
-writeFileSync(`${repoRootPath}/docs/submission/headline-stats.md`, md);
+writeFileSync(`${repoRootPath}/docs/headline-stats.md`, md);
 console.log(md);
 await sql().end();

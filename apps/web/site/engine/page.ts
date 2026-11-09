@@ -1,11 +1,8 @@
 // Per-page part of the experience. Runs on every route change and tears itself down on the next one.
-// Sections declare their particle shape in markup: data-stage="<shape>" data-stage-opts='{...}'.
 
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import type { MorphOptions } from "./stage";
-import type { ShapeName } from "./stage";
-import { $, $$, esc, magnetic, type Runtime, type StageCfg } from "./runtime";
+import { $, $$, esc, magnetic, type Runtime } from "./runtime";
 import { tone } from "../nightfall";
 import type { ReplayStep } from "../data";
 import { GRADE_WORD } from "@/lib/format";
@@ -14,7 +11,7 @@ const DRAIN = Date.parse("2026-04-01T16:05:00Z");
 const DAY = 86_400_000;
 
 export function initPage(rt: Runtime): () => void {
-  const { reduced, finePointer, morph } = rt;
+  const { reduced, finePointer } = rt;
   // Only the landing page performs; every other page shows its data without intros, reveals or tilt.
   const calm = reduced || location.pathname !== "/";
   const cleanups: (() => void)[] = [];
@@ -28,30 +25,9 @@ export function initPage(rt: Runtime): () => void {
     cleanups.push(() => el.removeEventListener("click", fn));
   };
 
-  let driftActive = false;
-  let applyDriftStage: () => void = () => {};
+  let driftActive = false; // arrow keys step the Drift replay only while it is on screen
 
   const ctx = gsap.context(() => {
-    // ------------------------------------------------------------ stage per section
-    const sections: { el: HTMLElement; cfg: StageCfg | "drift" }[] = $$("[data-stage]").map((el) => {
-      const shape = el.dataset.stage ?? "scatter";
-      if (shape === "drift") return { el, cfg: "drift" as const };
-      let opts: MorphOptions = {};
-      try {
-        opts = JSON.parse(el.dataset.stageOpts ?? "{}") as MorphOptions;
-      } catch {
-        /* keep defaults */
-      }
-      return { el, cfg: { shape: shape as ShapeName, opts } };
-    });
-    const apply = (cfg: StageCfg | "drift", pulse = false) => {
-      if (cfg === "drift") return applyDriftStage();
-      rt.lastStage = cfg;
-      if (!rt.isReady() || rt.menuOpen()) return;
-      morph(cfg.shape, cfg.opts);
-      if (pulse) rt.stage?.pulseScan();
-    };
-
     // ------------------------------------------------------------ horizontal pin (create before other triggers so offsets include it)
     gsap.matchMedia().add("(min-width: 900px) and (prefers-reduced-motion: no-preference)", () => {
       const track = $("#hlTrack");
@@ -73,24 +49,17 @@ export function initPage(rt: Runtime): () => void {
       });
     });
 
-    const triggers = sections.map(({ el, cfg }) =>
+    if ($("#replay"))
       ScrollTrigger.create({
-        trigger: el,
+        trigger: "#replay",
         start: "top 55%",
         end: "bottom 55%",
-        onToggle: (self) => {
-          if (cfg === "drift") driftActive = self.isActive;
-          if (self.isActive) apply(cfg, el.dataset.stagePulse === "1");
-        },
-      }),
-    );
+        onToggle: (self) => (driftActive = self.isActive),
+      });
 
     // ------------------------------------------------------------ intro once the boot sequence is done
     rt.whenReady(() => {
       ScrollTrigger.refresh();
-      const i = triggers.findIndex((t) => t.isActive);
-      const first = sections[i >= 0 ? i : 0];
-      if (first) apply(first.cfg, true);
       if (calm) return;
       gsap.from(".hero__line > span", { yPercent: 110, rotate: 4, duration: 1.4, ease: "expo.out", stagger: 0.09 });
       gsap.from(".hero__eyebrow, .hero__aside > *, .hero .hud, .hero__scroll", {
@@ -264,33 +233,6 @@ export function initPage(rt: Runtime): () => void {
       let timer: number | undefined;
       const firstAlert = steps.findIndex((s) => s.alerts.some((a) => a.severity !== "INFO"));
       const daysObj = { v: 0 };
-      applyDriftStage = () => {
-        const s = steps[driftI];
-        if (!s) return;
-        const base = {
-          colorB: "#1b2340",
-          x: 3,
-          y: 1.1,
-          scale: 0.72,
-          autoRotate: 0.1,
-          opacity: 0.95,
-          duration: 1.4,
-        } satisfies MorphOptions;
-        rt.lastStage = { shape: "knot", opts: { ...base, colorA: "#2BFFB0" } };
-        if (!rt.isReady() || rt.menuOpen()) return;
-        if (s.level === "dead")
-          morph("burst", {
-            ...base,
-            colorA: "#FF5A3D",
-            colorB: "#ff2a6d",
-            jitter: 0.08,
-            opacity: 0.9,
-            autoRotate: 0.3,
-          });
-        else if (s.level === "bad") morph("knot", { ...base, colorA: "#FF5A3D", jitter: 0.05, autoRotate: 0.25 });
-        else if (s.level === "warn") morph("knot", { ...base, colorA: "#FFB547", jitter: 0.02, autoRotate: 0.16 });
-        else morph("knot", { ...base, colorA: "#2BFFB0" });
-      };
       const render = (i: number) => {
         const s = steps[i];
         if (!s) return;
@@ -339,7 +281,6 @@ export function initPage(rt: Runtime): () => void {
           }</div>`;
         if (!reduced)
           gsap.from(detail.children, { y: 20, opacity: 0, duration: 0.7, ease: "power3.out", stagger: 0.06 });
-        if (driftActive) applyDriftStage();
       };
       $$<HTMLButtonElement>("[data-step]").forEach((b) => onClick(b, () => render(Number(b.dataset.step))));
       onClick($("#driftPrev"), () => render(Math.max(0, driftI - 1)));

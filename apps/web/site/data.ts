@@ -69,7 +69,7 @@ const AUTH: Record<string, string> = {
   UNKNOWN: "Unknown",
 };
 
-// Snapshot of the mainnet watch list from docs/submission/headline-stats.md (generated 2026-10-11).
+// Snapshot of the mainnet watch list from docs/headline-stats.md (generated 2026-10-11).
 // Used only when the database is unreachable, and always labelled as a snapshot in the UI.
 const FALLBACK: [
   slug: string,

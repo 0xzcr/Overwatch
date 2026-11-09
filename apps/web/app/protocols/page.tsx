@@ -1,6 +1,6 @@
 import { loadProtocols } from "@/site/data";
 import { Leaderboard } from "@/site/Leaderboard";
-import { PageHero, stage, JsonLd, breadcrumbs, pageMetadata, DATASET_COMMON } from "@/site/ui"; // SEO component
+import { PageHero, JsonLd, breadcrumbs, pageMetadata, DATASET_COMMON } from "@/site/ui"; // SEO component
 import { SITE_URL } from "@/site/content"; // SEO component
 
 // Cached and rebuilt in the background at most every 30 s: the data only changes when the indexer writes,
@@ -71,33 +71,8 @@ export default async function Protocols() {
             all. [Click on each protocol to know more]
           </>
         }
-        stageAttrs={stage("globe", {
-          colorA: "#2BFFB0",
-          colorB: "#1d6bff",
-          opacity: 1,
-          x: 2.9,
-          y: 0.6,
-          yNarrow: 1.4,
-          scale: 0.85,
-          arcs: true,
-          autoRotate: 0.07,
-          tiltX: 0.3,
-        })}
       />
-      <section
-        className="page-block"
-        data-dock="Leaderboard"
-        {...stage("globe", {
-          colorA: "#2BFFB0",
-          colorB: "#1d6bff",
-          opacity: 0.3,
-          x: 0,
-          scale: 1.4,
-          arcs: true,
-          autoRotate: 0.04,
-          tiltX: 0.3,
-        })}
-      >
+      <section className="page-block" data-dock="Leaderboard">
         <Leaderboard rows={cards} />
         <p className="page-note">
           {live

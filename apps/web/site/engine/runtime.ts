@@ -1,29 +1,19 @@
 // Persistent part of the experience: lives across client-side navigations.
-// ASCII stage, smooth scroll, boot sequence, cursor, nav, menu, dock shell, HUD slot counter.
+// Smooth scroll, boot sequence, cursor, nav, menu, dock shell, HUD slot counter.
 
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
-import { Stage, type MorphOptions } from "./stage";
-import type { ShapeName } from "./stage";
-
-export interface StageCfg {
-  shape: ShapeName;
-  opts: MorphOptions;
-}
 
 export interface Runtime {
   lenis: Lenis;
-  stage: Stage | null;
   reduced: boolean;
   finePointer: boolean;
-  morph: (shape: ShapeName, o: MorphOptions) => void;
   scrollTo: (target: string | HTMLElement | number, immediate?: boolean) => void;
   whenReady: (fn: () => void) => void;
   isReady: () => boolean;
   menuOpen: () => boolean;
   closeMenu: () => void;
-  lastStage: StageCfg | null;
   toast: (msg: string) => void;
   scramble: (el: HTMLElement) => void;
 }
@@ -57,20 +47,6 @@ function createRuntime(): Runtime {
   gsap.ticker.lagSmoothing(0);
   const scrollTo = (target: string | HTMLElement | number, immediate = false) =>
     lenis.scrollTo(target, { offset: typeof target === "number" ? 0 : -70, immediate, duration: 1.6 });
-
-  // ---------------------------------------------------------------- stage
-  let stage: Stage | null = null;
-  const canvas = $<HTMLCanvasElement>("#stage");
-  try {
-    if (canvas) {
-      stage = new Stage(canvas, { reducedMotion: reduced });
-      stage.start();
-    }
-  } catch {
-    document.body.classList.add("no-webgl");
-  }
-  lenis.on("scroll", (l: Lenis) => stage?.setScrollVelocity(l.velocity));
-  const morph = (shape: ShapeName, o: MorphOptions) => stage?.morph(shape, o);
 
   // ---------------------------------------------------------------- ready queue (after the boot sequence)
   let ready = false;
@@ -263,27 +239,10 @@ function createRuntime(): Runtime {
     menu.setAttribute("aria-hidden", "true");
     menuBtn?.setAttribute("aria-expanded", "false");
     lenis.start();
-    if (rt.lastStage) morph(rt.lastStage.shape, rt.lastStage.opts);
   }
   menuBtn?.addEventListener("click", () => (menuIsOpen ? closeMenu() : openMenu()));
   $("#menuClose")?.addEventListener("click", closeMenu);
-  $$<HTMLAnchorElement>(".menu__list a").forEach((a) => {
-    a.addEventListener("pointerenter", () => {
-      const shape = a.dataset.shape as ShapeName | undefined;
-      if (shape)
-        morph(shape, {
-          colorA: a.dataset.color ?? "#2BFFB0",
-          colorB: "#7CF3FF",
-          x: 2.9,
-          scale: 1.05,
-          opacity: 1,
-          duration: 1.2,
-          autoRotate: 0.15,
-          arcs: shape === "globe",
-        });
-    });
-    a.addEventListener("click", () => closeMenu());
-  });
+  $$<HTMLAnchorElement>(".menu__list a").forEach((a) => a.addEventListener("click", () => closeMenu()));
   window.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeMenu();
   });
@@ -315,16 +274,13 @@ function createRuntime(): Runtime {
 
   const rt: Runtime = {
     lenis,
-    stage,
     reduced,
     finePointer,
-    morph,
     scrollTo,
     whenReady,
     isReady: () => ready,
     menuOpen: () => menuIsOpen,
     closeMenu,
-    lastStage: null,
     toast,
     scramble,
   };
