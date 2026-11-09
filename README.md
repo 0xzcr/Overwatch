@@ -7,7 +7,7 @@ signers a change needs, how long an approved change waits before it takes effect
 accounts (pre-signed transactions that never expire), risky Token-2022 collateral and dead oracles. When those controls
 get weaker, it tells you, in plain English, with the account address and slot so you can check it yourself.
 
-Live site: **https://overwatch-chi.vercel.app**
+Live site: **https://overwatch1.xyz**
 
 > Overwatch reads **authority, not code**. It does not audit programs or track prices, TVL, solvency, bad debt or
 > exploits in progress. It warns **after** a change lands onchain and cannot undo it. Protocols off the watch list are
@@ -20,7 +20,7 @@ pre-signed durable-nonce transactions from two of five Security Council signers,
 Every step sat on Solana, in public, for days. Nobody was reading it on the depositor's behalf. On Solana, "who controls
 this protocol" is literally bytes at a known offset in an account, so anyone can read it. Overwatch does, continuously.
 
-The site's [case study](https://overwatch-chi.vercel.app/case-study) replays that timeline through Overwatch's current
+The site's [case study](https://overwatch1.xyz/case-study) replays that timeline through Overwatch's current
 rules. It is a **backtest** on a timeline reconstructed from public incident reports, not a live catch.
 
 ## What it does
@@ -106,7 +106,7 @@ up to −20), and control Overwatch cannot attribute (−15, because unknown is 
 D ≥ 40, F below. A protocol is **red** if one key can upgrade it, a multisig has no timelock and needs two or fewer
 signatures, a signer holds a durable nonce account, or it had a CRITICAL weakening in the last 30 days.
 
-The published [documentation](https://overwatch-chi.vercel.app/docs#scoring) is the source of truth for these rules. A
+The published [documentation](https://overwatch1.xyz/docs#scoring) is the source of truth for these rules. A
 protocol can never pay for a score.
 
 ## License
