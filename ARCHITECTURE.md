@@ -462,9 +462,11 @@ connection).
 | `scores` | score computation that changed something | `protocol_id`, `score`, `grade`, `flags` (bigint), `breakdown` (deductions JSON), `computed_at` |
 | `signers` | (signer, multisig) pair | first/last seen; feeds nonce watching |
 | `nonce_accounts` | nonce account ever seen | `address`, `authority`, `first_seen_slot`, `closed_at` |
-| `subscriptions` | alert subscriber | `channel` (`telegram`, `webhook`, `email`), `target` (chat id, URL, address), `protocol_ids` (null or empty = all), `min_severity`, `secret` (webhooks), `active` |
+| `subscriptions` | alert subscriber | `channel` (`telegram`, `webhook`, `email`), `target` (chat id, URL, address), `protocol_ids` (null or empty = all), `min_severity`, `secret` (webhooks), `active`, `confirmed` + `confirm_token` (email double opt-in: no alerts until the link is clicked) |
 | `deliveries` | (subscription, event) to deliver | `status` (`pending`, `delivered`, `failed`), `attempts`, `last_error`, `next_attempt_at`, `delivered_at` |
 | `api_keys` | API key | `key_hash` (SHA-256; the key itself is never stored), `owner`, `tier`, `rate_limit` |
+| `rate_limits` | rate-limit window | `bucket` (e.g. `ip:…`, `key:…`, `signup:webhook:…`), `n`, `reset_at`; shared by every server instance |
+| `signature_cursors` | (network, address) the indexer polls | `signature` (newest handled; null while the address has no visible history), `slot`, `updated_at`; lets the indexer replay what it missed after downtime |
 | `onchain_publishes` | registry write or vault shield | `protocol_id`, `tx_signature`, `score`, `flags`, `slot`, `status`, `kind` (`registry`, `shield`) |
 
 ### 8.2 Connections (`packages/db/src/client.ts`)
@@ -578,7 +580,9 @@ the publisher to publish the score (immediately when there is a CRITICAL event o
 
 ### 10.4 Catching pre-signed transactions (`inspectSignerTx`)
 
-When a watched signer appears in a transaction's logs, the indexer fetches the transaction and checks two things:
+When the transaction sweep (or, with websockets on, a log notification) finds a new transaction for a watched signer,
+the indexer fetches it and checks two things. If the transaction cannot be fetched yet, the call fails and the cursor
+stays put, so the next sweep tries again instead of skipping it:
 
 - If any System-program instruction touches a nonce account (`AdvanceNonceAccount` = 4, `InitializeNonceAccount` = 6,
   `AuthorizeNonceAccount` = 7), it triggers a refresh with a nonce scan.
@@ -634,7 +638,8 @@ anyone. Backfilled events in the last 30 days do count towards `recent_weakening
 
 `inspect.ts` (control report for any program), `tvl.ts` (DefiLlama TVL), `headline-stats.ts` + `stats-lib.ts` (the
 numbers in `docs/headline-stats.md`), `indexnow.ts` (pings search engines with the sitemap after a deploy), `capture-fixtures.ts` and `dev/idl.ts` (refresh test fixtures),
-`dev/probe.ts` (check program IDs), `dev/pipeline-smoke.ts` (the pipeline test),
+`dev/probe.ts` (check program IDs), `api-key.ts` (create, list and revoke API keys; a key is shown once and stored
+only as a SHA-256 hash), `dev/pipeline-smoke.ts` (the pipeline test),
 `lib.ts` (watch-list loading and table printing).
 
 ## 12. Alerts: the bot and the delivery worker
@@ -645,7 +650,10 @@ numbers in `docs/headline-stats.md`), `indexnow.ts` (pings search engines with t
 
 Started only when `TELEGRAM_BOT_TOKEN` is set. On start it registers its command menu and descriptions with Telegram.
 Every chat is a `subscriptions` row (`channel: "telegram"`, `target: chat id`, default `min_severity: HIGH`), created on
-first contact.
+first contact. If long polling fails for good (network loss, or a second process on the same token), the process
+exits so the host restarts it rather than running on without a bot. Links in messages use `BOT_SITE_URL` or
+`NEXT_PUBLIC_SITE_URL`, and fall back to the production site when that is a localhost address Telegram users could
+not open.
 
 | Command | Does |
 | --- | --- |
@@ -696,15 +704,20 @@ Route handlers under `apps/web/app/api/v1/`. Every JSON response is `{ "version"
 | GET | `/api/v1/stream` | Server-Sent Events (13.3). |
 | POST | `/api/v1/subscriptions/webhook` | `{url, min_severity?, protocols?}` → creates a webhook subscription and returns its `secret` once. |
 | POST | `/api/v1/subscriptions/test` | `{id, secret}` → sends a signed sample payload and reports the receiver's status. |
-| POST | `/api/v1/subscriptions/email` | `{email, min_severity?, protocols?}` (only when `RESEND_API_KEY` is set). |
+| POST | `/api/v1/subscriptions/email` | `{email, min_severity?, protocols?}` (only when `RESEND_API_KEY` is set). Sends a confirmation link; nothing is delivered until it is clicked. |
+| GET | `/api/v1/subscriptions/confirm?token=` | The link in that email: confirms the subscription, then redirects to the alerts page. |
+| GET / PATCH / DELETE | `/api/v1/subscriptions/{id}` | With the `x-subscription-secret` header: read, change (`min_severity`, `protocols`, `active`, webhook `url`) or delete a subscription. A wrong secret and an unknown id both answer 404, so ids cannot be probed. |
+| GET | `/api/feed` | Unversioned polling fallback for the live events page while the SSE stream reconnects. |
 
 ### 13.2 Cross-cutting behaviour (`apps/web/lib/api.ts`)
 
 - **Validation:** every input is parsed with `zod`; failures answer 400 with the issues. Unknown protocol slugs on
   subscriptions answer 400 (an empty list would otherwise mean "all protocols").
 - **Rate limiting (`guard`):** 30 requests a minute per IP anonymously; with an `x-api-key` header, the key's SHA-256 is
-  looked up in `api_keys` and its own `rate_limit` applies; an unknown key answers 401. Buckets are in memory per
-  serverless instance, so the limit is approximate across instances.
+  looked up in `api_keys` and its own `rate_limit` applies; an unknown or revoked key answers 401. Windows are counted
+  in the `rate_limits` table, so every serverless instance shares them; only when the database is unreachable does a
+  per-instance memory counter take over, so limits never fail open. `signupLimit` also caps new subscriptions at 5 per
+  IP per day per channel.
 - **Database down (`withDb`):** connection errors answer `503 {"error": "database unavailable"}` instead of a bare 500.
 
 ### 13.3 The live stream
@@ -725,7 +738,10 @@ technical text; all self-hosted via `@fontsource`), the two stylesheets, and ren
 
 - `Chrome` (`site/Chrome.tsx`): skip link, the boot overlay, vignette and grid
   layers, the custom cursor, the navbar (logo, `NavLinks`, the GMT `NavClock`, menu button, "Get alerts"), the
-  slide-in menu (from `content.ts` `pages`), the section dock, a toast area, and shared SVG symbols.
+  slide-in menu (from `content.ts` `pages`), the section dock, a toast area, shared SVG symbols, and `MaintenanceDrop`:
+  a dismissible banner shown only while `MAINTENANCE_NOTICE` in `content.ts` is non-empty (the same string also adds a
+  notice to the landing page and replaces the Telegram button on `/alerts`). It is empty while monitoring runs
+  normally.
 - `Experience` (`site/Experience.tsx`): a client component that lazy-loads the animation engine (section 15) and
   re-initialises page animations on every route change.
 - `Footer`.
@@ -745,6 +761,9 @@ technical text; all self-hosted via `@fontsource`), the two stylesheets, and ren
 | `/docs` | The documentation and the scoring methodology: the **source of truth** for rules, events and flags | `app/docs/page.tsx` |
 | `/docs/api` | API, SSE, webhooks, SDK and onchain integration | `app/docs/api/page.tsx` |
 | `/methodology` | Permanent redirect to `/docs#scoring` | |
+| `/llms.txt` | A plain-text briefing for AI assistants with every protocol's current grade (rebuilt at most every 5 minutes) | `app/llms.txt/route.ts` |
+| `/robots.txt`, `/sitemap.xml` | Crawler rules and the page list (section 14.5) | `app/robots.ts`, `app/sitemap.ts` |
+| `/manifest.webmanifest`, `/icon`, `/apple-icon`, `/opengraph-image`, `/twitter-image` | Install manifest, PNG icons drawn from the SVG favicon, and the social preview card | `app/manifest.ts`, `app/icon.tsx`, `app/apple-icon.tsx`, `app/opengraph-image.tsx`, `app/twitter-image.tsx` |
 
 ### 14.3 Data loading
 
@@ -764,6 +783,28 @@ docs, forms) and the hero. Colours are tokens (`--bg` pure black, `--ink`, `--ch
 accent, `--warn` amber, `--bad` red-orange, `--ok` bone white). Some markup carries the original accent hexes; CSS
 rules under `html[data-time="night"]` and `tone()` in `site/nightfall.ts` (for canvas drawing) map them to the red
 palette.
+
+### 14.5 Search and AI discovery
+
+The helpers live at the bottom of `site/ui.tsx`, and every line that exists for search engines or AI assistants carries
+an `SEO component` comment, so it is easy to find and keep together.
+
+- **Metadata:** each page exports `metadata = pageMetadata({ title, description, path })`, which sets the title
+  (`<title> · Overwatch`), description, canonical URL and matching Open Graph and Twitter cards with the generated
+  preview image. Protocol pages build theirs in `generateMetadata`.
+- **Structured data:** `<JsonLd>` writes schema.org JSON-LD. `app/layout.tsx` declares the `Organization` and
+  `WebSite` once; pages add their own node and point back at the organisation by `ORGANIZATION_ID`:
+  `WebApplication` (home), `Dataset` + `ItemList` (control map), `WebPage` + `SoftwareApplication` (each protocol),
+  `Dataset` (live events, with the JSON API as its download), `Article` (case study), `TechArticle` (docs and API
+  docs) and `FAQPage` (built from the visible Questions section of `/docs`, never from hidden text). Inner pages also
+  carry a `BreadcrumbList` from `breadcrumbs()`.
+- **Crawlers:** `robots.ts` names AI search, fetch and training crawlers explicitly, allows everything except `/api/`,
+  and opens the two public datasets (`/api/v1/protocols`, `/api/v1/events`). `sitemap.ts` sets `lastModified` from
+  real control changes, so crawlers come back when a grade could have moved.
+- **AI assistants:** `/llms.txt` summarises what Overwatch is and is not, links the key pages, the JSON datasets and
+  the source, and lists the live grade, authority, threshold and timelock of every protocol.
+- **IndexNow:** `public/<key>.txt` holds the key; `pnpm indexnow` submits every sitemap URL to IndexNow search engines
+  (Bing, Yandex and others) after a deploy.
 
 ## 15. The front-end engine
 
@@ -966,10 +1007,9 @@ variable as a build argument (`RAILWAY_DOCKERFILE_PATH=Dockerfile.worker`). Keyp
 - Lending and perps positions are not detected by `/wallet`; only liquid-staking tokens are.
 - The registry's stale-update check uses `>=` (an update at the same `last_event_slot` is accepted), while the project
   rules say history must strictly move forward (`>`). Decide and align code, tests and docs.
-- Webhook signatures carry no timestamp, so replays are possible; there is no endpoint to delete a webhook or rotate its
-  secret, and the test-fire payload has a different shape from real alerts.
+- Webhook signatures carry no timestamp, so replays are possible; a webhook can be deleted but its secret cannot be
+  rotated, and the test-fire payload has a different shape from real alerts.
 - The SDK's `verifyWebhook` compares signatures in non-constant time.
-- API rate-limit buckets live in memory per serverless instance.
 - The first request to a fresh Vercel instance is slow; the cause is not fully pinned down.
 - The indexer and bot must run as single instances; there is no leader election.
 - Without the devnet publisher keypair, onchain publishing is off.

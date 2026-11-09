@@ -27,11 +27,10 @@ Honest list of what's incomplete. Items here show as "coming soon" in the UI whe
 
 - **Registry stale-slot check** uses `>=` (an update at the same `last_event_slot` is accepted) while the project rules
   say history must strictly move forward (`>`). Decide, then align `programs/overwatch_registry`, its tests and the docs.
-- **Webhooks:** signatures have no timestamp (replay is possible); there is no endpoint to delete a webhook or rotate its
-  secret; the test-fire payload has a different shape from real alerts; the URL guard checks DNS at resolve time, so DNS
+- **Webhooks:** signatures have no timestamp (replay is possible); a webhook can be deleted
+  (`DELETE /api/v1/subscriptions/{id}`) but its secret cannot be rotated; the test-fire payload has a different shape from real alerts; the URL guard checks DNS at resolve time, so DNS
   rebinding is not fully covered.
 - **SDK `verifyWebhook`** compares signatures in non-constant time.
-- **API rate limits** are kept in memory per serverless instance.
 
 ## Configuration
 

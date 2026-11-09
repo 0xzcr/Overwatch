@@ -126,7 +126,8 @@ matter which directory they run from. A variable already set in your shell is ne
 | `RESEND_API_KEY` | empty | Enables email alerts and the email sign-up form. |
 | `RESEND_FROM` | `Overwatch <alerts@resend.dev>` | Sender address for email alerts. |
 | `WEBHOOK_ALLOW_PRIVATE_URLS` | empty | **Local development only.** `true` lets webhooks use `http://` and private hosts like `127.0.0.1`. Production must never set it: it is what stops webhook URLs from reaching internal networks. |
-| `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000` | Base URL used in alert links. |
+| `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000` | The site's public URL: canonical links, social cards, the sitemap, and links in alerts. |
+| `BOT_SITE_URL` | empty | Overrides the site URL in Telegram, webhook and email links only. A localhost value falls back to the production site, since Telegram users cannot open it. |
 
 ### Indexer
 
@@ -172,6 +173,7 @@ Useful one-off scripts (all in `scripts/`, all read-only against mainnet unless 
 | `pnpm fixtures:capture` | Re-captures real account bytes into `fixtures/` for the decoder tests. |
 | `pnpm fixtures:idl` | Re-fetches protocol Anchor IDLs into `fixtures/idl/` for the adapter tests. |
 | `pnpm probe <id…>` | Low-level check that program IDs exist and are upgradeable. |
+| `pnpm api-key create "<owner>" [--limit 300] [--tier partner]` | Issues an API key with a higher per-minute limit (shown once, stored hashed). `pnpm api-key list` and `pnpm api-key revoke <id>` manage them. Writes to the database. |
 
 ## 6. The database
 
