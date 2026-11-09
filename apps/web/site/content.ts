@@ -1,7 +1,7 @@
 // Site copy. Everything describes what Overwatch does; nothing here is presented as live data.
 
 /** Public origin for canonical URLs, social cards and structured data. */
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://overwatch-chi.vercel.app").replace(/\/$/, "");
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://overwatch1.xyz").replace(/\/$/, "");
 
 /**
  * Shown on the landing page, under the navbar and on /alerts while monitoring is down, and switches off the bot link.
