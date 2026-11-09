@@ -1,8 +1,47 @@
 import Link from "next/link";
 import { FLAG, RED_MASK, ORACLE_PROGRAMS } from "@overwatch/core";
 import { PageHero, Term, stage } from "@/site/ui";
+import { JsonLd, breadcrumbs, pageMetadata, ORGANIZATION_ID } from "@/site/seo";
+import { SITE_URL } from "@/site/content";
 
-export const metadata = { title: "Documentation", alternates: { canonical: "/docs" } };
+const DESCRIPTION =
+  "How Overwatch reads Solana protocol controls, scores them from 0 to 100, decides what is red, and how depositors, builders and onchain programs can use it.";
+export const metadata = pageMetadata({ title: "Documentation", description: DESCRIPTION, path: "/docs" });
+
+/**
+ * Short, self-contained answers to the questions people (and AI assistants) ask most. Each answer must make sense
+ * when quoted on its own. The same list renders the FAQ section and its FAQPage structured data, so they always match.
+ */
+const FAQ: [question: string, answer: string][] = [
+  [
+    "What does Overwatch watch?",
+    "Overwatch watches who can change a Solana DeFi protocol: the program upgrade authority, the Squads multisig behind it, its threshold, timelock and signers, durable nonce accounts those signers control, Token-2022 extensions and oracle dependencies. It does not watch prices, TVL, solvency or exploits in progress.",
+  ],
+  [
+    "How quickly does Overwatch notice a control change?",
+    "Overwatch reads every watched account about every 15 seconds and checks each signer's new transactions about every minute, so most control changes appear within a minute of confirming onchain. If the indexer is ever down, it replays the transactions it missed when it restarts.",
+  ],
+  [
+    "How is a protocol's grade calculated?",
+    "Every grade starts at 100 and subtracts fixed deductions for weak controls, clamped to 0 to 100. Threshold and timelock deductions use the weakest relevant multisig. Each deduction is listed on the protocol page with the account it came from. TVL is shown for context but never affects a grade.",
+  ],
+  [
+    "What makes a protocol red?",
+    "A protocol is red when its upgrade authority is a single key, a signer controls a durable nonce account, it has no timelock with a multisig threshold of two or fewer, or it had a recent CRITICAL weakening event. Red is the signal a vault can act on.",
+  ],
+  [
+    "Can Overwatch stop an attack?",
+    "No. Overwatch warns after a control change lands onchain; it cannot stop or undo it. Its value is the time between a weakening, such as a removed timelock or a pre-signed transaction, and the moment funds move. In the April 2026 Drift loss, those signs were onchain for days.",
+  ],
+  [
+    "How do I get Overwatch alerts?",
+    "Open the alerts page and choose a Telegram bot or signed webhooks, then pick the protocols and minimum severity you care about. Builders can also read grades and events from the JSON API.",
+  ],
+  [
+    "Can I verify Overwatch's data?",
+    "Yes. Every event and score records the account address and the slot it was read at, so anyone can check it against the chain, and the rules that turn accounts into grades are open source under the Apache 2.0 licence.",
+  ],
+];
 
 // The scoring, event and flag tables below are the published methodology: the source of truth that
 // packages/core/src/scoring.ts and rules.ts must match.
@@ -22,6 +61,7 @@ const TOC: [id: string, label: string][] = [
   ["limits", "Limitations"],
   ["fit", "Where it fits"],
   ["status", "Status of this deployment"],
+  ["faq", "Questions"],
 ];
 
 const PIPELINE: [step: string, text: string][] = [
@@ -92,6 +132,27 @@ const sevClass = (s: string) =>
 export default function Docs() {
   return (
     <>
+      <JsonLd
+        data={[
+          breadcrumbs([["Documentation", "/docs"]]),
+          {
+            "@type": "TechArticle",
+            headline: "How Overwatch works: reading, scoring and alerting on Solana protocol controls",
+            description: DESCRIPTION,
+            url: `${SITE_URL}/docs`,
+            author: { "@id": ORGANIZATION_ID },
+            publisher: { "@id": ORGANIZATION_ID },
+          },
+          {
+            "@type": "FAQPage",
+            mainEntity: FAQ.map(([question, answer]) => ({
+              "@type": "Question",
+              name: question,
+              acceptedAnswer: { "@type": "Answer", text: answer },
+            })),
+          },
+        ]}
+      />
       <PageHero
         dock="Docs"
         lines={["Documentation"]}
@@ -151,9 +212,10 @@ export default function Docs() {
             ))}
           </ol>
           <p>
-            Watched accounts are subscribed over websocket, so most changes appear seconds after they confirm.
-            Signers&apos; durable nonce accounts are found by an hourly scan, and a full reconcile runs every five
-            minutes.
+            Watched accounts are read about every 15 seconds and each signer&apos;s new transactions about every minute,
+            so most changes appear within a minute of confirming. Signers&apos; durable nonce accounts are found by an
+            hourly scan, a full reconcile runs every five minutes, and after any downtime the indexer replays the
+            transactions it missed.
           </p>
 
           <h2 id="scoring">Scoring and grades</h2>
@@ -382,6 +444,14 @@ export default function Docs() {
             unreachable, pages show the mainnet snapshot from October 11, 2026 and say so. The onchain registry and
             vault programs run on devnet.
           </p>
+
+          <h2 id="faq">Questions</h2>
+          {FAQ.map(([question, answer]) => (
+            <div key={question}>
+              <h3>{question}</h3>
+              <p>{answer}</p>
+            </div>
+          ))}
         </div>
       </section>
     </>

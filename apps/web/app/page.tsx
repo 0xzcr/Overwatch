@@ -3,6 +3,8 @@ import { layers, steps, MAINTENANCE_NOTICE } from "@/site/content";
 import { visual } from "@/site/visuals";
 import { AsciiEye } from "@/site/AsciiEye";
 import { Vis, cssVars, stage } from "@/site/ui";
+import { JsonLd, ORGANIZATION_ID } from "@/site/seo";
+import { SITE_URL } from "@/site/content";
 
 /** One span per character, so scrolling can select the title a letter at a time (see `.ch` in engine/page.ts). */
 const chars = (text: string) =>
@@ -15,6 +17,19 @@ const chars = (text: string) =>
 export default function Home() {
   return (
     <>
+      <JsonLd
+        data={{
+          "@type": "WebApplication",
+          name: "Overwatch",
+          url: SITE_URL,
+          applicationCategory: "SecurityApplication",
+          operatingSystem: "Web",
+          description:
+            "Early warning for Solana DeFi depositors: Overwatch reads who can change each protocol (upgrade keys, multisig thresholds, timelocks, signers, durable nonces), grades it, and alerts when those controls weaken.",
+          offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+          publisher: { "@id": ORGANIZATION_ID },
+        }}
+      />
       {/* HERO: the particle stage stays hidden here; the eye is the text canvas */}
       <section
         className="hero hero--solo wd"

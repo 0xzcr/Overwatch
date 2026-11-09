@@ -1,4 +1,6 @@
 import { Fragment } from "react";
+import { JsonLd, breadcrumbs, pageMetadata } from "@/site/seo";
+import { SITE_URL } from "@/site/content";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AUTHORITY_LABEL, fmtDuration, findVaultIndex, isOnCurve, mintRisks } from "@overwatch/core";
@@ -22,11 +24,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const slug = (await params).slug;
   const d = await loadProtocol(slug);
   if (!d) return { title: "Not found" };
-  return {
+  return pageMetadata({
     title: `${d.card.name} controls`,
     description: `Who can change ${d.card.name} on Solana: grade ${d.card.grade}, upgrade authority, multisig threshold, timelock and every control change, read from the chain.`,
-    alternates: { canonical: `/protocols/${slug}` },
-  };
+    path: `/protocols/${slug}`,
+  });
 }
 
 const PERMS = (m: number) => [m & 1 && "initiate", m & 2 && "vote", m & 4 && "execute"].filter(Boolean).join(" · ");
@@ -86,6 +88,27 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
 
   return (
     <>
+      <JsonLd
+        data={[
+          breadcrumbs([
+            ["Control map", "/protocols"],
+            [p.name, `/protocols/${slug}`],
+          ]),
+          {
+            "@type": "WebPage",
+            name: `${p.name} controls`,
+            url: `${SITE_URL}/protocols/${slug}`,
+            description: `Control grade ${p.grade}${p.score != null ? ` (${p.score}/100)` : ""} for ${p.name} on Solana: upgrade authority ${p.authority}, multisig threshold ${p.threshold}, timelock ${p.timelock}.`,
+            ...(p.lastChange && { dateModified: p.lastChange }),
+            about: {
+              "@type": "SoftwareApplication",
+              name: p.name,
+              applicationCategory: "FinanceApplication",
+              ...(p.website && { url: p.website }),
+            },
+          },
+        ]}
+      />
       <PageHero
         dock={p.name}
         eyebrow={

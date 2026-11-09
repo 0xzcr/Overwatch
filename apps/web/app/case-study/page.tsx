@@ -1,14 +1,15 @@
 import { manifesto } from "@/site/content";
 import { driftReplay, driftSources, loadProtocols, warningDays } from "@/site/data";
 import { PageHero, Term, cssVars, stage } from "@/site/ui";
+import { JsonLd, breadcrumbs, pageMetadata, ORGANIZATION_ID } from "@/site/seo";
+import { SITE_URL } from "@/site/content";
 
 // Cached and rebuilt in the background at most every 30 s: the data only changes when the indexer writes,
 // so visitors get a ready page instead of waiting on the database.
 export const revalidate = 30;
-export const metadata = {
-  title: "Case study",
-  alternates: { canonical: "/case-study" },
-};
+const DESCRIPTION =
+  "How the April 2026 Drift loss of about $285M played out onchain, and the days of warning signs in public accounts before any funds moved.";
+export const metadata = pageMetadata({ title: "Case study: Drift", description: DESCRIPTION, path: "/case-study" });
 
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
@@ -21,6 +22,20 @@ export default async function CaseStudy() {
 
   return (
     <>
+      <JsonLd
+        data={[
+          breadcrumbs([["Case study", "/case-study"]]),
+          {
+            "@type": "Article",
+            headline: "Drift lost $285M: the warning signs were onchain for days",
+            description: DESCRIPTION,
+            url: `${SITE_URL}/case-study`,
+            author: { "@id": ORGANIZATION_ID },
+            publisher: { "@id": ORGANIZATION_ID },
+            about: ["Drift Protocol", "Solana", "durable nonce", "multisig"],
+          },
+        ]}
+      />
       <PageHero
         dock="Case study"
         lines={["Drift lost $285M.", `${days} days of warning.`]}

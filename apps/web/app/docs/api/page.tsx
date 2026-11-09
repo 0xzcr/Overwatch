@@ -1,9 +1,10 @@
 import { PageHero, SectionHead, stage } from "@/site/ui";
+import { JsonLd, breadcrumbs, pageMetadata, ORGANIZATION_ID } from "@/site/seo";
+import { SITE_URL } from "@/site/content";
 
-export const metadata = {
-  title: "API reference",
-  alternates: { canonical: "/docs/api" },
-};
+const DESCRIPTION =
+  "The Overwatch public API: protocol control grades, control-change events, score history, a live event stream and webhook alerts, as JSON over HTTPS.";
+export const metadata = pageMetadata({ title: "API reference", description: DESCRIPTION, path: "/docs/api" });
 
 const EP: [string, string, string][] = [
   ["GET", "/api/v1/protocols", "All watched protocols with grade, score, flags and key facts."],
@@ -38,6 +39,22 @@ function Code({ title, children }: { title: string; children: string }) {
 export default function ApiDocs() {
   return (
     <>
+      <JsonLd
+        data={[
+          breadcrumbs([
+            ["Documentation", "/docs"],
+            ["API reference", "/docs/api"],
+          ]),
+          {
+            "@type": "TechArticle",
+            headline: "Overwatch API reference",
+            description: DESCRIPTION,
+            url: `${SITE_URL}/docs/api`,
+            author: { "@id": ORGANIZATION_ID },
+            publisher: { "@id": ORGANIZATION_ID },
+          },
+        ]}
+      />
       <PageHero
         dock="API"
         lines={["API"]}

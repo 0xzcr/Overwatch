@@ -78,7 +78,7 @@ export const steps = [
     num: "02",
     name: "Watch",
     title: "Changes as they happen",
-    text: "We subscribe to those accounts and signers. A removed timelock or lowered threshold shows up seconds after it confirms. Signers' durable nonce accounts are scanned hourly. We warn after a change lands; we cannot undo it.",
+    text: "We read those accounts every 15 seconds and the signers' transactions every minute. A removed timelock or lowered threshold shows up within a minute of confirming. Signers' durable nonce accounts are scanned hourly. We warn after a change lands; we cannot undo it.",
   },
   {
     num: "03",
