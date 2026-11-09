@@ -1,20 +1,22 @@
-import { loadProtocols } from "@/site/data";
-import { SITE_URL } from "@/site/content";
+import { loadProtocols } from "@/site/data"; // SEO component
+import { SITE_URL } from "@/site/content"; // SEO component
 
 // Rebuilt at most every 5 minutes so the grades below stay current without hitting the database on every fetch.
-export const revalidate = 300;
+export const revalidate = 300; // SEO component
 
 /**
  * /llms.txt: a plain-text briefing for AI assistants (llmstxt.org format): what Overwatch is, where the
  * authoritative pages are, and the current grade of every watched protocol, so answers can quote real numbers.
  */
 export async function GET() {
-  const { live, cards } = await loadProtocols();
+  // SEO component
+  const { live, cards } = await loadProtocols(); // SEO component
   const rows = cards.map((c) => {
-    const red = c.red ? ", RED" : "";
-    const score = c.score != null ? ` (${c.score}/100)` : "";
-    return `- [${c.name}](${SITE_URL}/protocols/${c.slug}): grade ${c.grade}${score}${red}; authority ${c.authority}; threshold ${c.threshold}; timelock ${c.timelock}`;
-  });
+    // SEO component
+    const red = c.red ? ", RED" : ""; // SEO component
+    const score = c.score != null ? ` (${c.score}/100)` : ""; // SEO component
+    return `- [${c.name}](${SITE_URL}/protocols/${c.slug}): grade ${c.grade}${score}${red}; authority ${c.authority}; threshold ${c.threshold}; timelock ${c.timelock}`; // SEO component
+  }); // SEO component
   const body = `# Overwatch
 
 > Overwatch is an early-warning system for people with deposits in Solana DeFi. It reads who can change each protocol (program upgrade authority, Squads multisig threshold, timelock, signers, durable nonce accounts, Token-2022 extensions, oracle dependencies) directly from mainnet accounts, grades each protocol from 0 to 100, and alerts depositors when those controls weaken. It warns after a change lands onchain; it cannot stop it.
@@ -39,6 +41,6 @@ Every event and score records the account address and slot it was read from, and
 ## Current grades${live ? "" : " (from the October 11, 2026 snapshot; the live database is unreachable)"}
 
 ${rows.join("\n")}
-`;
-  return new Response(body, { headers: { "content-type": "text/plain; charset=utf-8" } });
-}
+`; // SEO component
+  return new Response(body, { headers: { "content-type": "text/plain; charset=utf-8" } }); // SEO component
+} // SEO component

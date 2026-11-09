@@ -2,9 +2,8 @@ import Link from "next/link";
 import { layers, steps, MAINTENANCE_NOTICE } from "@/site/content";
 import { visual } from "@/site/visuals";
 import { AsciiEye } from "@/site/AsciiEye";
-import { Vis, cssVars, stage } from "@/site/ui";
-import { JsonLd, ORGANIZATION_ID } from "@/site/seo";
-import { SITE_URL } from "@/site/content";
+import { Vis, cssVars, stage, JsonLd, ORGANIZATION_ID } from "@/site/ui"; // SEO component
+import { SITE_URL } from "@/site/content"; // SEO component
 
 /** One span per character, so scrolling can select the title a letter at a time (see `.ch` in engine/page.ts). */
 const chars = (text: string) =>
@@ -17,19 +16,22 @@ const chars = (text: string) =>
 export default function Home() {
   return (
     <>
-      <JsonLd
+      <JsonLd // SEO component
         data={{
-          "@type": "WebApplication",
-          name: "Overwatch",
-          url: SITE_URL,
-          applicationCategory: "SecurityApplication",
-          operatingSystem: "Web",
+          // SEO component
+          "@type": "WebApplication", // SEO component
+          name: "Overwatch", // SEO component
+          url: SITE_URL, // SEO component
+          applicationCategory: "SecurityApplication", // SEO component
+          operatingSystem: "Web", // SEO component
+          // SEO component
           description:
-            "Early warning for Solana DeFi depositors: Overwatch reads who can change each protocol (upgrade keys, multisig thresholds, timelocks, signers, durable nonces), grades it, and alerts when those controls weaken.",
-          offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-          publisher: { "@id": ORGANIZATION_ID },
-        }}
+            "Early warning for Solana DeFi depositors: Overwatch reads who can change each protocol (upgrade keys, multisig thresholds, timelocks, signers, durable nonces), grades it, and alerts when those controls weaken.", // SEO component
+          offers: { "@type": "Offer", price: "0", priceCurrency: "USD" }, // SEO component
+          publisher: { "@id": ORGANIZATION_ID }, // SEO component
+        }} // SEO component
       />
+      {/* SEO component */}
       {/* HERO: the particle stage stays hidden here; the eye is the text canvas */}
       <section
         className="hero hero--solo wd"

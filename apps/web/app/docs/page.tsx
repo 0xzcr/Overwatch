@@ -1,47 +1,54 @@
 import Link from "next/link";
 import { FLAG, RED_MASK, ORACLE_PROGRAMS } from "@overwatch/core";
-import { PageHero, Term, stage } from "@/site/ui";
-import { JsonLd, breadcrumbs, pageMetadata, ORGANIZATION_ID } from "@/site/seo";
-import { SITE_URL } from "@/site/content";
+import { PageHero, Term, stage, JsonLd, breadcrumbs, pageMetadata, ORGANIZATION_ID } from "@/site/ui"; // SEO component
+import { SITE_URL } from "@/site/content"; // SEO component
 
-const DESCRIPTION =
-  "How Overwatch reads Solana protocol controls, scores them from 0 to 100, decides what is red, and how depositors, builders and onchain programs can use it.";
-export const metadata = pageMetadata({ title: "Documentation", description: DESCRIPTION, path: "/docs" });
+const DESCRIPTION = // SEO component
+  "How Overwatch reads Solana protocol controls, scores them from 0 to 100, decides what is red, and how depositors, builders and onchain programs can use it."; // SEO component
+export const metadata = pageMetadata({ title: "Documentation", description: DESCRIPTION, path: "/docs" }); // SEO component
 
 /**
  * Short, self-contained answers to the questions people (and AI assistants) ask most. Each answer must make sense
  * when quoted on its own. The same list renders the FAQ section and its FAQPage structured data, so they always match.
  */
 const FAQ: [question: string, answer: string][] = [
+  // SEO component
   [
-    "What does Overwatch watch?",
-    "Overwatch watches who can change a Solana DeFi protocol: the program upgrade authority, the Squads multisig behind it, its threshold, timelock and signers, durable nonce accounts those signers control, Token-2022 extensions and oracle dependencies. It does not watch prices, TVL, solvency or exploits in progress.",
-  ],
+    // SEO component
+    "What does Overwatch watch?", // SEO component
+    "Overwatch watches who can change a Solana DeFi protocol: the program upgrade authority, the Squads multisig behind it, its threshold, timelock and signers, durable nonce accounts those signers control, Token-2022 extensions and oracle dependencies. It does not watch prices, TVL, solvency or exploits in progress.", // SEO component
+  ], // SEO component
   [
-    "How quickly does Overwatch notice a control change?",
-    "Overwatch reads every watched account about every 15 seconds and checks each signer's new transactions about every minute, so most control changes appear within a minute of confirming onchain. If the indexer is ever down, it replays the transactions it missed when it restarts.",
-  ],
+    // SEO component
+    "How quickly does Overwatch notice a control change?", // SEO component
+    "Overwatch reads every watched account about every 15 seconds and checks each signer's new transactions about every minute, so most control changes appear within a minute of confirming onchain. If the indexer is ever down, it replays the transactions it missed when it restarts.", // SEO component
+  ], // SEO component
   [
-    "How is a protocol's grade calculated?",
-    "Every grade starts at 100 and subtracts fixed deductions for weak controls, clamped to 0 to 100. Threshold and timelock deductions use the weakest relevant multisig. Each deduction is listed on the protocol page with the account it came from. TVL is shown for context but never affects a grade.",
-  ],
+    // SEO component
+    "How is a protocol's grade calculated?", // SEO component
+    "Every grade starts at 100 and subtracts fixed deductions for weak controls, clamped to 0 to 100. Threshold and timelock deductions use the weakest relevant multisig. Each deduction is listed on the protocol page with the account it came from. TVL is shown for context but never affects a grade.", // SEO component
+  ], // SEO component
   [
-    "What makes a protocol red?",
-    "A protocol is red when its upgrade authority is a single key, a signer controls a durable nonce account, it has no timelock with a multisig threshold of two or fewer, or it had a recent CRITICAL weakening event. Red is the signal a vault can act on.",
-  ],
+    // SEO component
+    "What makes a protocol red?", // SEO component
+    "A protocol is red when its upgrade authority is a single key, a signer controls a durable nonce account, it has no timelock with a multisig threshold of two or fewer, or it had a recent CRITICAL weakening event. Red is the signal a vault can act on.", // SEO component
+  ], // SEO component
   [
-    "Can Overwatch stop an attack?",
-    "No. Overwatch warns after a control change lands onchain; it cannot stop or undo it. Its value is the time between a weakening, such as a removed timelock or a pre-signed transaction, and the moment funds move. In the April 2026 Drift loss, those signs were onchain for days.",
-  ],
+    // SEO component
+    "Can Overwatch stop an attack?", // SEO component
+    "No. Overwatch warns after a control change lands onchain; it cannot stop or undo it. Its value is the time between a weakening, such as a removed timelock or a pre-signed transaction, and the moment funds move. In the April 2026 Drift loss, those signs were onchain for days.", // SEO component
+  ], // SEO component
   [
-    "How do I get Overwatch alerts?",
-    "Open the alerts page and choose a Telegram bot or signed webhooks, then pick the protocols and minimum severity you care about. Builders can also read grades and events from the JSON API.",
-  ],
+    // SEO component
+    "How do I get Overwatch alerts?", // SEO component
+    "Open the alerts page and choose a Telegram bot or signed webhooks, then pick the protocols and minimum severity you care about. Builders can also read grades and events from the JSON API.", // SEO component
+  ], // SEO component
   [
-    "Can I verify Overwatch's data?",
-    "Yes. Every event and score records the account address and the slot it was read at, so anyone can check it against the chain, and the rules that turn accounts into grades are open source under the Apache 2.0 licence.",
-  ],
-];
+    // SEO component
+    "Can I verify Overwatch's data?", // SEO component
+    "Yes. Every event and score records the account address and the slot it was read at, so anyone can check it against the chain, and the rules that turn accounts into grades are open source under the Apache 2.0 licence.", // SEO component
+  ], // SEO component
+]; // SEO component
 
 // The scoring, event and flag tables below are the published methodology: the source of truth that
 // packages/core/src/scoring.ts and rules.ts must match.
@@ -61,7 +68,7 @@ const TOC: [id: string, label: string][] = [
   ["limits", "Limitations"],
   ["fit", "Where it fits"],
   ["status", "Status of this deployment"],
-  ["faq", "Questions"],
+  ["faq", "Questions"], // SEO component
 ];
 
 const PIPELINE: [step: string, text: string][] = [
@@ -132,27 +139,32 @@ const sevClass = (s: string) =>
 export default function Docs() {
   return (
     <>
-      <JsonLd
+      <JsonLd // SEO component
         data={[
-          breadcrumbs([["Documentation", "/docs"]]),
+          // SEO component
+          breadcrumbs([["Documentation", "/docs"]]), // SEO component
           {
-            "@type": "TechArticle",
-            headline: "How Overwatch works: reading, scoring and alerting on Solana protocol controls",
-            description: DESCRIPTION,
-            url: `${SITE_URL}/docs`,
-            author: { "@id": ORGANIZATION_ID },
-            publisher: { "@id": ORGANIZATION_ID },
-          },
+            // SEO component
+            "@type": "TechArticle", // SEO component
+            headline: "How Overwatch works: reading, scoring and alerting on Solana protocol controls", // SEO component
+            description: DESCRIPTION, // SEO component
+            url: `${SITE_URL}/docs`, // SEO component
+            author: { "@id": ORGANIZATION_ID }, // SEO component
+            publisher: { "@id": ORGANIZATION_ID }, // SEO component
+          }, // SEO component
           {
-            "@type": "FAQPage",
+            // SEO component
+            "@type": "FAQPage", // SEO component
             mainEntity: FAQ.map(([question, answer]) => ({
-              "@type": "Question",
-              name: question,
-              acceptedAnswer: { "@type": "Answer", text: answer },
-            })),
-          },
-        ]}
+              // SEO component
+              "@type": "Question", // SEO component
+              name: question, // SEO component
+              acceptedAnswer: { "@type": "Answer", text: answer }, // SEO component
+            })), // SEO component
+          }, // SEO component
+        ]} // SEO component
       />
+      {/* SEO component */}
       <PageHero
         dock="Docs"
         lines={["Documentation"]}
@@ -446,12 +458,18 @@ export default function Docs() {
           </p>
 
           <h2 id="faq">Questions</h2>
+          {/* SEO component */}
           {FAQ.map(([question, answer]) => (
+            // SEO component
             <div key={question}>
+              {/* SEO component */}
               <h3>{question}</h3>
+              {/* SEO component */}
               <p>{answer}</p>
-            </div>
+              {/* SEO component */}
+            </div> // SEO component
           ))}
+          {/* SEO component */}
         </div>
       </section>
     </>

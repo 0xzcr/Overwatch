@@ -1,10 +1,9 @@
-import { PageHero, SectionHead, stage } from "@/site/ui";
-import { JsonLd, breadcrumbs, pageMetadata, ORGANIZATION_ID } from "@/site/seo";
-import { SITE_URL } from "@/site/content";
+import { PageHero, SectionHead, stage, JsonLd, breadcrumbs, pageMetadata, ORGANIZATION_ID } from "@/site/ui"; // SEO component
+import { SITE_URL } from "@/site/content"; // SEO component
 
-const DESCRIPTION =
-  "The Overwatch public API: protocol control grades, control-change events, score history, a live event stream and webhook alerts, as JSON over HTTPS.";
-export const metadata = pageMetadata({ title: "API reference", description: DESCRIPTION, path: "/docs/api" });
+const DESCRIPTION = // SEO component
+  "The Overwatch public API: protocol control grades, control-change events, score history, a live event stream and webhook alerts, as JSON over HTTPS."; // SEO component
+export const metadata = pageMetadata({ title: "API reference", description: DESCRIPTION, path: "/docs/api" }); // SEO component
 
 const EP: [string, string, string][] = [
   ["GET", "/api/v1/protocols", "All watched protocols with grade, score, flags and key facts."],
@@ -39,22 +38,26 @@ function Code({ title, children }: { title: string; children: string }) {
 export default function ApiDocs() {
   return (
     <>
-      <JsonLd
+      <JsonLd // SEO component
         data={[
+          // SEO component
           breadcrumbs([
-            ["Documentation", "/docs"],
-            ["API reference", "/docs/api"],
-          ]),
+            // SEO component
+            ["Documentation", "/docs"], // SEO component
+            ["API reference", "/docs/api"], // SEO component
+          ]), // SEO component
           {
-            "@type": "TechArticle",
-            headline: "Overwatch API reference",
-            description: DESCRIPTION,
-            url: `${SITE_URL}/docs/api`,
-            author: { "@id": ORGANIZATION_ID },
-            publisher: { "@id": ORGANIZATION_ID },
-          },
-        ]}
+            // SEO component
+            "@type": "TechArticle", // SEO component
+            headline: "Overwatch API reference", // SEO component
+            description: DESCRIPTION, // SEO component
+            url: `${SITE_URL}/docs/api`, // SEO component
+            author: { "@id": ORGANIZATION_ID }, // SEO component
+            publisher: { "@id": ORGANIZATION_ID }, // SEO component
+          }, // SEO component
+        ]} // SEO component
       />
+      {/* SEO component */}
       <PageHero
         dock="API"
         lines={["API"]}

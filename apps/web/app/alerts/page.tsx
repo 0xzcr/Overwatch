@@ -1,21 +1,23 @@
 import { loadProtocols } from "@/site/data";
 import { AlertsForms } from "@/site/AlertsForms";
-import { PageHero, stage } from "@/site/ui";
-import { JsonLd, breadcrumbs, pageMetadata } from "@/site/seo";
+import { PageHero, stage, JsonLd, breadcrumbs, pageMetadata } from "@/site/ui"; // SEO component
 
 export const dynamic = "force-dynamic";
 export const metadata = pageMetadata({
-  title: "Alerts",
+  // SEO component
+  title: "Alerts", // SEO component
+  // SEO component
   description:
-    "Get a Telegram message or a signed webhook when the controls of a Solana DeFi protocol you use get weaker, such as a removed timelock or a lowered multisig threshold.",
-  path: "/alerts",
-});
+    "Get a Telegram message or a signed webhook when the controls of a Solana DeFi protocol you use get weaker, such as a removed timelock or a lowered multisig threshold.", // SEO component
+  path: "/alerts", // SEO component
+}); // SEO component
 
 export default async function Alerts({ searchParams }: { searchParams: Promise<{ protocol?: string }> }) {
   const [{ cards }, sp] = await Promise.all([loadProtocols(), searchParams]);
   return (
     <>
       <JsonLd data={breadcrumbs([["Alerts", "/alerts"]])} />
+      {/* SEO component */}
       <PageHero
         dock="Alerts"
         lines={["Alerts"]}

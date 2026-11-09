@@ -1,15 +1,14 @@
 import { manifesto } from "@/site/content";
 import { driftReplay, driftSources, loadProtocols, warningDays } from "@/site/data";
-import { PageHero, Term, cssVars, stage } from "@/site/ui";
-import { JsonLd, breadcrumbs, pageMetadata, ORGANIZATION_ID } from "@/site/seo";
-import { SITE_URL } from "@/site/content";
+import { PageHero, Term, cssVars, stage, JsonLd, breadcrumbs, pageMetadata, ORGANIZATION_ID } from "@/site/ui"; // SEO component
+import { SITE_URL } from "@/site/content"; // SEO component
 
 // Cached and rebuilt in the background at most every 30 s: the data only changes when the indexer writes,
 // so visitors get a ready page instead of waiting on the database.
 export const revalidate = 30;
-const DESCRIPTION =
-  "How the April 2026 Drift loss of about $285M played out onchain, and the days of warning signs in public accounts before any funds moved.";
-export const metadata = pageMetadata({ title: "Case study: Drift", description: DESCRIPTION, path: "/case-study" });
+const DESCRIPTION = // SEO component
+  "How the April 2026 Drift loss of about $285M played out onchain, and the days of warning signs in public accounts before any funds moved."; // SEO component
+export const metadata = pageMetadata({ title: "Case study: Drift", description: DESCRIPTION, path: "/case-study" }); // SEO component
 
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
@@ -22,20 +21,23 @@ export default async function CaseStudy() {
 
   return (
     <>
-      <JsonLd
+      <JsonLd // SEO component
         data={[
-          breadcrumbs([["Case study", "/case-study"]]),
+          // SEO component
+          breadcrumbs([["Case study", "/case-study"]]), // SEO component
           {
-            "@type": "Article",
-            headline: "Drift lost $285M: the warning signs were onchain for days",
-            description: DESCRIPTION,
-            url: `${SITE_URL}/case-study`,
-            author: { "@id": ORGANIZATION_ID },
-            publisher: { "@id": ORGANIZATION_ID },
-            about: ["Drift Protocol", "Solana", "durable nonce", "multisig"],
-          },
-        ]}
+            // SEO component
+            "@type": "Article", // SEO component
+            headline: "Drift lost $285M: the warning signs were onchain for days", // SEO component
+            description: DESCRIPTION, // SEO component
+            url: `${SITE_URL}/case-study`, // SEO component
+            author: { "@id": ORGANIZATION_ID }, // SEO component
+            publisher: { "@id": ORGANIZATION_ID }, // SEO component
+            about: ["Drift Protocol", "Solana", "durable nonce", "multisig"], // SEO component
+          }, // SEO component
+        ]} // SEO component
       />
+      {/* SEO component */}
       <PageHero
         dock="Case study"
         lines={["Drift lost $285M.", `${days} days of warning.`]}

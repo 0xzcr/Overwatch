@@ -1,6 +1,5 @@
 import { Fragment } from "react";
-import { JsonLd, breadcrumbs, pageMetadata } from "@/site/seo";
-import { SITE_URL } from "@/site/content";
+import { SITE_URL } from "@/site/content"; // SEO component
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AUTHORITY_LABEL, fmtDuration, findVaultIndex, isOnCurve, mintRisks } from "@overwatch/core";
@@ -9,7 +8,7 @@ import { buildGraph, type GEdge, type GNode } from "@/lib/graph";
 import { loadProtocol, SNAPSHOT_LABEL, type ProtoCard } from "@/site/data";
 import { ControlGraph } from "@/site/ControlGraph";
 import { Timeline } from "@/site/Timeline";
-import { Addr, Badge, Grade, PageHero, SectionHead, Term, stage } from "@/site/ui";
+import { Addr, Badge, Grade, PageHero, SectionHead, Term, stage, JsonLd, breadcrumbs, pageMetadata } from "@/site/ui"; // SEO component
 
 // Cached and rebuilt in the background at most every 30 s: the data only changes when the indexer writes,
 // so visitors get a ready page instead of waiting on the database.
@@ -25,10 +24,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const d = await loadProtocol(slug);
   if (!d) return { title: "Not found" };
   return pageMetadata({
+    // SEO component
     title: `${d.card.name} controls`,
     description: `Who can change ${d.card.name} on Solana: grade ${d.card.grade}, upgrade authority, multisig threshold, timelock and every control change, read from the chain.`,
-    path: `/protocols/${slug}`,
-  });
+    path: `/protocols/${slug}`, // SEO component
+  }); // SEO component
 }
 
 const PERMS = (m: number) => [m & 1 && "initiate", m & 2 && "vote", m & 4 && "execute"].filter(Boolean).join(" · ");
@@ -88,27 +88,32 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
 
   return (
     <>
-      <JsonLd
+      <JsonLd // SEO component
         data={[
+          // SEO component
           breadcrumbs([
-            ["Control map", "/protocols"],
-            [p.name, `/protocols/${slug}`],
-          ]),
+            // SEO component
+            ["Control map", "/protocols"], // SEO component
+            [p.name, `/protocols/${slug}`], // SEO component
+          ]), // SEO component
           {
-            "@type": "WebPage",
-            name: `${p.name} controls`,
-            url: `${SITE_URL}/protocols/${slug}`,
-            description: `Control grade ${p.grade}${p.score != null ? ` (${p.score}/100)` : ""} for ${p.name} on Solana: upgrade authority ${p.authority}, multisig threshold ${p.threshold}, timelock ${p.timelock}.`,
-            ...(p.lastChange && { dateModified: p.lastChange }),
+            // SEO component
+            "@type": "WebPage", // SEO component
+            name: `${p.name} controls`, // SEO component
+            url: `${SITE_URL}/protocols/${slug}`, // SEO component
+            description: `Control grade ${p.grade}${p.score != null ? ` (${p.score}/100)` : ""} for ${p.name} on Solana: upgrade authority ${p.authority}, multisig threshold ${p.threshold}, timelock ${p.timelock}.`, // SEO component
+            ...(p.lastChange && { dateModified: p.lastChange }), // SEO component
             about: {
-              "@type": "SoftwareApplication",
-              name: p.name,
-              applicationCategory: "FinanceApplication",
-              ...(p.website && { url: p.website }),
-            },
-          },
-        ]}
+              // SEO component
+              "@type": "SoftwareApplication", // SEO component
+              name: p.name, // SEO component
+              applicationCategory: "FinanceApplication", // SEO component
+              ...(p.website && { url: p.website }), // SEO component
+            }, // SEO component
+          }, // SEO component
+        ]} // SEO component
       />
+      {/* SEO component */}
       <PageHero
         dock={p.name}
         eyebrow={
