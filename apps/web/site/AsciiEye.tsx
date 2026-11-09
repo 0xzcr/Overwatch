@@ -79,7 +79,8 @@ export function AsciiEye() {
 
     const resize = () => {
       const r = canvas.getBoundingClientRect();
-      const dpr = Math.min(devicePixelRatio || 1, 2);
+      // Browser zoom raises the pixel ratio (200% on a 2x screen is 4x); up to 3x keeps the text sharp when zoomed in.
+      const dpr = Math.min(devicePixelRatio || 1, 3);
       W = r.width;
       H = r.height;
       canvas.width = Math.round(W * dpr);
@@ -203,7 +204,11 @@ export function AsciiEye() {
         `gaze.y  ${gaze.y >= 0 ? "+" : ""}${gaze.y.toFixed(7)}`,
       ];
       if (slot) lines.push(`slot  ≈${(slot.n + Math.floor((Date.now() - slot.at) / SLOT_MS)).toLocaleString("en-US")}`);
-      lines.forEach((l, k) => ctx.fillText(l, lx, ly + k * lh));
+      // Keep the readout inside the canvas: at some zoom levels its natural spot runs past the right or bottom edge.
+      const widest = Math.max(...lines.map((l) => ctx.measureText(l).width));
+      const rx = Math.min(lx, W - widest - 4);
+      const ry = Math.min(ly, H - lines.length * lh);
+      lines.forEach((l, k) => ctx.fillText(l, rx, ry + k * lh));
       ctx.globalAlpha = 1;
     };
 
@@ -224,10 +229,15 @@ export function AsciiEye() {
       visible = !!e?.isIntersecting;
       if (visible) start();
     });
-    const ro = new ResizeObserver(() => {
+    // Resizing wipes the canvas, so draw a frame straight away instead of waiting for the animation loop
+    // (which may be paused while the eye is offscreen), or it can sit blank after a zoom.
+    const redraw = () => {
       resize();
-      if (still) frame(performance.now());
-    });
+      frame(performance.now());
+    };
+    const ro = new ResizeObserver(redraw);
+    // Zooming changes the pixel ratio even when the canvas keeps its CSS size, which ResizeObserver does not report.
+    addEventListener("resize", redraw);
     const onVisibility = () => !document.hidden && start();
 
     void document.fonts.load(`11px "IBM Plex Mono"`).finally(() => {
@@ -249,6 +259,7 @@ export function AsciiEye() {
       io.disconnect();
       ro.disconnect();
       removeEventListener("pointermove", onMove);
+      removeEventListener("resize", redraw);
       document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);

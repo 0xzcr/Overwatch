@@ -33,7 +33,6 @@ export function Chrome() {
 
       <div className="vignette" aria-hidden="true" />
       <div className="gridlines" aria-hidden="true" />
-      <div className="grain" aria-hidden="true" />
 
       <div className="cursor" id="cursor" aria-hidden="true">
         <div className="cursor__ring">
