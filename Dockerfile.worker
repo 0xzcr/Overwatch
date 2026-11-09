@@ -11,7 +11,9 @@ COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json tsconfig.base.js
 COPY packages ./packages
 COPY apps/indexer/package.json apps/indexer/
 COPY apps/bot/package.json apps/bot/
-RUN pnpm install --frozen-lockfile --filter "./apps/indexer..." --filter "./apps/bot..."
+# Filter by package name: with pnpm 11, a path filter ("./apps/indexer...") matched only the apps themselves and
+# skipped their workspace dependencies' packages (packages/sdk had no node_modules, so the indexer could not start).
+RUN pnpm install --frozen-lockfile --filter "@overwatch/indexer..." --filter "@overwatch/bot..."
 
 FROM deps AS run
 ARG APP=indexer

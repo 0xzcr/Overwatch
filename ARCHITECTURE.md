@@ -514,6 +514,11 @@ rows, events, alerts or notifications.
 
 `apps/indexer/src/main.ts` is one long-running Node process. It watches every **verified** protocol, keeps each one's snapshot fresh, and runs the pipeline.
 
+It depends on no particular provider: it needs Solana JSON-RPC endpoints from anyone (`SOLANA_MAINNET_RPC_URLS`,
+comma-separated) and any Postgres. `docker compose up -d` runs it next to a local Postgres. **Polling is the source of
+truth**; websockets are optional hints that only make changes show up a few seconds sooner (`INDEXER_WEBSOCKETS=false`
+turns them off).
+
 ### 10.1 Startup and timers
 
 - On start: a full **reconcile with a nonce scan** for every protocol.
@@ -521,12 +526,36 @@ rows, events, alerts or notifications.
 - Every **hour**: reconcile with the nonce scan (signer nonce accounts via `getProgramAccounts`).
 - Every **15 seconds**: look for protocols added to the database since start (e.g. after `pnpm seed`) and start watching
   them.
-- An HTTP server on `INDEXER_PORT` (8787) answers `GET /health` with uptime, last reconcile, refresh/event/error counts
-  and websocket health; status 200 if at least one network's websockets are healthy, 503 otherwise.
+- Every **`POLL_INTERVAL_MS`** (15s): the account sweep (10.2).
+- On start, then every **`TX_POLL_INTERVAL_MS`** (60s): the transaction sweep (10.2). Free endpoints allow roughly 4
+  calls a second per method, and this sweep costs one call per address, hence the slower default.
+- An HTTP server on `INDEXER_PORT` (8787) answers `GET /health` with uptime, last reconcile, last sweeps,
+  refresh/event/error counts and websocket health; status 200 while account sweeps keep finishing, 503 otherwise.
+- A watchdog exits the process when no reconcile has succeeded for 20 minutes, so the supervisor restarts it.
 
-### 10.2 What it subscribes to (`watch()`)
+### 10.2 What it watches (`watch()`, `poll.ts`)
 
-For each protocol, on the right network:
+**Polling** (`apps/indexer/src/poll.ts`), for each protocol on the right network:
+
+- **Account sweep:** every program, ProgramData account, multisig, collateral mint, oracle, admin and adapter account
+  is read in one batched `getMultipleAccounts`, and a protocol is refreshed when one of its accounts changes. Only bytes
+  that matter count: ProgramData is read as its 45-byte header (deploy slot + upgrade authority, not the program
+  binary), mint supply is ignored, and for an oracle only its owner program counts.
+- **Transaction sweep:** for every signer and multisig address, `getSignaturesForAddress` since a cursor saved in the
+  `signature_cursors` table, oldest first. Signer transactions go to `inspectSignerTx` (10.4); multisig transactions
+  trigger a refresh stamped with the transaction. The cursor moves only after a transaction is handled, so after any
+  downtime the indexer **replays what it missed** (up to 10 pages of 1000 per address). A new address starts from now;
+  one with no visible history saves the current slot instead, so its first transaction is still caught.
+
+**Endpoints** (`packages/solana/src/rpc.ts`): requests fail over between the listed endpoints; one that times out or
+returns 429/5xx is rested for a minute, and one that refuses a method is skipped for that request. Endpoints keep very
+different amounts of history (publicnode about three days, `api.mainnet-beta` everything, but it can take ~15s per
+lookup of a quiet address), and a node asked about older history answers with an empty list rather than an error. So
+each endpoint's depth is checked with `getFirstAvailableBlock`, and history calls go to the shallowest endpoint that
+still reaches back to the cursor: fast nodes for normal polling, the archive only to replay a long outage. With no
+endpoint deep enough, the call fails loudly instead of returning "nothing new".
+
+**Websockets** (optional hints), for each protocol:
 
 - `accountSubscribe` for every program and ProgramData account, every multisig, collateral mint, oracle, admin
   account and adapter account. Any change triggers a refresh.

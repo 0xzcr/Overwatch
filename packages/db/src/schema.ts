@@ -199,3 +199,17 @@ export const onchainPublishes = pgTable("onchain_publishes", {
   kind: text("kind").notNull().default("registry"), // registry | shield
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/** The newest transaction the indexer has processed for an address, so a restart resumes and replays what it missed. */
+export const signatureCursors = pgTable(
+  "signature_cursors",
+  {
+    network: text("network").notNull(),
+    address: text("address").notNull(),
+    // null while the address has no visible transactions; `slot` is then where watching started
+    signature: text("signature"),
+    slot: bigint("slot", { mode: "number" }).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.network, t.address] })],
+);
