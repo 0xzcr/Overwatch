@@ -33,13 +33,11 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "server-only": "^0.0.1",
-    "three": "0.171.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.1",
     "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "@types/three": "0.171.0"
+    "@types/react-dom": "^19.0.0"
   }
 }

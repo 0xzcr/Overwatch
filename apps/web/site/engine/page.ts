@@ -4,7 +4,7 @@
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type { MorphOptions } from "./stage";
-import type { ShapeName } from "./shapes";
+import type { ShapeName } from "./stage";
 import { $, $$, esc, magnetic, type Runtime, type StageCfg } from "./runtime";
 import { tone } from "../nightfall";
 import type { ReplayStep } from "../data";

@@ -1,6 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import type { MorphOptions } from "./engine/stage";
-import type { ShapeName } from "./engine/shapes";
+import type { MorphOptions, ShapeName } from "./engine/stage";
 import { GLOSSARY } from "./content";
 import { explorer, GRADE_WORD } from "@/lib/format";
 

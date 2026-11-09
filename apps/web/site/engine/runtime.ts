@@ -1,11 +1,11 @@
 // Persistent part of the experience: lives across client-side navigations.
-// WebGL stage, smooth scroll, boot sequence, cursor, nav, menu, dock shell, HUD slot counter.
+// ASCII stage, smooth scroll, boot sequence, cursor, nav, menu, dock shell, HUD slot counter.
 
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import { Stage, type MorphOptions } from "./stage";
-import type { ShapeName } from "./shapes";
+import type { ShapeName } from "./stage";
 
 export interface StageCfg {
   shape: ShapeName;

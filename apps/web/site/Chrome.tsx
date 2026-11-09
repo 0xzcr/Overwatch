@@ -31,7 +31,6 @@ export function Chrome() {
         </div>
       </div>
 
-      <canvas className="stage" id="stage" aria-hidden="true" />
       <div className="vignette" aria-hidden="true" />
       <div className="gridlines" aria-hidden="true" />
       <div className="grain" aria-hidden="true" />
