@@ -53,7 +53,7 @@ export const pages = [
     kicker: "Control changes as they land onchain",
     color: "#7CF3FF",
   },
-  { href: "/case-study", name: "Case study", kicker: "The Drift exploit, replayed", color: "#FF5A3D" },
+  { href: "/case-study", name: "Case studies", kicker: "Ten control attacks, explained", color: "#FF5A3D" },
   { href: "/alerts", name: "Alerts", kicker: "Telegram, webhooks, email", color: "#FFB547" },
   {
     href: "/docs",
@@ -131,28 +131,25 @@ export const layers: (Capability & { href: string; cta: string; color: string })
     ],
   },
   {
-    id: "drift",
+    id: "presigned",
     code: "04",
     chapter: "watch",
-    title: "The Drift pattern",
+    title: "Pre-signed takeovers",
     vis: "terminal",
     color: "#FFB547",
     href: "/case-study",
-    cta: "Replay the Drift timeline",
+    cta: "Read ten control attacks",
     summary:
-      "If controls weaken within 14 days of a signer creating durable nonce accounts, the alert is rated critical. That is the sequence that came before the $285M Drift loss. The replay is a backtest of current rules on the public record.",
+      "Signers can sign a transaction now that runs any time later. If controls weaken within 14 days of a signer creating a durable nonce account, the alert is rated critical. The case studies show how attackers took control in ten recent losses.",
     term: [
-      ["i", "2026-03-23 signer-A, signer-B → durable nonce"],
-      ["w", "SIGNER_NONCE_ACCOUNT_CREATED · CRITICAL (2/5 ≥ 2)"],
-      ["i", "2026-03-27 council migration · 2-of-5 · no delay"],
-      ["e", "⚠ Drift pattern: weakening within 14d of nonce"],
-      ["s", "backtest: flagged 9 days before the drain"],
+      ["i", "signer-A, signer-B → durable nonce accounts"],
+      ["w", "SIGNER_NONCE_ACCOUNT_CREATED · HIGH"],
+      ["i", "multisig → 2-of-5 · no delay"],
+      ["e", "⚠ weakening within 14d of a nonce · CRITICAL"],
+      ["s", "alert sent: Telegram · webhook · email"],
     ],
   },
 ];
-
-export const manifesto =
-  "Drift lost $285M in about twelve minutes, and no smart contract bug was needed. The attacker collected pre-signed transactions from two of five council signers and waited. Every step was public on Solana for nine days, and nobody was monitoring the controls. Overwatch monitors them.";
 
 export const flagBits = [
   "SINGLE_KEY",
@@ -176,7 +173,7 @@ export const GLOSSARY: Record<string, string> = {
   timelock:
     "A mandatory waiting period between approving a change and it taking effect. It gives depositors time to withdraw if something bad is approved.",
   "durable nonce":
-    "A Solana feature that lets a transaction be signed now and submitted any time later. Normal transactions expire in about a minute. The Drift attacker collected pre-signed durable-nonce transactions from signers days in advance.",
+    "A Solana feature that lets a transaction be signed now and submitted any time later. Normal transactions expire in about a minute. Attackers have collected pre-signed transactions from signers days in advance.",
   "upgrade authority":
     "The key that can replace a program's code. Whoever holds it can change the rules, including how your deposit can be withdrawn.",
   threshold: "How many signers of a multisig must approve a change.",

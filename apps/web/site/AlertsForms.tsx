@@ -98,9 +98,9 @@ export function AlertsForms({
         <div className="path" style={{ ["--c" as string]: "#7CF3FF" }}>
           <h3>Telegram</h3>
           <p>
-            Open the bot and send <span className="mono">/watch drift</span>, <span className="mono">/list</span> or{" "}
-            <span className="mono">/status kamino-lend</span>. <span className="mono">/wallet &lt;address&gt;</span>{" "}
-            subscribes you to protocols you hold.
+            Open the bot and send <span className="mono">/watch kamino-lend</span>, <span className="mono">/list</span>{" "}
+            or <span className="mono">/status jupiter-perps</span>.{" "}
+            <span className="mono">/wallet &lt;address&gt;</span> subscribes you to protocols you hold.
           </p>
           {bot && MAINTENANCE_NOTICE ? (
             <>

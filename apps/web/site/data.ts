@@ -1,14 +1,6 @@
 import "server-only";
 import { cache } from "react";
-import {
-  DRIFT_STEPS,
-  DRIFT_SOURCES,
-  diffSnapshots,
-  scoreSnapshot,
-  flagNames,
-  fmtDuration,
-  type OverwatchEvent,
-} from "@overwatch/core";
+import { fmtDuration } from "@overwatch/core";
 import { getProtocols, getEvents, type ProtocolView, type EventView } from "@/lib/data";
 
 /** A protocol row as the site shows it. Built from live DB data or the labelled snapshot below. */
@@ -34,18 +26,6 @@ export interface ProtoCard {
   lastChange: string | null;
   source: string;
   website: string | null;
-}
-
-export interface ReplayStep {
-  date: string;
-  headline: string;
-  detail: string;
-  level: "ok" | "warn" | "bad" | "dead";
-  alerts: { severity: string; title: string; explanation: string; labels: string[] }[];
-  score: number;
-  grade: string;
-  red: boolean;
-  flags: string[];
 }
 
 export const SNAPSHOT_LABEL = "mainnet snapshot · Oct 11 2026";
@@ -283,60 +263,4 @@ export async function loadProtocol(slug: string) {
   if (views) return null; // DB is up and the protocol is unknown
   const card = fallbackCards().find((c) => c.slug === slug);
   return card ? { live: false, card, view: null, events: [] as FeedItem[] } : null;
-}
-
-// ---------------------------------------------------------------- Drift replay
-
-// The reconstruction uses placeholder names ("drift-admin (council vault)", "attacker") that the
-// rules engine shortens like real addresses. Spell them out for readers.
-const readable = (s: string) =>
-  s
-    .replace("drif…ult)", "the council vault")
-    .replace("atta…cker", "the attacker")
-    .replace(/sign…er-([A-F])/g, "signer-$1")
-    .replace(/nonc…ce-(\d)/g, "nonce-$1");
-
-/** Replays the reconstructed Drift snapshots through the real rules engine and scorer. */
-export function driftReplay(): ReplayStep[] {
-  const history: OverwatchEvent[] = [];
-  return DRIFT_STEPS.map((st, i) => {
-    const prev = DRIFT_STEPS[i - 1];
-    const alerts = prev
-      ? diffSnapshots(prev.snapshot, st.snapshot, { history, slot: i, blockTime: st.date, now: st.date, name: "Drift" })
-      : [];
-    history.push(...alerts);
-    const sc = scoreSnapshot(st.snapshot, history, st.date);
-    const level: ReplayStep["level"] =
-      i === DRIFT_STEPS.length - 1
-        ? "dead"
-        : alerts.some((a) => a.severity === "CRITICAL")
-          ? "bad"
-          : alerts.length || sc.red
-            ? "warn"
-            : "ok";
-    return {
-      date: st.date,
-      headline: st.headline,
-      detail: st.detail,
-      level,
-      alerts: alerts.map((a) => ({
-        severity: a.severity,
-        title: a.title,
-        explanation: readable(a.explanation),
-        labels: a.labels,
-      })),
-      score: sc.score,
-      grade: sc.grade,
-      red: sc.red,
-      flags: flagNames(sc.flags),
-    };
-  });
-}
-
-export const driftSources = DRIFT_SOURCES;
-
-const DRAIN = Date.parse("2026-04-01T16:05:00Z");
-export function warningDays(steps: ReplayStep[]) {
-  const first = steps.find((s) => s.alerts.some((a) => a.severity !== "INFO"));
-  return first ? Math.round((DRAIN - Date.parse(first.date)) / 86_400_000) : 0;
 }

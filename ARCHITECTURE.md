@@ -43,7 +43,8 @@ elsewhere. Most serious protocols put that authority behind a **multisig** (seve
 **timelock** (an approved change waits before it takes effect, giving depositors time to leave). Those protections can
 be weakened: signers removed, the threshold lowered, the timelock cut, control handed to a single key, or signers can
 quietly sign transactions in advance using **durable nonces**, which never expire and can be executed at any later
-moment. That last one is how Drift lost about $285M on April 1, 2026.
+moment. Attackers have used every one of these; the website's case studies (`/case-study`) walk through ten recent
+examples.
 
 On Solana every one of these facts is public: it is bytes at a fixed offset in an account anyone can read. Overwatch:
 
@@ -756,7 +757,7 @@ technical text; all self-hosted via `@fontsource`), the two stylesheets, and ren
 | `/protocols` | The control map: a sortable, filterable table of every protocol's grade, authority, m-of-n, timelock, verification | `site/Leaderboard.tsx` (TanStack Table) |
 | `/protocols/[slug]` | Grade card; "Who can move your money" (an interactive control graph); Facts; Score breakdown; Onchain registry record (read live from devnet); Get alerts; Governance timeline | `lib/graph.ts` → `site/ControlGraph.tsx` (React Flow), `site/Timeline.tsx`, `@overwatch/sdk` `fetchRiskRecord` |
 | `/events` | Live events: a dense log grouped by UTC day, filterable by severity and protocol, with a toggle to hide code deploys, streaming new events over SSE | `site/LiveFeed.tsx` |
-| `/case-study` | The Drift incident and a step-by-step replay of current rules over the reconstructed timeline (labelled a backtest) | `core/drift.ts` → `site/data.ts` `driftReplay()` → engine |
+| `/case-study` | Ten recent control attacks as plain text, newest first: what happened, what failed, what Overwatch can and cannot see, with sources | `app/case-study/page.tsx` (the incidents are a typed list in the page) |
 | `/alerts` | Telegram link, webhook creation with test-fire, email sign-up | `site/AlertsForms.tsx` |
 | `/docs` | The documentation and the scoring methodology: the **source of truth** for rules, events and flags | `app/docs/page.tsx` |
 | `/docs/api` | API, SSE, webhooks, SDK and onchain integration | `app/docs/api/page.tsx` |
@@ -814,10 +815,9 @@ an `SEO component` comment, so it is easy to find and keep together.
   scrolling (driven by the GSAP ticker so ScrollTrigger stays in sync), the boot sequence (landing page only, once per
   session via `sessionStorage`), the custom cursor, the menu, the dock, toasts and small effects (`scramble`,
   `magnetic`).
-- **`page.ts`** runs on every route and returns a disposer. It wires reveals, count-ups and the pinned horizontal
-  "What you get" track; selects the hero title one character at a time as you scroll away; and drives the Drift replay
-  (arrow keys step it while it is on screen). On inner pages and for reduced motion it runs in "calm" mode: no intros,
-  reveals or tilt.
+- **`page.ts`** runs on every route and returns a disposer. It wires reveals and the pinned horizontal "What you get"
+  track, selects the hero title one character at a time as you scroll away, and runs the dock. On inner pages and for
+  reduced motion it runs in "calm" mode: no intros, reveals or tilt.
 - **`AsciiEye.tsx`** (the landing hero) is a 2D canvas that renders a rotating sphere of monospaced characters drawn
   from Solana-looking strings. Each character cell maps to a point on the sphere; a gaze vector (following the pointer,
   wandering when idle) decides the red iris and the empty pupil; it blinks, draws a tracking box around the pupil with
@@ -992,7 +992,7 @@ variable as a build argument (`RAILWAY_DOCKERFILE_PATH=Dockerfile.worker`). Keyp
   history-depth routing), `apps/indexer` (14: account fingerprints, cursors, downtime replay), `packages/sdk` (4),
   `apps/bot` (3).
 - **Pipeline smoke test** (`pnpm smoke:pipeline`): the real database path end to end, without RPC.
-- **Browser tests** (Playwright, `apps/web/e2e/smoke.spec.ts`): navigation, the control map, the case-study replay, every
+- **Browser tests** (Playwright, `apps/web/e2e/smoke.spec.ts`): navigation, the control map, the ten case studies, every
   main page rendering, the red palette and the ticking GMT clock.
 - **Program tests** (LiteSVM): registry authorisation, stale-update rejection and pausing; vault share maths and exits.
 - **CI** (`.github/workflows/ci.yml`): on every push and pull request, a TypeScript job (install, migrate a Postgres
@@ -1025,7 +1025,7 @@ variable as a build argument (`RAILWAY_DOCKERFILE_PATH=Dockerfile.worker`). Keyp
 | **Config authority** | A key that can change a Squads multisig's settings without a vote. |
 | **Vault PDA** | The address a Squads multisig signs with; derived from the multisig and an index 0–255 (Overwatch checks 0–7). |
 | **PDA** | Program-derived address: an address off the ed25519 curve that only a program can sign for. |
-| **Durable nonce** | A nonce account that lets a transaction be signed now and executed any time later; the mechanism behind the Drift attack. |
+| **Durable nonce** | A nonce account that lets a transaction be signed now and executed any time later; attackers have used pre-signed nonce transactions to take admin control. |
 | **Snapshot** | The normalised control state of a protocol at one slot (`ControlSnapshot`). |
 | **Event** | A typed change between two snapshots, with severity and plain-English text. |
 | **Weakening** | A change that leaves depositors less safe. |

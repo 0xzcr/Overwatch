@@ -15,13 +15,17 @@ Live site: **https://overwatch1.xyz**
 
 ## Why
 
-On April 1, 2026, Drift lost about $285M in twelve minutes without a single smart-contract bug. The attacker collected
-pre-signed durable-nonce transactions from two of five Security Council signers, waited, and used them to take admin.
-Every step sat on Solana, in public, for days. Nobody was reading it on the depositor's behalf. On Solana, "who controls
-this protocol" is literally bytes at a known offset in an account, so anyone can read it. Overwatch does, continuously.
+In 2026, compromised keys and signers overtook smart-contract bugs as the leading cause of crypto losses. Attackers
+stopped breaking code and started taking control of it: a single admin key, a multisig with too low a threshold, a
+verifier set to one-of-one, signers persuaded to sign in advance. The code then did exactly what it was told.
 
-The site's [case study](https://overwatch1.xyz/case-study) replays that timeline through Overwatch's current
-rules. It is a **backtest** on a timeline reconstructed from public incident reports, not a live catch.
+On Solana, "who controls this protocol" is literally bytes at a known offset in an account, so anyone can read it, and
+a weakened control is often public before any funds move. Nobody was reading it on the depositor's behalf. Overwatch
+does, continuously.
+
+The site's [case studies](https://overwatch1.xyz/case-study) cover ten recent attacks of this kind: what happened,
+what failed, and what Overwatch can and cannot see. Where they say what Overwatch would have caught, that is an
+assessment or a backtest, not a live catch.
 
 ## What it does
 

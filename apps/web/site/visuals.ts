@@ -215,12 +215,7 @@ function pipeline(u: Capability) {
       "PROGRAM_UPGRADED",
       "MEDIUM · unannounced upgrades deserve a look",
     ],
-    score: [
-      ["snapshot", "deductions", "flags", "grade", "publish"],
-      5,
-      "Tests passing",
-      "includes Drift timeline replay",
-    ],
+    score: [["snapshot", "deductions", "flags", "grade", "publish"], 5, "Tests passing", "every rule and flag covered"],
   };
   const [steps, done, head, msg] = flows[u.chapter] ?? flows.act!;
   return `
@@ -303,10 +298,10 @@ function chat() {
   <div class="vz vz-chat">
     <div class="vz-chat__top"><span class="vz-chat__av"><svg viewBox="0 0 64 64"><use href="#ow-mark"/></svg></span><div><b>Overwatch</b><span class="mono">bot</span></div></div>
     <div class="vz-chat__msgs">
-      <p class="me" style="--i:0">/watch drift</p>
-      <p style="--i:1">Watching Drift Protocol. Alerts at HIGH and above.</p>
-      <p class="me" style="--i:2">/status drift</p>
-      <p style="--i:3"><b>Drift Protocol</b>: grade <b>A</b> (85/100)<br/>Upgrade authority: squads v4 vault<br/>Multisig: 4-of-7, timelock 1 hour</p>
+      <p class="me" style="--i:0">/watch kamino-lend</p>
+      <p style="--i:1">Watching Kamino Lend. Alerts at HIGH and above.</p>
+      <p class="me" style="--i:2">/status kamino-lend</p>
+      <p style="--i:3"><b>Kamino Lend</b>: grade <b>A</b> (85/100)<br/>Upgrade authority: squads v4 vault<br/>Multisig: 5-of-10, timelock 1 day</p>
       <p class="alert" style="--i:4">🔴 <b>CRITICAL</b> · Example Lend removed its 2 days safety delay</p>
     </div>
   </div>`;

@@ -2,30 +2,19 @@
 
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { $, $$, esc, magnetic, type Runtime } from "./runtime";
+import { $, $$, magnetic, type Runtime } from "./runtime";
 import { tone } from "../nightfall";
-import type { ReplayStep } from "../data";
-import { GRADE_WORD } from "@/lib/format";
-
-const DRAIN = Date.parse("2026-04-01T16:05:00Z");
-const DAY = 86_400_000;
 
 export function initPage(rt: Runtime): () => void {
   const { reduced, finePointer } = rt;
   // Only the landing page performs; every other page shows its data without intros, reveals or tilt.
   const calm = reduced || location.pathname !== "/";
   const cleanups: (() => void)[] = [];
-  const listen = <K extends keyof WindowEventMap>(ev: K, fn: (e: WindowEventMap[K]) => void) => {
-    window.addEventListener(ev, fn);
-    cleanups.push(() => window.removeEventListener(ev, fn));
-  };
   const onClick = (el: Element | null, fn: () => void) => {
     if (!el) return;
     el.addEventListener("click", fn);
     cleanups.push(() => el.removeEventListener("click", fn));
   };
-
-  let driftActive = false; // arrow keys step the Drift replay only while it is on screen
 
   const ctx = gsap.context(() => {
     // ------------------------------------------------------------ horizontal pin (create before other triggers so offsets include it)
@@ -48,14 +37,6 @@ export function initPage(rt: Runtime): () => void {
         },
       });
     });
-
-    if ($("#replay"))
-      ScrollTrigger.create({
-        trigger: "#replay",
-        start: "top 55%",
-        end: "bottom 55%",
-        onToggle: (self) => (driftActive = self.isActive),
-      });
 
     // ------------------------------------------------------------ intro once the boot sequence is done
     rt.whenReady(() => {
@@ -140,18 +121,6 @@ export function initPage(rt: Runtime): () => void {
           scrollTrigger: { trigger: ".hero", start: "20% top", end: "80% top", scrub: true },
         });
       }
-      const words = $$(".manifesto__text .w");
-      if (words.length)
-        gsap.fromTo(
-          words,
-          { opacity: 0.12 },
-          {
-            opacity: 1,
-            stagger: 0.05,
-            ease: "none",
-            scrollTrigger: { trigger: ".manifesto", start: "top 70%", end: "bottom 70%", scrub: true },
-          },
-        );
       $$(".section-head, .cta__head, .block-head").forEach((el) =>
         gsap.from(el.children, {
           y: 40,
@@ -162,7 +131,7 @@ export function initPage(rt: Runtime): () => void {
           scrollTrigger: { trigger: el, start: "top 85%" },
         }),
       );
-      $$(".steps, .paths, .stats__grid, .cards, [data-reveal]").forEach((grid) =>
+      $$(".steps, .paths, .cards, [data-reveal]").forEach((grid) =>
         gsap.from(grid.children, {
           y: 50,
           opacity: 0,
@@ -181,24 +150,6 @@ export function initPage(rt: Runtime): () => void {
         }),
       );
     }
-
-    // count-ups
-    $$("[data-count]").forEach((el) => {
-      const end = Number(el.dataset.count ?? 0);
-      const o = { v: 0 };
-      ScrollTrigger.create({
-        trigger: el,
-        start: "top 90%",
-        once: true,
-        onEnter: () =>
-          gsap.to(o, {
-            v: end,
-            duration: calm ? 0 : 1.6,
-            ease: "power3.out",
-            onUpdate: () => (el.textContent = String(Math.round(o.v))),
-          }),
-      });
-    });
 
     // ------------------------------------------------------------ pointer niceties
     if (finePointer && !calm) {
@@ -223,87 +174,6 @@ export function initPage(rt: Runtime): () => void {
           gsap.to(el, { rotateY: 0, rotateX: 0, duration: 0.8, ease: "elastic.out(1, 0.5)" }),
         );
       });
-    }
-
-    // ------------------------------------------------------------ drift replay
-    const detail = $("#driftDetail");
-    const steps = JSON.parse($("#ow-drift")?.textContent ?? "[]") as ReplayStep[];
-    if (detail && steps.length) {
-      let driftI = 0;
-      let timer: number | undefined;
-      const firstAlert = steps.findIndex((s) => s.alerts.some((a) => a.severity !== "INFO"));
-      const daysObj = { v: 0 };
-      const render = (i: number) => {
-        const s = steps[i];
-        if (!s) return;
-        driftI = i;
-        $$(".drift__step").forEach((li, j) => {
-          li.classList.toggle("is-on", j === i);
-          li.classList.toggle("is-past", j < i);
-        });
-        const daysEl = $("#driftDays");
-        const warning =
-          firstAlert >= 0 && i >= firstAlert ? (DRAIN - Date.parse(steps[firstAlert]?.date ?? "")) / DAY : 0;
-        gsap.to(daysObj, {
-          v: warning,
-          duration: reduced ? 0 : 1.2,
-          ease: "power3.out",
-          onUpdate: () => daysEl && (daysEl.textContent = daysObj.v.toFixed(1)),
-        });
-        const left = Math.max(0, (DRAIN - Date.parse(s.date)) / DAY);
-        const leftEl = $("#driftLeft");
-        if (leftEl)
-          leftEl.textContent =
-            left > 0 ? `${left.toFixed(1)} days until the drain` : "drain in progress · ~$285M over ~12 minutes";
-        const gradeEl = $("#driftGrade");
-        if (gradeEl) {
-          gradeEl.textContent = s.grade;
-          gradeEl.dataset.grade = s.grade;
-        }
-        const scoreEl = $("#driftScore");
-        if (scoreEl) scoreEl.textContent = `${s.score}/100 · ${GRADE_WORD[s.grade] ?? ""}`;
-        const redEl = $("#driftRed");
-        if (redEl) redEl.hidden = !s.red;
-        detail.innerHTML = `
-          <p class="mono drift__date">${esc(new Date(s.date).toUTCString().replace(":00 GMT", " UTC"))}</p>
-          <h3>${esc(s.headline)}</h3>
-          <p>${esc(s.detail)}</p>
-          <div class="drift__alerts">${
-            s.alerts.length
-              ? s.alerts
-                  .map(
-                    (a) => `<div class="d-alert sev-${a.severity.toLowerCase()}">
-                      <span class="mono">${esc(a.severity)}${a.labels.map((l) => ` · ${esc(l)}`).join("")}</span>
-                      <b>${esc(a.title)}</b><p>${esc(a.explanation)}</p></div>`,
-                  )
-                  .join("")
-              : `<div class="d-alert sev-none"><span class="mono">${i === 0 ? "BASELINE" : "NO NEW EVENTS"}</span><b>${s.red ? "Already graded red: two people can change everything instantly." : "Nothing new to report."}</b></div>`
-          }</div>`;
-        if (!reduced)
-          gsap.from(detail.children, { y: 20, opacity: 0, duration: 0.7, ease: "power3.out", stagger: 0.06 });
-      };
-      $$<HTMLButtonElement>("[data-step]").forEach((b) => onClick(b, () => render(Number(b.dataset.step))));
-      onClick($("#driftPrev"), () => render(Math.max(0, driftI - 1)));
-      onClick($("#driftNext"), () => render(Math.min(steps.length - 1, driftI + 1)));
-      const playBtn = $("#driftPlay");
-      const stop = () => {
-        window.clearInterval(timer);
-        timer = undefined;
-        if (playBtn) playBtn.textContent = "▶ autoplay";
-      };
-      onClick(playBtn, () => {
-        if (timer) return stop();
-        if (driftI >= steps.length - 1) render(0);
-        if (playBtn) playBtn.textContent = "❚❚ pause";
-        timer = window.setInterval(() => (driftI >= steps.length - 1 ? stop() : render(driftI + 1)), 3200);
-      });
-      cleanups.push(stop);
-      listen("keydown", (e) => {
-        if ((e.target as HTMLElement).closest("input, textarea, select")) return;
-        if (driftActive && (e.key === "ArrowRight" || e.key === "ArrowLeft"))
-          render(Math.max(0, Math.min(steps.length - 1, driftI + (e.key === "ArrowRight" ? 1 : -1))));
-      });
-      render(0);
     }
   });
 

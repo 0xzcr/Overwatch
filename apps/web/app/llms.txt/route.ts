@@ -28,7 +28,7 @@ Every event and score records the account address and slot it was read from, and
 - [Control map](${SITE_URL}/protocols): every watched protocol with its grade, authority, threshold and timelock
 - [Live events](${SITE_URL}/events): every detected control change, with severity, slot and transaction
 - [Documentation](${SITE_URL}/docs): how reading, scoring, events and red flags work, plus a FAQ
-- [Case study: Drift](${SITE_URL}/case-study): the April 2026 Drift loss (about $285M) and the days of onchain warning before it
+- [Case studies](${SITE_URL}/case-study): ten recent attacks where attackers took control instead of breaking code, and what onchain monitoring can and cannot see
 - [Alerts](${SITE_URL}/alerts): Telegram bot and signed webhooks
 
 ## Data and API

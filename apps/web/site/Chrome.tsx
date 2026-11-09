@@ -150,7 +150,7 @@ export function Footer() {
             <h4>Watch</h4>
             <Link href="/protocols">Control map</Link>
             <Link href="/events">Live events</Link>
-            <Link href="/case-study">Case study</Link>
+            <Link href="/case-study">Case studies</Link>
           </div>
           <div>
             <h4>Act</h4>

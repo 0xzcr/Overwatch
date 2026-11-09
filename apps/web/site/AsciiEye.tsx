@@ -8,7 +8,7 @@ import { useEffect, useRef } from "react";
  */
 
 const TOKENS = [
-  "dRiftyHA39MW",
+  "PERPHjGBqRHA",
   "SQDS4ep65T86",
   "KLend2g3cP87",
   "MFv2hWf31Z9k",

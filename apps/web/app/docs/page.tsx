@@ -36,7 +36,7 @@ const FAQ: [question: string, answer: string][] = [
   [
     // SEO component
     "Can Overwatch stop an attack?", // SEO component
-    "No. Overwatch warns after a control change lands onchain; it cannot stop or undo it. Its value is the time between a weakening, such as a removed timelock or a pre-signed transaction, and the moment funds move. In the April 2026 Drift loss, those signs were onchain for days.", // SEO component
+    "No. Overwatch warns after a control change lands onchain; it cannot stop or undo it. Its value is the time between a weakening, such as a removed timelock or a pre-signed transaction, and the moment funds move. In several recent losses those signs were onchain for days before any funds moved.", // SEO component
   ], // SEO component
   [
     // SEO component
@@ -192,8 +192,9 @@ export default function Docs() {
           </p>
           <p>
             On Solana, &quot;who controls this protocol&quot; is stored as bytes at known offsets in public accounts.
-            Anyone can read it. Before the April 2026 Drift loss (about $285M in twelve minutes), the warning signs sat
-            onchain for days. Nobody was reading them on the depositor&apos;s behalf. Overwatch does.
+            Anyone can read it. In most large losses of 2026 attackers took control rather than breaking code (see the{" "}
+            <Link href="/case-study">case studies</Link>), and the weakened controls were public before funds moved.
+            Nobody was reading them on the depositor&apos;s behalf. Overwatch does.
           </p>
           <p>
             It watches <b>authority</b>: <Term t="upgrade authority" />, <Term t="multisig" /> <Term t="threshold" />,{" "}
@@ -271,7 +272,7 @@ export default function Docs() {
           <p className="callout">
             <b className="bad">The Drift pattern.</b> Any weakening event within 14 days of a signer creating a durable
             nonce account, or the reverse, escalates to CRITICAL regardless of the individual deductions. Pre-signed
-            nonce transactions never expire, which is how the Drift attacker held admin power in reserve.
+            nonce transactions never expire, so signatures collected in advance can be used at any later moment.
           </p>
 
           <h2 id="flags">Flags and red</h2>
@@ -332,9 +333,10 @@ export default function Docs() {
               timelock, every deduction and its change history.
             </li>
             <li>
-              Set up <Link href="/alerts">alerts</Link>. On Telegram, send <span className="mono">/watch drift</span>,{" "}
-              <span className="mono">/list</span> or <span className="mono">/status kamino-lend</span> to the bot. Email
-              and webhooks are on the same page. Pick a minimum severity so you only hear about what matters.
+              Set up <Link href="/alerts">alerts</Link>. On Telegram, send{" "}
+              <span className="mono">/watch kamino-lend</span>, <span className="mono">/list</span> or{" "}
+              <span className="mono">/status kamino-lend</span> to the bot. Email and webhooks are on the same page.
+              Pick a minimum severity so you only hear about what matters.
             </li>
             <li>
               When an alert arrives it says what changed, why it matters and what you can do, with a link to the
@@ -424,8 +426,8 @@ export default function Docs() {
               Admin-config adapters (withdraw limits, listing authority) are mapped for only a few protocols so far.
             </li>
             <li>
-              The <Link href="/case-study">Drift case study</Link> is a backtest: current rules applied to a timeline
-              reconstructed from public incident reports. It is not a live catch.
+              The <Link href="/case-study">case studies</Link> describe past attacks from public reports. Where they say
+              what Overwatch would have seen, that is an assessment or a backtest, not a live catch.
             </li>
             <li>
               The onchain registry trusts its publisher keys (up to 5, chosen by a Squads multisig admin). Overwatch

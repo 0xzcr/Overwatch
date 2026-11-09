@@ -190,8 +190,8 @@ export function LiveFeed({
             </p>
           ) : (
             <p>
-              The live database isn&apos;t connected here. To see how alerts read, step through the{" "}
-              <Link href="/case-study">Drift replay</Link>.
+              The live database isn&apos;t connected here. To see what these alerts guard against, read the{" "}
+              <Link href="/case-study">case studies</Link>.
             </p>
           )}
         </div>

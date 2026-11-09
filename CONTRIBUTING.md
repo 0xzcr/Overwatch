@@ -39,8 +39,8 @@ Four rules are non-negotiable, because the whole product rests on them:
   re-fetch the account and recompute the result. There is no appeal to authority.
 - **The rules live in this repository and stay readable.** If a grade cannot be explained by reading
   `packages/core/src/scoring.ts` and `packages/core/src/rules.ts`, it is a bug.
-- **Copy stays honest.** Overwatch warns _after_ a change lands onchain and cannot undo it. Anything about the Drift
-  incident is a **backtest** of current rules on the public record and must say so. Nothing illustrative is presented
+- **Copy stays honest.** Overwatch warns _after_ a change lands onchain and cannot undo it. Anything a case study says
+  Overwatch would have caught is an assessment or a **backtest** and must say so. Nothing illustrative is presented
   as live data.
 - **A protocol can never pay for a score.**
 
@@ -261,7 +261,7 @@ and what to do. Every claim must be checkable.
 | `apps/indexer/test/` | `pnpm --filter @overwatch/indexer test` | Account fingerprints, signature cursors and replay after downtime. |
 | `apps/bot/test/` | `pnpm --filter @overwatch/bot test` | Alert formatting and retry backoff. |
 | `scripts/dev/pipeline-smoke.ts` | `pnpm smoke:pipeline` | The database pipeline end to end (needs Postgres). |
-| `apps/web/e2e/` | `pnpm --filter @overwatch/web e2e --workers=1` | Playwright smoke tests: landing → docs navigation, control map → protocol page, case-study replay, every main page renders, the red palette and the GMT clock. Needs the dev server on :3000. |
+| `apps/web/e2e/` | `pnpm --filter @overwatch/web e2e --workers=1` | Playwright smoke tests: landing → docs navigation, control map → protocol page, the case studies list ten attacks, every main page renders, the red palette and the GMT clock. Needs the dev server on :3000. |
 | `programs/*/tests/` | `cargo test -p overwatch_registry -p overwatch_vault` | Registry publisher rules and stale-slot rejection; vault share math and the exit decision. |
 
 Writing tests: new rule or scoring logic always gets a test in `packages/core/test/` using the helpers in

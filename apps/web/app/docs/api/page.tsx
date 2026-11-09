@@ -89,7 +89,7 @@ export default function ApiDocs() {
       <section className="page-block" data-dock="Examples">
         <SectionHead title="Examples" />
         <div className="codegrid" data-reveal>
-          <Code title="curl">{`curl -s https://<host>/api/v1/protocols/drift \\
+          <Code title="curl">{`curl -s https://<host>/api/v1/protocols/kamino-lend \\
   | jq '.data | {grade, score, flagNames, threshold, timelockSec}'
 
 curl -s "https://<host>/api/v1/events?severity=critical&since=2026-10-01T00:00:00Z"
@@ -99,7 +99,7 @@ curl -N https://<host>/api/v1/stream   # event: event / score / registry / shiel
   -H 'content-type: application/json' \\
   -d '{"url":"https://example.com/hooks/overwatch",
        "min_severity":"HIGH",
-       "protocols":["drift","kamino-lend"]}'
+       "protocols":["kamino-lend","jupiter-perps"]}'
 # → { id, secret, ... }  keep both
 
 # change or pause it later
@@ -149,7 +149,7 @@ pub risk: Account<'info, overwatch_registry::RiskRecord>,   // owner checked by 
 if risk.flags & overwatch_registry::flags::RED_MASK != 0 { /* exit */ }`}</Code>
           <Code title="sdk.ts">{`import { fetchRiskRecord } from "@overwatch/sdk";
 
-const r = await fetchRiskRecord("https://api.devnet.solana.com", "drift");
+const r = await fetchRiskRecord("https://api.devnet.solana.com", "kamino-lend");
 // { score, grade, flags, red, ... }`}</Code>
         </div>
       </section>

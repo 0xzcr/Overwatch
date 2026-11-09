@@ -43,7 +43,7 @@ const TIPS = {
   timelock:
     "A mandatory waiting period between approving a change and it taking effect. It gives depositors time to withdraw.",
   nonce:
-    "Signers holding durable nonce accounts can pre-sign transactions that never expire. That is how the Drift attack was staged.",
+    "Signers holding durable nonce accounts can pre-sign transactions that never expire. Attackers have used them to hold control in reserve.",
 };
 
 export function Leaderboard({ rows }: { rows: ProtoCard[] }) {

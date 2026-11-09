@@ -165,7 +165,7 @@ export function pageMetadata({
   }; // SEO component
 } // SEO component
 
-/** A BreadcrumbList for a page below the home page, e.g. [["Control map", "/protocols"], ["Drift", "/protocols/drift"]]. */
+/** A BreadcrumbList for a page below the home page, e.g. [["Control map", "/protocols"], ["Kamino Lend", "/protocols/kamino-lend"]]. */
 export function breadcrumbs(trail: [name: string, path: string][]) {
   // SEO component
   const items = [["Overwatch", "/"] as [string, string], ...trail]; // SEO component

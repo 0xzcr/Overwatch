@@ -19,12 +19,11 @@ test("leaderboard lists protocols and links to the detail page", async ({ page }
   await expect(page.getByRole("heading", { name: "Who can move your money" })).toBeVisible();
 });
 
-test("case study replays alerts from the rules engine", async ({ page }) => {
-  await page.goto("/case/drift");
+test("case studies list ten attacks as plain text", async ({ page }) => {
+  await page.goto("/case/drift"); // the old Drift link still lands here
   await expect(page).toHaveURL(/\/case-study$/);
-  await expect(page.locator("body")).not.toHaveClass(/is-loading/);
-  await page.locator("#driftNext").click();
-  await expect(page.getByText(/never-expiring/).first()).toBeVisible();
+  await expect(page.locator(".docs__body article")).toHaveCount(10);
+  await expect(page.getByRole("heading", { name: "5. Drift Protocol" })).toBeVisible();
 });
 
 test("documentation, API docs, events and alerts pages render", async ({ page }) => {
