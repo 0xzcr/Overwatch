@@ -5,3 +5,6 @@ primary_region = "syd" # next to the Supabase database (ap-southeast-2)
   dockerfile = "Dockerfile.worker"
   [build.args]
     APP = "bot"
+# Restart on any exit, so a crash never leaves alerts off.
+[[restart]]
+  policy = "always"

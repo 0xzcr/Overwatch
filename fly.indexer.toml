@@ -5,9 +5,15 @@ primary_region = "syd" # next to the Supabase database (ap-southeast-2)
   dockerfile = "Dockerfile.worker"
   [build.args]
     APP = "indexer"
+# Restart on any exit, including the watchdog's exit in apps/indexer/src/main.ts.
+[[restart]]
+  policy = "always"
 [[services]]
   internal_port = 8787
   protocol = "tcp"
+  # Nothing sends it traffic, so never let Fly stop it as idle.
+  auto_stop_machines = "off"
+  min_machines_running = 1
   [[services.http_checks]]
     path = "/health"
     interval = "30s"
