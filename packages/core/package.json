@@ -6,7 +6,9 @@
   "main": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./net": "./src/net.ts"
+    "./net": "./src/net.ts",
+    "./siws": "./src/siws.ts",
+    "./plans": "./src/plans.ts"
   },
   "scripts": {
     "typecheck": "tsc -p .",
