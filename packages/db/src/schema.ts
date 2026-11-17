@@ -11,6 +11,7 @@ import {
   uniqueIndex,
   primaryKey,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const protocols = pgTable("protocols", {
   id: serial("id").primaryKey(),
@@ -27,6 +28,9 @@ export const protocols = pgTable("protocols", {
   tvlUsd: bigint("tvl_usd", { mode: "number" }),
   tvlFetchedAt: timestamp("tvl_fetched_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  // A private watch belongs to one account: it is graded and alerted like any protocol, but only its owner sees it.
+  ownerAccountId: integer("owner_account_id").references(() => accounts.id, { onDelete: "cascade" }),
+  visibility: text("visibility").notNull().default("public"), // public | private
 });
 
 export const watchedAccounts = pgTable(
@@ -99,6 +103,10 @@ export const scores = pgTable(
     grade: text("grade").notNull(),
     flags: bigint("flags", { mode: "bigint" }).notNull(),
     breakdown: jsonb("breakdown").notNull(),
+    /** per-control grades from the ruleset (what sets the grade), shown on the protocol page */
+    capabilities: jsonb("capabilities").notNull().default([]),
+    /** grades are only compared with earlier grades from the same ruleset */
+    ruleset: text("ruleset").notNull().default("v1"),
     computedAt: timestamp("computed_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("scores_protocol").on(t.protocolId, t.computedAt)],
@@ -143,6 +151,8 @@ export const subscriptions = pgTable(
     // email subscriptions stay unconfirmed (and get no alerts) until the owner clicks the link sent to them
     confirmed: boolean("confirmed").notNull().default(true),
     confirmToken: text("confirm_token").unique(),
+    /** set when the subscription belongs to a signed-in account (its watchlist and plan apply) */
+    accountId: integer("account_id").references(() => accounts.id, { onDelete: "cascade" }),
   },
   (t) => [index("subs_channel_target").on(t.channel, t.target)],
 );
@@ -172,6 +182,9 @@ export const deliveries = pgTable(
 export const apiKeys = pgTable("api_keys", {
   id: serial("id").primaryKey(),
   keyHash: text("key_hash").notNull().unique(),
+  /** first characters of the key, so its owner can tell keys apart; the key itself is never stored */
+  prefix: text("prefix"),
+  accountId: integer("account_id").references(() => accounts.id, { onDelete: "cascade" }),
   owner: text("owner").notNull(),
   tier: text("tier").notNull().default("free"),
   rateLimit: integer("rate_limit").notNull().default(60),
@@ -213,3 +226,61 @@ export const signatureCursors = pgTable(
   },
   (t) => [primaryKey({ columns: [t.network, t.address] })],
 );
+
+/** A signed-in customer. Identity is a Solana wallet: signing a message proves ownership, no password exists. */
+export const accounts = pgTable("accounts", {
+  id: serial("id").primaryKey(),
+  wallet: text("wallet").notNull().unique(),
+  plan: text("plan").notNull().default("free"), // free | pro | team
+  /** null for free; a paid plan stops applying after this moment */
+  planExpiresAt: timestamp("plan_expires_at", { withTimezone: true }),
+  /** protocol ids shown on the dashboard and used by the account's alert channels */
+  watchlist: integer("watchlist").array().notNull().default([]),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * A request to pay for a plan in USDC on Solana. The amount carries a unique fraction of a cent so a bare transfer
+ * (from an exchange or a custody desk that cannot attach a reference) still matches exactly one invoice.
+ */
+export const invoices = pgTable(
+  "invoices",
+  {
+    id: serial("id").primaryKey(),
+    accountId: integer("account_id")
+      .notNull()
+      .references(() => accounts.id, { onDelete: "cascade" }),
+    plan: text("plan").notNull(),
+    months: integer("months").notNull(),
+    /** USDC base units (6 decimals) */
+    amount: bigint("amount", { mode: "number" }).notNull(),
+    network: text("network").notNull(),
+    mint: text("mint").notNull(),
+    treasury: text("treasury").notNull(),
+    /** a fresh public key included in the payment transaction (Solana Pay reference) */
+    reference: text("reference").notNull().unique(),
+    status: text("status").notNull().default("open"), // open | paid | expired
+    txSignature: text("tx_signature").unique(),
+    payer: text("payer"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("invoices_account").on(t.accountId, t.createdAt),
+    // an open amount must be unique, so a transfer of that exact amount identifies one invoice
+    uniqueIndex("invoices_open_amount")
+      .on(t.amount)
+      .where(sql`status = 'open'`),
+  ],
+);
+
+/** One-time codes that link a Telegram chat to an account (sent to the bot as /start <code>). */
+export const telegramLinks = pgTable("telegram_links", {
+  code: text("code").primaryKey(),
+  accountId: integer("account_id")
+    .notNull()
+    .references(() => accounts.id, { onDelete: "cascade" }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+});
