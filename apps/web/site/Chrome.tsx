@@ -5,8 +5,10 @@ import { Logo, LogoMark } from "./Logo";
 import { NavLinks } from "./NavLinks";
 import { NavClock } from "./NavClock";
 import { MaintenanceDrop } from "./MaintenanceDrop";
+import { AccountButton } from "./SignIn";
+import { accountsOpen } from "@/lib/session";
 
-/** Persistent chrome: boot sequence, WebGL canvas, cursor, nav, menu and dock. Rendered once in the root layout. */
+/** Persistent chrome: boot sequence, WebGL canvas, cursor, nav and menu. Rendered once in the root layout. */
 export function Chrome() {
   return (
     <>
@@ -68,9 +70,13 @@ export function Chrome() {
               <i />
             </span>
           </button>
-          <Link className="btn btn--glow btn--sm" href="/alerts" data-cursor="Alerts">
-            <span>Get alerts</span>
-          </Link>
+          {accountsOpen() ? (
+            <AccountButton />
+          ) : (
+            <Link className="btn btn--glow btn--sm" href="/alerts" data-cursor="Alerts">
+              <span>Get alerts</span>
+            </Link>
+          )}
         </div>
         <MaintenanceDrop />
       </header>
@@ -85,39 +91,22 @@ export function Chrome() {
             </button>
           </div>
           <ol className="menu__list">
-            {pages.map((p) => (
-              <li key={p.href} style={cssVars({ "--c": p.color })}>
-                <Link href={p.href} data-cursor="Go">
-                  <span className="menu__name">{p.name}</span>
-                  <span className="menu__kicker">{p.kicker}</span>
-                  <span className="menu__count mono">→</span>
-                </Link>
-              </li>
-            ))}
+            {pages
+              .filter((p) => p.href !== "/app" || accountsOpen())
+              .map((p) => (
+                <li key={p.href} style={cssVars({ "--c": p.color })}>
+                  <Link href={p.href} data-cursor="Go">
+                    <span className="menu__name">{p.name}</span>
+                    <span className="menu__kicker">{p.kicker}</span>
+                    <span className="menu__count mono">→</span>
+                  </Link>
+                </li>
+              ))}
           </ol>
           <div className="menu__foot">
             <span>Mainnet data is read-only. The onchain registry runs on devnet.</span>
           </div>
         </div>
-      </div>
-
-      <div className="dock" id="dock" aria-label="Section navigation">
-        <button className="dock__btn" id="dockPrev" aria-label="Previous section" data-cursor="Prev">
-          ←
-        </button>
-        <div className="dock__now">
-          <svg className="dock__ring" viewBox="0 0 36 36" aria-hidden="true">
-            <circle cx="18" cy="18" r="15.5" />
-            <circle id="dockProg" cx="18" cy="18" r="15.5" />
-          </svg>
-          <span className="mono dock__num" id="dockNum">
-            00
-          </span>
-          <span className="dock__name" id="dockName" />
-        </div>
-        <button className="dock__btn" id="dockNext" aria-label="Next section" data-cursor="Next">
-          →
-        </button>
       </div>
 
       <div className="toast mono" id="toast" role="status" />
@@ -141,8 +130,8 @@ export function Footer() {
         <div className="footer__brand">
           <Logo className="logo logo--footer" id="logo-footer" />
           <p>
-            Overwatch reads who can change the Solana protocols holding your deposits and alerts you after those
-            controls weaken onchain. It watches authority, not prices or code.
+            Overwatch grades how easily each Solana protocol holding your deposits could be drained (keys to steal, time
+            to withdraw) and alerts you the moment that gets worse. It watches control, not prices or code.
           </p>
         </div>
         <div className="footer__cols">
@@ -154,6 +143,8 @@ export function Footer() {
           </div>
           <div>
             <h4>Act</h4>
+            {accountsOpen() && <Link href="/app">Dashboard</Link>}
+            <Link href="/pricing">Pricing</Link>
             <Link href="/alerts">Alerts</Link>
             <Link href="/docs#onchain">Onchain registry</Link>
           </div>

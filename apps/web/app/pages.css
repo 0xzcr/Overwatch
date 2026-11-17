@@ -633,6 +633,10 @@ a.addr:hover {
   background: rgba(var(--panel-rgb), 0.82);
   backdrop-filter: blur(10px);
 }
+/* browsers indent <dd> by 40px, which pushed the empty-state text out of line with the card's label */
+.facts__card dd {
+  margin: 0;
+}
 .facts__card.is-dashed {
   border-style: dashed;
 }
@@ -1799,6 +1803,16 @@ a:focus-visible > .logo .dog__sheen {
     text-overflow: ellipsis;
     background: rgb(var(--panel-rgb));
   }
+  /* the ellipsis has to sit on the text itself: the link is a flex row, where the cell's own ellipsis never shows */
+  .lb__name {
+    display: flex;
+    min-width: 0;
+  }
+  .lb__name b {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 /* ------------------------------------------------------------ docs: sticky contents beside a readable column */
@@ -1923,5 +1937,440 @@ a:focus-visible > .logo .dog__sheen {
     display: block;
     max-width: 100%;
     overflow-x: auto;
+  }
+}
+
+/* ------------------------------------------------------------ ticker: recent changes, fixed along the bottom */
+.ticker {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  align-items: stretch;
+  height: 38px;
+  border-top: 1px solid var(--line);
+  background: rgba(var(--bg-rgb), 0.78);
+  backdrop-filter: blur(16px) saturate(140%);
+  font-size: 13px;
+}
+.ticker__label {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 9px;
+  padding: 0 16px 0 var(--gutter);
+  border-right: 1px solid var(--line);
+  color: var(--ink);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.ticker__window {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  /* items fade in and out at the two ends instead of being cut off */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 48px, #000 calc(100% - 48px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 48px, #000 calc(100% - 48px), transparent);
+}
+.ticker__track {
+  display: flex;
+  width: max-content;
+  height: 100%;
+  /* the track holds the list twice; sliding it by half its width lands exactly on the second copy */
+  animation: ticker linear infinite;
+}
+.ticker:hover .ticker__track,
+.ticker:focus-within .ticker__track {
+  animation-play-state: paused;
+}
+@keyframes ticker {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.ticker__run {
+  display: flex;
+  align-items: center;
+}
+.ticker__item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 22px;
+  white-space: nowrap;
+  color: var(--chrome);
+  transition: color 0.2s;
+}
+.ticker__item:hover {
+  color: var(--ink);
+}
+.ticker__item time {
+  font-size: 12px;
+  color: var(--dim);
+}
+/* the dot's colour is the event's severity */
+.ticker__sev {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dim);
+}
+.sev-medium .ticker__sev {
+  background: var(--warn);
+}
+.sev-high .ticker__sev {
+  background: var(--bad);
+}
+.sev-critical .ticker__sev {
+  background: var(--mint);
+}
+/* leave room under the footer so the ticker never covers its last line */
+body:has(.ticker) .footer {
+  padding-bottom: calc(90px + 38px);
+}
+@media (prefers-reduced-motion: reduce) {
+  /* no movement: the list can be scrolled sideways by hand instead */
+  .ticker__window {
+    overflow-x: auto;
+  }
+  .ticker__track {
+    animation: none;
+  }
+  .ticker__run[aria-hidden="true"] {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------ phones */
+@media (max-width: 640px) {
+  /* the opening fits one screen: a smaller eye, then the title and its sentence above the ticker */
+  .wd {
+    gap: 14px;
+    padding-top: 68px;
+    padding-bottom: 64px;
+  }
+  .wd__eye {
+    width: min(86%, 38svh);
+  }
+  .wd__text {
+    gap: 14px;
+  }
+  /* the three steps stack instead of hiding two of them off the right edge */
+  .steps {
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    overflow-x: visible;
+    scroll-snap-type: none;
+  }
+  .step {
+    padding: 20px;
+  }
+  /* the control graph gets a taller frame, so its two-per-row layout is large enough to read */
+  .cg {
+    height: 76svh;
+  }
+  .ticker {
+    font-size: 12.5px;
+  }
+  .ticker__label {
+    gap: 7px;
+    padding-right: 10px;
+  }
+  .ticker__item {
+    padding: 0 14px;
+  }
+  .ticker__window {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 20px, #000 calc(100% - 20px), transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 20px, #000 calc(100% - 20px), transparent);
+  }
+}
+
+/* ───────────────────────────── accounts: sign-in, dashboard, pricing ───────────────────────────── */
+
+.signin {
+  max-width: 560px;
+  display: grid;
+  gap: 16px;
+}
+.signin__title {
+  font-family: var(--display);
+  font-size: clamp(24px, 3vw, 32px);
+  margin: 0;
+}
+.signin__lede,
+.signin__none {
+  color: var(--chrome);
+  margin: 0;
+}
+.signin__none a {
+  color: var(--ink);
+}
+.signin__wallets {
+  display: grid;
+  gap: 8px;
+}
+.signin__wallet {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.signin__wallet:hover:not(:disabled) {
+  border-color: var(--mint);
+}
+.signin__wallet:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.signin__wallet img {
+  border-radius: 6px;
+}
+
+.acct {
+  display: grid;
+  gap: 40px;
+}
+.acct__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+.acct__head p {
+  margin: 0;
+}
+.acct__wallet {
+  font-size: 20px;
+  color: var(--ink);
+}
+.acct__plan {
+  margin-right: auto;
+}
+/* sticky so the result of an action far down the page is still seen */
+.acct__note {
+  position: sticky;
+  top: 72px;
+  z-index: 5;
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+.acct__section {
+  display: grid;
+  gap: 14px;
+}
+.acct__section > p {
+  margin: 0;
+}
+.acct__h {
+  font-family: var(--display);
+  font-size: clamp(20px, 2.4vw, 26px);
+  margin: 0;
+}
+.acct__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+.acct__card {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  padding: 18px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+.acct__card h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.acct__card p {
+  margin: 0;
+}
+.acct__actions,
+.acct__row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.acct__form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+  align-items: center;
+}
+.acct__secret {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px dashed var(--warn);
+  border-radius: var(--radius);
+  overflow-wrap: anywhere;
+}
+.acct__invoice {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--mint);
+  border-radius: var(--radius);
+}
+.acct__invoice p {
+  margin: 0;
+}
+.acct__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.acct__list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.acct__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.acct__table th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+.acct__table th,
+.acct__table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+
+.plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+.plan {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  padding: 28px 24px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+.plan--featured {
+  border-color: var(--mint);
+}
+.plan__name {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 28px;
+}
+.plan__who,
+.plan__price {
+  margin: 0;
+}
+.plan__price .mono {
+  font-size: 40px;
+  color: var(--ink);
+}
+.plan__features {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  color: var(--chrome);
+}
+.plan .btn {
+  justify-self: start;
+}
+.plan__soon {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+/* Mosaic veil over a paid plan: the content is blurred, then a pixel grid with flickering tiles sits on top. */
+.plan__veil {
+  position: relative;
+  justify-self: start;
+  user-select: none;
+  pointer-events: none;
+}
+.plan__veil > * {
+  filter: blur(10px);
+}
+.plan__veil::after {
+  content: "";
+  position: absolute;
+  inset: -6px -10px;
+  border-radius: var(--radius);
+  background-image:
+    /* tile seams */
+    linear-gradient(90deg, rgba(var(--panel-rgb), 1) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(var(--panel-rgb), 1) 1px, transparent 1px),
+    /* two checker layers of different sizes: their overlap reads as uneven mosaic tiles */
+    conic-gradient(rgba(var(--mint-rgb), 0.3) 25%, transparent 0 50%, rgba(var(--mint-rgb), 0.3) 0 75%, transparent 0),
+    conic-gradient(rgba(255, 255, 255, 0.14) 25%, transparent 0 50%, rgba(255, 255, 255, 0.14) 0 75%, transparent 0);
+  background-size:
+    12px 12px,
+    12px 12px,
+    24px 24px,
+    36px 36px;
+  backdrop-filter: blur(6px);
+  animation: veil-flicker 2.4s steps(4) infinite;
+}
+@keyframes veil-flicker {
+  to {
+    background-position:
+      0 0,
+      0 0,
+      24px 12px,
+      -36px 24px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .plan__veil::after {
+    animation: none;
+  }
+}
+.plans__notes {
+  margin-top: 48px;
+  max-width: 760px;
+}
+.plans__notes ul {
+  display: grid;
+  gap: 8px;
+  color: var(--chrome);
+  padding-left: 18px;
+}
+
+@media (max-width: 640px) {
+  .acct__table {
+    font-size: 13px;
+  }
+  .acct__table th:nth-child(3),
+  .acct__table td:nth-child(3) {
+    display: none;
   }
 }
