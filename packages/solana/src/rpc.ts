@@ -254,12 +254,48 @@ export class Rpc {
   async getTransaction(signature: string, slot = 0): Promise<ParsedTx | null> {
     const r = await this.call(
       "getTransaction",
-      [signature, { encoding: "json", maxSupportedTransactionVersion: 0, commitment: "confirmed" }],
+      // version 1 (SIMD-0385) is live on mainnet; asking for 0 makes the RPC refuse those transactions outright
+      [signature, { encoding: "json", maxSupportedTransactionVersion: 1, commitment: "confirmed" }],
       slot,
     );
     return r ? txSchema.parse(r) : null;
   }
+
+  /** One transaction with its token balances (for payment checks). */
+  async getPaymentTransaction(signature: string): Promise<PaymentTxRaw | null> {
+    const r = await this.call("getTransaction", [
+      signature,
+      { encoding: "json", maxSupportedTransactionVersion: 1, commitment: "confirmed" },
+    ]);
+    return r ? paymentTxSchema.parse(r) : null;
+  }
 }
+
+const tokenBalanceSchema = z.object({
+  accountIndex: z.number(),
+  mint: z.string(),
+  owner: z.string().optional(),
+  uiTokenAmount: z.object({ amount: z.string(), decimals: z.number() }),
+});
+
+/** A transaction with token balances before and after: what a payment check needs. */
+export const paymentTxSchema = z.object({
+  slot: z.number(),
+  blockTime: z.number().nullable().optional(),
+  meta: z
+    .object({
+      err: z.unknown(),
+      preTokenBalances: z.array(tokenBalanceSchema).optional(),
+      postTokenBalances: z.array(tokenBalanceSchema).optional(),
+      loadedAddresses: z.object({ writable: z.array(z.string()), readonly: z.array(z.string()) }).optional(),
+    })
+    .nullable(),
+  transaction: z.object({
+    signatures: z.array(z.string()),
+    message: z.object({ accountKeys: z.array(z.string()) }),
+  }),
+});
+export type PaymentTxRaw = z.infer<typeof paymentTxSchema>;
 
 export const txSchema = z.object({
   slot: z.number(),

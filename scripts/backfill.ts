@@ -81,7 +81,7 @@ async function parseTx(
 ): Promise<{ found: Found[]; slot: number; blockTime: number | null }> {
   const raw = await rpc.call("getTransaction", [
     sig,
-    { encoding: "json", maxSupportedTransactionVersion: 0, commitment: "confirmed" },
+    { encoding: "json", maxSupportedTransactionVersion: 1, commitment: "confirmed" },
   ]);
   if (!raw) return { found: [], slot: 0, blockTime: null };
   const tx = txSchema.parse(raw);
