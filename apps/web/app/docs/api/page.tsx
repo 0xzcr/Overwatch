@@ -64,9 +64,9 @@ export default function ApiDocs() {
         lede={
           <>
             JSON over HTTPS, no sign-up. Every response is <span className="mono">{"{ version, data }"}</span>, and
-            errors are <span className="mono">{"{ version, error }"}</span>. Anyone can make 30 requests a minute;
-            partners with an <span className="mono">x-api-key</span> get more. Over the limit you get 429 with{" "}
-            <span className="mono">retry-after</span>.
+            errors are <span className="mono">{"{ version, error }"}</span>. Anyone can make 30 requests a minute; an{" "}
+            <span className="mono">x-api-key</span> from your <a href="/app">dashboard</a> raises that to 300 (Pro) or
+            1,200 (Team) per key. Over the limit you get 429 with <span className="mono">retry-after</span>.
           </>
         }
       />
@@ -76,7 +76,7 @@ export default function ApiDocs() {
         <table className="dtable dtable--api">
           <tbody>
             {EP.map(([m, p, d]) => (
-              <tr key={p}>
+              <tr key={`${m} ${p}`}>
                 <td className={`mono method-tag is-${m.toLowerCase()}`}>{m}</td>
                 <td className="mono">{p}</td>
                 <td>{d}</td>
@@ -90,7 +90,8 @@ export default function ApiDocs() {
         <SectionHead title="Examples" />
         <div className="codegrid" data-reveal>
           <Code title="curl">{`curl -s https://<host>/api/v1/protocols/kamino-lend \\
-  | jq '.data | {grade, score, flagNames, threshold, timelockSec}'
+  | jq '.data | {grade, red, ruleset, capabilities}'
+# capabilities: one row per control: { capability, label, grade, keys, delaySec, provisional, red }
 
 curl -s "https://<host>/api/v1/events?severity=critical&since=2026-10-01T00:00:00Z"
 

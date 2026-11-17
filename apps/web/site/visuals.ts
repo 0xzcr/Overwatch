@@ -83,7 +83,7 @@ function gauge(u: Capability) {
       ? [
           ["Upgrade authority", "Program PDA"],
           ["Mapped", "No"],
-          ["Deduction", "−15"],
+          ["Grade", "Unverified"],
         ]
       : [
           ["Multisig", "5-of-10"],
@@ -215,7 +215,7 @@ function pipeline(u: Capability) {
       "PROGRAM_UPGRADED",
       "MEDIUM · unannounced upgrades deserve a look",
     ],
-    score: [["snapshot", "deductions", "flags", "grade", "publish"], 5, "Tests passing", "every rule and flag covered"],
+    score: [["snapshot", "paths", "grid", "grade", "publish"], 5, "Tests passing", "every rule and flag covered"],
   };
   const [steps, done, head, msg] = flows[u.chapter] ?? flows.act!;
   return `
@@ -301,7 +301,7 @@ function chat() {
       <p class="me" style="--i:0">/watch kamino-lend</p>
       <p style="--i:1">Watching Kamino Lend. Alerts at HIGH and above.</p>
       <p class="me" style="--i:2">/status kamino-lend</p>
-      <p style="--i:3"><b>Kamino Lend</b>: grade <b>A</b> (85/100)<br/>Upgrade authority: squads v4 vault<br/>Multisig: 5-of-10, timelock 1 day</p>
+      <p style="--i:3"><b>Kamino Lend</b>: grade <b>C</b><br/>Cheapest path: 4 keys, 12h delay<br/>Multisig: 4-of-10, timelock 12h</p>
       <p class="alert" style="--i:4">🔴 <b>CRITICAL</b> · Example Lend removed its 2 days safety delay</p>
     </div>
   </div>`;
@@ -309,17 +309,17 @@ function chat() {
 
 function ledger() {
   const rows: [string, string][] = [
-    ["Single upgrade key", "−60"],
-    ["No timelock", "−25"],
-    ["Threshold ≤ 2", "−20"],
-    ["Controlled multisig", "−20"],
-    ["Signer durable nonce (each)", "−10"],
-    ["Pending weakening vote", "−10"],
-    ["Unmapped control", "−15"],
+    ["1 key · no delay", "F"],
+    ["2 keys · no delay", "F"],
+    ["3 keys · 24h delay", "C"],
+    ["4+ keys · 7 day delay", "B"],
+    ["2+ keys · 30 day delay", "A"],
+    ["Unreadable controller", "?"],
+    ["Can only make things safer", "—"],
   ];
   return `
   <div class="vz vz-ledger">
-    <div class="vz-ledger__head mono"><span>score = 100</span><b>clamp(0, 100)</b></div>
+    <div class="vz-ledger__head mono"><span>keys × delay</span><b>worst power wins</b></div>
     <ol>${rows.map(([a, b], i) => `<li style="--i:${i}"><span>${a}</span><b class="mono">${b}</b></li>`).join("")}</ol>
   </div>`;
 }

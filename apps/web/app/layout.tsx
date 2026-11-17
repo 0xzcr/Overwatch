@@ -10,9 +10,9 @@ import { Chrome, Footer } from "@/site/Chrome";
 import { Experience } from "@/site/Experience";
 import { SITE_URL, REPO_URL } from "@/site/content";
 
-const TITLE = "Overwatch — Know who can move your money";
+const TITLE = "Overwatch — Know how easily your deposits could be taken";
 const DESCRIPTION =
-  "Overwatch reads who can change the Solana protocols holding your deposits: upgrade keys, multisig thresholds, timelocks, signers and durable nonces. It alerts you after those controls weaken onchain.";
+  "Overwatch grades every Solana DeFi protocol by how many keys an attacker must steal to drain it and how long depositors would have to withdraw, and alerts you the moment that gets worse.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

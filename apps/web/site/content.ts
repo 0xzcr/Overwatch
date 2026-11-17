@@ -54,6 +54,8 @@ export const pages = [
     color: "#7CF3FF",
   },
   { href: "/case-study", name: "Case studies", kicker: "Ten control attacks, explained", color: "#FF5A3D" },
+  { href: "/app", name: "Dashboard", kicker: "Your watchlist, alerts, keys and plan", color: "#FFB547" },
+  { href: "/pricing", name: "Pricing", kicker: "Free safety alerts; paid depth, in USDC", color: "#FFB547" },
   { href: "/alerts", name: "Alerts", kicker: "Telegram, webhooks, email", color: "#FFB547" },
   {
     href: "/docs",
@@ -68,20 +70,26 @@ export const steps = [
   {
     num: "01",
     name: "Map",
-    title: "Who controls each protocol",
-    text: "For each major protocol we read the upgrade authority, the multisig behind it, how many signers must approve a change, and how long that change waits. Each fact links to the account it came from.",
+    title: "Every way your money can be taken",
+    text: "For each protocol we find every power that could drain it (upgrading the code, changing risk settings) and who holds it: one key, a multisig, a DAO. Each fact links to the account it came from.",
   },
   {
     num: "02",
+    name: "Grade",
+    title: "Two numbers decide the grade",
+    text: "How many keys an attacker must steal, and how many days you would have to withdraw before a change takes effect. A to F, worst power wins, the same published rules for every protocol. Red means it can be drained with no warning.",
+  },
+  {
+    num: "03",
     name: "Watch",
     title: "Changes as they happen",
     text: "We read those accounts every 15 seconds and the signers' transactions every minute. A removed timelock or lowered threshold shows up within a minute of confirming. Signers' durable nonce accounts are scanned hourly. We warn after a change lands; we cannot undo it.",
   },
   {
-    num: "03",
+    num: "04",
     name: "Warn",
-    title: "Alerts and onchain scores",
-    text: "Alerts go to Telegram, a webhook or email, written in plain English. Scores are also stored onchain, so a vault program can act without waiting for a person.",
+    title: "Alerts the moment it gets easier",
+    text: "When a grade drops, a timelock shrinks or a signer changes, you hear on Telegram, email or a signed webhook, in plain English. Grades are also stored onchain, so a vault program can act without waiting for a person.",
   },
 ] as const;
 
@@ -109,7 +117,7 @@ export const layers: (Capability & { href: string; cta: string; color: string })
     href: "/alerts",
     cta: "Set up alerts",
     summary:
-      "Alerts on Telegram, signed webhooks or email when a protocol's controls weaken. There is also a versioned API and a live event stream.",
+      "Pick the protocols you hold and get alerts on Telegram, email or signed webhooks when their grade drops. A versioned API and a live event stream are there for builders.",
   },
   {
     id: "registry",
@@ -151,19 +159,23 @@ export const layers: (Capability & { href: string; cta: string; color: string })
   },
 ];
 
+/** Bit positions 0-14 of the onchain flags (4 and 11 are retired and never set). */
 export const flagBits = [
   "SINGLE_KEY",
   "NO_TIMELOCK",
   "LOW_THRESHOLD",
   "CONTROLLED_MULTISIG",
-  "SIGNER_NONCE",
+  "RETIRED_4",
   "PENDING_WEAKENING",
   "RECENT_WEAKENING",
   "RISKY_COLLATERAL",
   "DEPRECATED_ORACLE",
   "UNVERIFIED",
-  "NO_TIMELOCK_LOW_THRESHOLD",
+  "DRAIN_PATH_F",
+  "RETIRED_11",
+  "SIGNER_NONCE",
   "RECENT_CRITICAL",
+  "PARTIAL_COVERAGE",
 ];
 
 /** "What does this mean?" tooltips. */

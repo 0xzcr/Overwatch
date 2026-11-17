@@ -4,7 +4,7 @@ import { PageHero, Term, JsonLd, breadcrumbs, pageMetadata, ORGANIZATION_ID } fr
 import { SITE_URL } from "@/site/content"; // SEO component
 
 const DESCRIPTION = // SEO component
-  "How Overwatch reads Solana protocol controls, scores them from 0 to 100, decides what is red, and how depositors, builders and onchain programs can use it."; // SEO component
+  "How Overwatch reads Solana protocol controls, grades every way a protocol could be drained by keys to steal and time to withdraw, decides what is red, and how depositors, builders and onchain programs can use it."; // SEO component
 export const metadata = pageMetadata({ title: "Documentation", description: DESCRIPTION, path: "/docs" }); // SEO component
 
 /**
@@ -26,12 +26,17 @@ const FAQ: [question: string, answer: string][] = [
   [
     // SEO component
     "How is a protocol's grade calculated?", // SEO component
-    "Every grade starts at 100 and subtracts fixed deductions for weak controls, clamped to 0 to 100. Threshold and timelock deductions use the weakest relevant multisig. Each deduction is listed on the protocol page with the account it came from. TVL is shown for context but never affects a grade.", // SEO component
+    "For every power that could drain the protocol (upgrading its code, changing its risk settings), Overwatch finds the cheapest way to use it: how many private keys an attacker must steal, and how long the change waits before it takes effect, minus the time depositors need to withdraw. A grid turns those two numbers into A to F, and the protocol takes the grade of its weakest power. TVL never affects a grade.", // SEO component
   ], // SEO component
   [
     // SEO component
     "What makes a protocol red?", // SEO component
-    "A protocol is red when its upgrade authority is a single key, a signer controls a durable nonce account, it has no timelock with a multisig threshold of two or fewer, or it had a recent CRITICAL weakening event. Red is the signal a vault can act on.", // SEO component
+    "A protocol is red when a power that can drain it grades F: one key with less than a day's delay, or two keys with no delay. Durable nonce accounts, pending proposals and recent events are shown as flags but never make a protocol red on their own. Red is the signal a vault can act on.", // SEO component
+  ], // SEO component
+  [
+    // SEO component
+    "Doesn't a team need to act fast in an emergency?", // SEO component
+    "Yes, and the grade allows for it. A fast power that can only make things safer, such as pausing, lowering limits or tightening risk settings, is listed but not graded. So is a power the program caps below 5% of deposits, which grades no lower than D. Only powers that can take depositors' money need keys and a delay. A team that splits the two keeps its speed and its grade. Teams can also show us code we cannot read yet; until then the protocol shows as unverified, not as a letter.", // SEO component
   ], // SEO component
   [
     // SEO component
@@ -82,7 +87,7 @@ const PIPELINE: [step: string, text: string][] = [
   ],
   [
     "Score",
-    "Start at 100, subtract the deductions below, clamp to 0–100 and map to a grade. The rules are code in the repo: packages/core/src/scoring.ts and rules.ts, with unit tests for every rule.",
+    "Grade every drain power by keys to steal and usable delay, and take the worst. The rules are code in the repo (packages/core/src/ruleset), tested by 164 scenarios, 23 properties checked over 86,016 multisig setups, a brute-force oracle, and 4,000 random trees for unverified grades (lab/rules-v4.1).",
   ],
   [
     "Publish",
@@ -91,31 +96,50 @@ const PIPELINE: [step: string, text: string][] = [
   ["Alert", "Send the event to Telegram, signed webhooks or email, and stream it over Server-Sent Events."],
 ];
 
+/** The grid (ruleset v4): rows are keys an attacker must steal, columns the delay depositors can actually use. */
+const GRID: [keys: string, cells: string[]][] = [
+  ["1 key", ["F", "F", "D", "C", "B"]],
+  ["2 keys", ["F", "D", "C", "B", "A"]],
+  ["3 keys", ["D", "C", "C", "B", "A"]],
+  ["4 or more", ["C", "C", "B", "B", "A"]],
+];
+const GRID_COLUMNS = ["no delay", "under 24h", "24h to 7d", "7 to 30d", "30d or more"];
+
 const RULES: [string, string][] = [
-  ["Upgrade authority is a single key", "−60"],
-  ["Controlled multisig (Squads configAuthority set)", "−20"],
-  ["Threshold ≤ 2", "−20"],
-  ["Otherwise, threshold / voting members < 50%", "−10"],
-  ["Timelock = 0", "−25"],
-  ["Timelock < 24h", "−15"],
-  ["Timelock < 48h", "−5"],
-  ["Each signer holding an active durable nonce account", "−10 (max −30)"],
-  ["A pending proposal would weaken controls", "−10"],
-  ["Any HIGH/CRITICAL weakening event in the last 30 days", "−10"],
-  ["Collateral with PermanentDelegate, or a deprecated oracle", "−10 each (max −20)"],
-  ["Control we could not map (unmapped PDA, unknown, Realms/Squads v3 not yet decoded)", "−15"],
-  ["Immutable program", "no upgrade deductions"],
+  [
+    "Every power that could drain the protocol is graded",
+    "upgrade code, change risk settings, move funds, mint, set prices, bridge, stake",
+  ],
+  ["Each power is graded by its cheapest path", "fewest keys to steal, then shortest delay"],
+  [
+    "Usable delay = timelock minus the time depositors need to withdraw",
+    "a delay shorter than the exit protects no one",
+  ],
+  ["The protocol takes the grade of its weakest power", "the page shows which one"],
+  ["Red = a drain power grades F", "never set by flags alone"],
+  ["A Squads config authority or open spending limit is its own path", "it can act without a vote"],
+  ["A controller Overwatch cannot read", "unverified: no letter, unless what can be read is already D or F"],
+  ["An A needs every expected power mapped", "otherwise B with a coverage note"],
+  ["Blocking withdrawals (freeze)", "graded, never below D, never red"],
+  ["Pausing new deposits", "listed, not graded"],
+  ["A power that can only make things safer (lower limits, pause)", "listed, not graded, with the code that shows it"],
+  ["A power the program caps under 5% of deposits", "graded, never below D, never red"],
+  ["A power the deployed code has no instruction for", "listed, not graded; any redeploy voids this until re-checked"],
+  ["Token issuers (USDC, LSTs)", "listed as a trust assumption, not graded"],
+  ["Flags only, never the grade", "durable nonces, hot wallets, low thresholds, cancel rights, pending proposals"],
 ];
 
 const GRADES: [g: string, range: string, word: string][] = [
-  ["A", "≥ 85", "Strong"],
-  ["B", "≥ 70", "Good"],
-  ["C", "≥ 55", "Caution"],
-  ["D", "≥ 40", "Weak"],
-  ["F", "< 40", "Dangerous"],
+  ["A", "score 95", "Strong: 30+ days to react, or immutable"],
+  ["B", "score 80", "Good: a week or more to react, or many keys"],
+  ["C", "score 65", "Caution"],
+  ["D", "score 50", "Weak"],
+  ["F", "score 20", "Dangerous: can be drained with no warning (red when it is a drain power)"],
 ];
 
 const EVENTS: [string, string][] = [
+  ["GRADE_LOWERED", "CRITICAL if now red · HIGH for 2+ grades or 2 below the 90-day best · else MEDIUM"],
+  ["GRADE_RAISED", "INFO"],
   ["TIMELOCK_REMOVED", "CRITICAL"],
   ["TIMELOCK_REDUCED", "HIGH"],
   ["THRESHOLD_LOWERED", "HIGH · CRITICAL if new threshold ≤ 2"],
@@ -224,20 +248,49 @@ export default function Docs() {
 
           <h2 id="scoring">Scoring and grades</h2>
           <p>
-            Every grade is a deterministic function of facts shown on the protocol page, and each fact links to its raw
-            account. Start at 100, subtract, clamp to 0–100. Threshold and timelock deductions use the weakest relevant
-            multisig, not the sum.
+            Two numbers decide every grade: how many private keys an attacker must steal to drain the protocol, and how
+            many days depositors would have to withdraw before the change takes effect. The 7-day and 30-day lines are
+            the exit windows used by L2BEAT and DeFiScan; an A needs 30 usable days or immutable code, and one key never
+            reaches A. Every grade is a deterministic function of facts on the protocol page.
           </p>
+          <table className="dtable">
+            <thead>
+              <tr>
+                <th>Keys to steal</th>
+                {GRID_COLUMNS.map((c) => (
+                  <th key={c}>{c}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {GRID.map(([keys, cells]) => (
+                <tr key={keys}>
+                  <td>{keys}</td>
+                  {cells.map((g, i) => (
+                    <td key={i} className={`mono${g === "F" ? " bad" : ""}`}>
+                      {g}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
           <table className="dtable">
             <tbody>
               {RULES.map(([r, p]) => (
                 <tr key={r}>
                   <td>{r}</td>
-                  <td className="mono bad">{p}</td>
+                  <td className="dim">{p}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+          <p>
+            Where the rules are a judgement rather than a published standard (the steps below 7 days, the 5% spending
+            limit line, the D floor for freezes), the lab in the repo records why. A grade change raises its own alert:
+            CRITICAL when a protocol turns red, HIGH for a two-grade drop or a slow slide two grades below its 90-day
+            best, MEDIUM for one grade.
+          </p>
           <table className="dtable">
             <tbody>
               {GRADES.map(([g, range, word]) => (
@@ -271,17 +324,18 @@ export default function Docs() {
           </table>
           <p className="callout">
             <b className="bad">The Drift pattern.</b> Any weakening event within 14 days of a signer creating a durable
-            nonce account, or the reverse, escalates to CRITICAL regardless of the individual deductions. Pre-signed
-            nonce transactions never expire, so signatures collected in advance can be used at any later moment.
+            nonce account, or the reverse, escalates to CRITICAL regardless of the grade. Pre-signed nonce transactions
+            never expire, so signatures collected in advance can be used at any later moment.
           </p>
 
           <h2 id="flags">Flags and red</h2>
           <p>
             Each score is published with a u64 flags bitmap. A protocol is <b className="bad">red</b> when{" "}
             <span className="mono">flags &amp; RED_MASK != 0</span>, where RED_MASK ={" "}
-            <span className="mono">0x{RED_MASK.toString(16)}</span>: a single key, a signer with a durable nonce, no
-            timelock combined with a threshold of two or fewer, or a recent CRITICAL weakening. Red is the signal a
-            vault acts on.
+            <span className="mono">0x{RED_MASK.toString(16)}</span>. Under ruleset v4 only bits 0 (one key can drain
+            with no protective delay) and 10 (a drain power grades F) are set, so red means exactly what the grade says.
+            Bits 4 and 11 belonged to the previous rules and are retired; the mask keeps its value so deployed programs
+            keep working.
           </p>
           <table className="dtable">
             <tbody>
@@ -330,7 +384,7 @@ export default function Docs() {
             </li>
             <li>
               Open a protocol to see who can move your money: the upgrade authority, the multisig, its signers, the
-              timelock, every deduction and its change history.
+              timelock, the control that sets its grade, and its change history.
             </li>
             <li>
               Set up <Link href="/alerts">alerts</Link>. On Telegram, send{" "}
@@ -386,13 +440,14 @@ export default function Docs() {
 
           <h2 id="protocols">If you run a protocol</h2>
           <p>
-            Every deduction is public and has a fix: add or lengthen a timelock, raise the multisig threshold, retire a
-            single-key authority, and keep signers away from durable nonce accounts. The grade updates on the next
-            snapshot after the change confirms.
+            Every grade names the control that sets it, and the fix is public: a longer timelock (7 days moves most
+            setups up a grade, 30 days to A), more signers, or retiring a single-key authority. The grade updates on the
+            next snapshot after the change confirms. Teams can watch their own programs and multisigs privately from the
+            dashboard before anyone else sees a change.
           </p>
           <p>
-            A protocol can never pay for a score. Sponsorship can only buy a listing and registered change windows, and
-            sponsors are published.
+            A protocol can never pay for a grade. Paid plans buy alert depth, webhooks, API access and private watches;
+            the grading rules are the same for every protocol.
           </p>
 
           <h2 id="verify">Verify everything yourself</h2>

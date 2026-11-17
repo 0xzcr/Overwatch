@@ -120,7 +120,7 @@ const ATTACKS: Attack[] = [
     failed:
       "A low threshold, no timelock, and signers who could be persuaded to sign transactions that would be held and used later.",
     overwatch:
-      "Every one of these conditions is onchain and graded: no timelock (−25), two or fewer signatures needed (−20), signers holding durable nonce accounts (−10 each), and together they mark a protocol red. Applying Overwatch's current rules to the reconstructed timeline raises a critical alert days before the drain. That is a backtest, not a live catch.",
+      "Every one of these conditions is onchain and graded: two keys to steal with no delay is an F on Overwatch's grid, which turns a protocol red, and signers holding durable nonce accounts are flagged. Applying Overwatch's current rules to the reconstructed timeline raises a critical alert days before the drain. That is a backtest, not a live catch.",
     sources: [
       ["Halborn", "https://www.halborn.com/blog/post/explained-the-drift-hack-april-2026"],
       [
