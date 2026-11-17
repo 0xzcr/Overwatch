@@ -38,8 +38,9 @@ export function Grade({
     <span className={`grade grade--${size} g-${g}`}>
       <b>{g}</b>
       <span className="mono">
-        {score ?? "—"}
-        {size !== "sm" && <> · {GRADE_WORD[g] ?? "Unscored"}</>}
+        {/* an unverified grade's score is only the onchain placeholder (C), so it is not shown */}
+        {g === "?" ? GRADE_WORD["?"] : (score ?? "—")}
+        {size !== "sm" && g !== "?" && <> · {GRADE_WORD[g] ?? "Unscored"}</>}
       </span>
     </span>
   );

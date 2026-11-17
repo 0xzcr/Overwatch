@@ -1,6 +1,6 @@
 import "server-only";
 import { listProtocols, listEvents, scoreHistory } from "@overwatch/db";
-import type { ControlSnapshot, Deduction, ProtocolConfig } from "@overwatch/core";
+import type { CapabilityGrade, ControlSnapshot, Deduction, ProtocolConfig } from "@overwatch/core";
 import { flagNames, isRed, AUTHORITY_LABEL } from "@overwatch/core";
 
 export interface ProtocolView {
@@ -21,6 +21,11 @@ export interface ProtocolView {
   flagNames: string[];
   red: boolean;
   breakdown: Deduction[];
+  /** how each control was graded (keys to steal, delay, grade): what sets the grade */
+  capabilities: CapabilityGrade[];
+  /** the ruleset that produced the grade */
+  ruleset: string | null;
+  visibility: string;
   computedAt: string | null;
   snapshot: ControlSnapshot | null;
   snapshotAt: string | null;
@@ -33,8 +38,9 @@ export interface ProtocolView {
   controlled: boolean;
 }
 
-export async function getProtocols(): Promise<ProtocolView[]> {
-  const rows = await listProtocols();
+/** Public protocols, plus the private watches of `ownerAccountId` when given. */
+export async function getProtocols(ownerAccountId?: number | null): Promise<ProtocolView[]> {
+  const rows = await listProtocols({ ownerAccountId });
   return rows.map((r) => {
     const snap = r.snapshot as ControlSnapshot | null;
     const flags = r.score ? BigInt(r.score.flags) : 0n;
@@ -62,6 +68,9 @@ export async function getProtocols(): Promise<ProtocolView[]> {
       flagNames: flagNames(flags),
       red: isRed(flags),
       breakdown: (r.score?.breakdown as Deduction[]) ?? [],
+      capabilities: (r.score?.capabilities as CapabilityGrade[] | undefined) ?? [],
+      ruleset: r.score?.ruleset ?? null,
+      visibility: r.visibility,
       computedAt: r.score?.computed_at ? new Date(r.score.computed_at).toISOString() : null,
       snapshot: snap,
       snapshotAt: r.snapshotAt ? new Date(r.snapshotAt).toISOString() : null,
@@ -77,8 +86,8 @@ export async function getProtocols(): Promise<ProtocolView[]> {
   });
 }
 
-export async function getProtocol(slug: string) {
-  return (await getProtocols()).find((p) => p.slug === slug) ?? null;
+export async function getProtocol(slug: string, ownerAccountId?: number | null) {
+  return (await getProtocols(ownerAccountId)).find((p) => p.slug === slug) ?? null;
 }
 
 export type EventView = Awaited<ReturnType<typeof getEvents>>[number];

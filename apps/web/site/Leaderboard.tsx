@@ -11,17 +11,9 @@ import {
   type SortingState,
 } from "@tanstack/react-table";
 import type { ProtoCard } from "./data";
-import { GRADE_WORD } from "@/lib/format";
+import { GRADE_WORD, ago } from "@/lib/format";
 
 const h = createColumnHelper<ProtoCard>();
-
-const ago = (iso: string | null) => {
-  if (!iso) return "—";
-  const s = (Date.now() - Date.parse(iso)) / 1000;
-  if (s < 3600) return `${Math.max(1, Math.round(s / 60))}m ago`;
-  if (s < 86400) return `${Math.round(s / 3600)}h ago`;
-  return `${Math.round(s / 86400)}d ago`;
-};
 
 function Th({ label, tip }: { label: string; tip?: string }) {
   if (!tip) return <>{label}</>;
@@ -78,7 +70,10 @@ export function Leaderboard({ rows }: { rows: ProtoCard[] }) {
           <span className={`grade grade--sm g-${c.row.original.grade}`}>
             <b>{c.row.original.grade}</b>
             <span className="mono">
-              {c.getValue() ?? "—"} · {GRADE_WORD[c.row.original.grade] ?? "Unscored"}
+              {/* an unverified grade's score is only the onchain placeholder, so it is not shown */}
+              {c.row.original.grade === "?"
+                ? GRADE_WORD["?"]
+                : `${c.getValue() ?? "—"} · ${GRADE_WORD[c.row.original.grade] ?? "Unscored"}`}
             </span>
           </span>
         ),

@@ -20,6 +20,17 @@ export interface ProtoCard {
   tvl: string;
   flags: string[];
   breakdown: { points: number; reason: string }[];
+  /** per-control grades from the ruleset; empty for the offline snapshot */
+  capabilities: {
+    capability: string;
+    label: string;
+    grade: string | null;
+    keys: number | null;
+    delaySec: number | null;
+    provisional: boolean;
+    red: boolean;
+    reasons: string[];
+  }[];
   nonceSigners: number;
   controlled: boolean;
   verified: boolean;
@@ -31,13 +42,15 @@ export interface ProtoCard {
 export const SNAPSHOT_LABEL = "mainnet snapshot · Oct 11 2026";
 
 const usd = (n: number | null | undefined) =>
-  n == null
+  !n // null, or 0 for a protocol that holds no deposits (an aggregator)
     ? "—"
     : n >= 1e9
       ? `$${(n / 1e9).toFixed(2)}B`
       : n >= 1e6
         ? `$${(n / 1e6).toFixed(1)}M`
-        : `$${Math.round(n).toLocaleString("en-US")}`;
+        : n >= 1e3
+          ? `$${(n / 1e3).toFixed(1)}K`
+          : `$${Math.round(n)}`;
 
 const AUTH: Record<string, string> = {
   SQUADS_V4_VAULT: "Squads v4 multisig",
@@ -106,6 +119,7 @@ function fallbackCards(): ProtoCard[] {
       tvl: "—",
       flags,
       breakdown: [],
+      capabilities: [],
       nonceSigners: 0,
       controlled: false,
       verified: !unmapped,
@@ -136,6 +150,7 @@ function fromView(p: ProtocolView): ProtoCard {
     tvl: usd(p.tvlUsd),
     flags: p.flagNames,
     breakdown: p.breakdown.map((d) => ({ points: d.points, reason: d.reason })),
+    capabilities: p.capabilities,
     nonceSigners: p.nonceSigners,
     controlled: p.controlled,
     verified: p.verified,

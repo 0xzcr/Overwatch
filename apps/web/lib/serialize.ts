@@ -22,7 +22,18 @@ export const protocolSummary = (p: ProtocolView) => ({
   red: p.red,
   flags: p.flags,
   flagNames: p.flagNames,
+  // `points` is always 0 since ruleset v4 (grid grading); kept so existing integrations do not break
   breakdown: p.breakdown.map((d) => ({ key: d.key, points: d.points, reason: d.reason })),
+  ruleset: p.ruleset,
+  capabilities: p.capabilities.map((c) => ({
+    capability: c.capability,
+    label: c.label,
+    grade: c.grade,
+    keys: c.keys,
+    delaySec: c.delaySec,
+    provisional: c.provisional,
+    red: c.red,
+  })),
   computedAt: p.computedAt,
   lastChange: p.lastChange,
   authorityKind: p.authorityKind,

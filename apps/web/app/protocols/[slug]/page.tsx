@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { SITE_URL } from "@/site/content"; // SEO component
+import { REPO_URL, SITE_URL } from "@/site/content"; // SEO component
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AUTHORITY_LABEL, fmtDuration, findVaultIndex, isOnCurve, mintRisks } from "@overwatch/core";
@@ -352,32 +352,64 @@ export default async function Detail({ params }: { params: Promise<{ slug: strin
 
         <div className="detail__side">
           <div>
-            <SectionHead title="Score breakdown" />
+            <SectionHead title="What sets the grade" />
             <div className="breakdown">
-              <div className="breakdown__row">
-                <span>Start</span>
-                <span className="mono">100</span>
-              </div>
-              {p.breakdown.map((b, i) => (
-                <div key={i} className="breakdown__row">
-                  <span>{b.reason}</span>
-                  <span className="mono bad">−{b.points}</span>
-                </div>
-              ))}
-              {!p.breakdown.length && (
+              {p.capabilities
+                .filter((c) => c.grade !== null)
+                .map((c, i) => (
+                  <div key={i} className="breakdown__row">
+                    <span>
+                      {c.label}
+                      <span className="dim mono">
+                        {" "}
+                        · {c.keys === null ? "no one" : `${c.keys} key${c.keys === 1 ? "" : "s"}`} ·{" "}
+                        {c.delaySec ? `${fmtDuration(c.delaySec)} delay` : "no delay"}
+                        {c.provisional ? " · provisional" : ""}
+                      </span>
+                    </span>
+                    <span className={`mono${c.red ? " bad" : ""}`}>{c.grade}</span>
+                  </div>
+                ))}
+              {p.capabilities
+                .filter((c) => c.grade === null)
+                .map((c, i) => (
+                  <div key={`t${i}`} className="breakdown__row dim">
+                    <span>
+                      {c.label}
+                      {/* why it has no grade: unread, one-way, not callable, or a trust assumption */}
+                      {!c.provisional && c.reasons[0] && <span className="mono"> · {c.reasons[0]}</span>}
+                    </span>
+                    <span className="mono">{c.provisional ? "unverified" : "not graded"}</span>
+                  </div>
+                ))}
+              {p.breakdown
+                .filter((b) => !b.reason.includes(" → "))
+                .map((b, i) => (
+                  <div key={`n${i}`} className="breakdown__row dim">
+                    <span>{b.reason}</span>
+                  </div>
+                ))}
+              {!p.capabilities.length && (
                 <div className="breakdown__row dim">
                   {live
-                    ? "No deductions."
-                    : "Itemised deductions need the live database. This grade is from the snapshot."}
+                    ? "Grading in progress."
+                    : "The per-control breakdown needs the live database. This grade is from the snapshot."}
                 </div>
               )}
               <div className="breakdown__row breakdown__total">
-                <span className="label">Score</span>
-                <span className="mono">
-                  {p.score ?? "—"} · {p.grade}
-                </span>
+                <span className="label">Grade (worst control)</span>
+                <span className="mono">{p.grade === "?" ? "unverified" : p.grade}</span>
               </div>
             </div>
+            {p.grade === "?" && (
+              <p className="page-note">
+                Part of how {p.name} is controlled runs through a program Overwatch cannot read yet, so no letter is
+                published rather than a guess. Run this protocol?{" "}
+                <a href={`${REPO_URL}/issues/new?title=${encodeURIComponent(`Governance for ${p.slug}`)}`}>
+                  Show us your governance →
+                </a>
+              </p>
+            )}
             <p className="page-note">
               Flags: <span className="mono">{p.flags.join(", ") || "none"}</span>.{" "}
               <Link href="/docs#scoring">How grades work →</Link>
