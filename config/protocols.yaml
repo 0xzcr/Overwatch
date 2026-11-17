@@ -9,8 +9,21 @@
   website: https://kamino.finance
   docs_sources: [https://github.com/Kamino-Finance/klend, https://docs.kamino.finance]
   programs: [{ id: KLend2g3cP87fffoy8q1mQqGKjrxjC8boSyAYavgmjD, label: Lending program }]
-  multisigs: [{ address: 6hhBGCtmg7tPWUSgp3LG6X2rsmYWAc4tNsA6G4CnfQbM, vault_index: 0, role: upgrade_authority, discovered_via: tx-history }]
-  collateral_mints: [EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v, 2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo, J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn]
+  multisigs:
+    - {
+        address: 6hhBGCtmg7tPWUSgp3LG6X2rsmYWAc4tNsA6G4CnfQbM,
+        vault_index: 0,
+        role: upgrade_authority,
+        discovered_via: tx-history,
+      }
+    # owner of the main lending market (lendingMarketOwner), found from the owner's transaction history 2026-11-17
+    - { address: 7idEEVRidWrahZJhxXMqniDbV6ESj7ZjyLrigcMcEt6H, vault_index: 0, role: admin, discovered_via: tx-history }
+  collateral_mints:
+    [
+      EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v,
+      2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo,
+      J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn,
+    ]
 - slug: jupiter-lend
   name: Jupiter Lend
   category: lending
@@ -18,7 +31,15 @@
   website: https://jup.ag/lend
   docs_sources: [https://dev.jup.ag/docs/lend-api]
   programs: [{ id: jup3YeL8QhtSx1e253b2FDvsMNC87fDrgQZivbrndc9, label: Lending program }]
-  multisigs: [{ address: J3mJ3wz6xkVUk3T8qHnuAYNxsRH3ixHsryYNZAU2vG8P, vault_index: 0, role: upgrade_authority, discovered_via: tx-history }]
+  multisigs:
+    [
+      {
+        address: J3mJ3wz6xkVUk3T8qHnuAYNxsRH3ixHsryYNZAU2vG8P,
+        vault_index: 0,
+        role: upgrade_authority,
+        discovered_via: tx-history,
+      },
+    ]
   collateral_mints: [EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v]
 - slug: marginfi
   name: marginfi
@@ -27,7 +48,15 @@
   website: https://marginfi.com
   docs_sources: [https://docs.marginfi.com/mfi-v2]
   programs: [{ id: MFv2hWf31Z9kbCa1snEPYctwafyhdvnV7FZnsebVacA, label: marginfi v2 program }]
-  multisigs: [{ address: 7FCPipJWVbPbdHymVt1gJYwKciakkJz5GahdQySemvHk, vault_index: 0, role: upgrade_authority, discovered_via: tx-history }]
+  multisigs:
+    [
+      {
+        address: 7FCPipJWVbPbdHymVt1gJYwKciakkJz5GahdQySemvHk,
+        vault_index: 0,
+        role: upgrade_authority,
+        discovered_via: tx-history,
+      },
+    ]
   collateral_mints: [EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v]
 - slug: save
   name: Save (formerly Solend)
@@ -44,8 +73,26 @@
   website: https://drift.trade
   docs_sources: [https://docs.drift.trade, https://github.com/drift-labs/protocol-v2]
   programs: [{ id: dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH, label: Drift v2 program }]
-  multisigs: [{ address: 7qipzLR9j1JcvdxE1XJEFgvoyFmgBpgw5hMdHBMPcJtM, vault_index: 0, role: upgrade_authority, discovered_via: tx-history }]
+  multisigs:
+    [
+      {
+        address: 7qipzLR9j1JcvdxE1XJEFgvoyFmgBpgw5hMdHBMPcJtM,
+        vault_index: 0,
+        role: upgrade_authority,
+        discovered_via: tx-history,
+      },
+    ]
   collateral_mints: [EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v]
+  # Since the April 2026 incident every Anchor instruction is commented out (protocol-v2 commit e32903b, #2174) and
+  # mainnet calls fail with InstructionFallbackNotFound (checked 2026-11-17), so state.admin has nothing to call.
+  # Pinned to the deploy it was checked on: any redeploy voids it and the admin path is graded again.
+  admin_limits:
+    - {
+        adapter: "drift:State",
+        share: 0,
+        source: "no admin instructions in the deployed program since protocol-v2 #2174",
+        deploy_slot: 429731225,
+      }
   notes: Case study. Current (post-incident) council is watched live; the March 2026 sequence is in /case/drift.
 - slug: jupiter-perps
   name: Jupiter Perps
@@ -54,7 +101,15 @@
   website: https://jup.ag/perps
   docs_sources: [https://dev.jup.ag/docs/perp-api]
   programs: [{ id: PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu, label: Perpetuals program }]
-  multisigs: [{ address: AxkJ8oH5aDu4ZRWfsujPtxdb6Vhq4gDehpoReBgrUUSm, vault_index: 0, role: upgrade_authority, discovered_via: tx-history }]
+  multisigs:
+    [
+      {
+        address: AxkJ8oH5aDu4ZRWfsujPtxdb6Vhq4gDehpoReBgrUUSm,
+        vault_index: 0,
+        role: upgrade_authority,
+        discovered_via: tx-history,
+      },
+    ]
 - slug: raydium
   name: Raydium
   category: dex
@@ -64,7 +119,17 @@
   programs:
     - { id: 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8, label: AMM v4 }
     - { id: CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK, label: CLMM }
-  multisigs: [{ address: tr8rgazUrZzgdkfc6Q622nVJHMMzh29trdBE2uBHb4u, vault_index: 0, role: upgrade_authority, discovered_via: tx-history }]
+    - { id: CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C, label: CPMM }
+    - { id: LanMV9sAd7wArD4vJFi2qDdfnVhFxYSUg6eADduJ3uj, label: LaunchLab }
+  multisigs:
+    [
+      {
+        address: tr8rgazUrZzgdkfc6Q622nVJHMMzh29trdBE2uBHb4u,
+        vault_index: 0,
+        role: upgrade_authority,
+        discovered_via: tx-history,
+      },
+    ]
 - slug: orca
   name: Orca Whirlpools
   category: dex
@@ -72,7 +137,15 @@
   website: https://orca.so
   docs_sources: [https://dev.orca.so, https://github.com/orca-so/whirlpools]
   programs: [{ id: whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc, label: Whirlpools program }]
-  multisigs: [{ address: BQsDWkL417U4tVE2sDnPks469pKdm6YzFgKH77doiEjF, vault_index: 0, role: upgrade_authority, discovered_via: tx-history }]
+  multisigs:
+    [
+      {
+        address: BQsDWkL417U4tVE2sDnPks469pKdm6YzFgKH77doiEjF,
+        vault_index: 0,
+        role: upgrade_authority,
+        discovered_via: tx-history,
+      },
+    ]
 - slug: meteora-dlmm
   name: Meteora DLMM
   category: dex
@@ -89,14 +162,25 @@
   programs:
     - { id: pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA, label: PumpSwap AMM }
     - { id: 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P, label: Pump bonding curve }
-  multisigs: [{ address: 2yMoQqQrtbhq3nQ3wFoQQawWS65qcqUXcwHEYha4rshW, vault_index: 0, role: upgrade_authority, discovered_via: tx-history }]
+  multisigs:
+    [
+      {
+        address: 2yMoQqQrtbhq3nQ3wFoQQawWS65qcqUXcwHEYha4rshW,
+        vault_index: 0,
+        role: upgrade_authority,
+        discovered_via: tx-history,
+      },
+    ]
 - slug: jupiter-aggregator
   name: Jupiter Aggregator
   category: aggregator
   defillama_slug: jupiter-aggregator
   website: https://jup.ag
   docs_sources: [https://dev.jup.ag/docs/swap-api]
-  programs: [{ id: JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4, label: Aggregator v6 }]
+  programs:
+    - { id: JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4, label: Aggregator v6 }
+    - { id: DCA265Vj8a9CEuX1eb1LWRnDT7uK6q1xMipnNyatn23M, label: DCA }
+    - { id: j1o2qRpjcyUwEvwtcfhEQefh773ZgjxcVRry7LDqg5X, label: Limit orders v2 }
 - slug: marinade
   name: Marinade
   category: lst
@@ -127,3 +211,214 @@
   website: https://www.openbook-solana.com
   docs_sources: [https://github.com/openbook-dex/openbook-v2]
   programs: [{ id: opnb2LAfJYbRMAHHvqjCwQxanZn7ReEHp1k81EohpZb, label: OpenBook v2 program }]
+# ── Added 2026-11-17. Upgrade authorities read on mainnet; multisigs found from the authority's transaction
+# ── history and re-derived (Squads v4 vault PDA). Programs with an unmapped authority are graded provisional.
+- slug: kamino-vaults
+  name: Kamino Vaults
+  category: yield
+  website: https://kamino.finance
+  docs_sources: [https://docs.kamino.finance]
+  programs: [{ id: KvauGMspG5k6rtzrqqn7WNn3oZdyKqLKwK2XWQ8FLjd, label: Vaults program }]
+  multisigs:
+    [
+      {
+        address: 6hhBGCtmg7tPWUSgp3LG6X2rsmYWAc4tNsA6G4CnfQbM,
+        vault_index: 0,
+        role: upgrade_authority,
+        discovered_via: tx-history,
+      },
+    ]
+- slug: kamino-liquidity
+  name: Kamino Liquidity
+  category: yield
+  website: https://kamino.finance
+  docs_sources: [https://docs.kamino.finance]
+  programs: [{ id: 6LtLpnUFNByNXLyCoK9wA2MykKAmQNZKBdY8s47dehDc, label: Liquidity vaults program }]
+  multisigs:
+    [
+      {
+        address: E7994UpSGhSpbpnuSepPXHBuMy3eRvHJL36DjTs1kb2b,
+        vault_index: 0,
+        role: upgrade_authority,
+        discovered_via: tx-history,
+      },
+    ]
+- slug: flash-trade
+  name: Flash Trade
+  category: perps
+  defillama_slug: flash-trade
+  website: https://flash.trade
+  docs_sources: [https://docs.flash.trade]
+  programs: [{ id: FLASH6Lo6h3iasJKWDs2F8TkW2UKf3s15C8PMGuVfgBn, label: Perpetuals program }]
+  multisigs:
+    [
+      {
+        address: Gb33UeQNnQ4XDuobtGq9M6PVKRVfoH77p8d6JXsgqyXF,
+        vault_index: 0,
+        role: upgrade_authority,
+        discovered_via: tx-history,
+      },
+    ]
+- slug: solayer
+  name: Solayer
+  category: restaking
+  defillama_slug: solayer
+  website: https://solayer.org
+  docs_sources: [https://docs.solayer.org]
+  programs: [{ id: sSo1iU21jBrU9VaJ8PJib1MtorefUV4fzC9GURa2KNn, label: Restaking program }]
+  multisigs:
+    [
+      {
+        address: 5AQ3c2nC3Ua5Ms1QP4XpcfaU2Q31C8VhiUJGX3c8zFqp,
+        vault_index: 0,
+        role: upgrade_authority,
+        discovered_via: tx-history,
+      },
+    ]
+- slug: switchboard
+  name: Switchboard
+  category: oracle
+  website: https://switchboard.xyz
+  docs_sources: [https://docs.switchboard.xyz]
+  programs: [{ id: SBondMDrcV3K4kxZR1HNVT7osZxAHVHgYXL5Ze1oMUv, label: On-demand oracle program }]
+  multisigs:
+    [
+      {
+        address: 93RQfY6VHRkqXBCEhMY5u92bCGp428DTzqZUEA2Hjr9h,
+        vault_index: 0,
+        role: upgrade_authority,
+        discovered_via: tx-history,
+      },
+    ]
+- slug: exponent
+  name: Exponent
+  category: yield
+  defillama_slug: exponent
+  website: https://exponent.finance
+  docs_sources: [https://docs.exponent.finance]
+  programs: [{ id: ExponentnaRg3CQbW6dqQNZKXp7gtZ9DGMp1cwC4HAS7, label: Exponent core }]
+  multisigs:
+    [
+      {
+        address: 51smH7pBDKJDgmVnVks3gMWaPQFfmQ5s4Fc223yHcjuH,
+        vault_index: 0,
+        role: upgrade_authority,
+        discovered_via: tx-history,
+      },
+    ]
+- slug: loopscale
+  name: Loopscale
+  category: lending
+  defillama_slug: loopscale
+  website: https://loopscale.com
+  docs_sources: [https://docs.loopscale.com]
+  programs: [{ id: 1oopBoJG58DgkUVKkEzKgyG9dvRmpgeEm1AVjoHkF78, label: Loopscale program }]
+  multisigs:
+    [
+      {
+        address: C4awuufiuL8DNT5wMDP27HneKKqbgynrsbCa4XYGSuPk,
+        vault_index: 0,
+        role: upgrade_authority,
+        discovered_via: tx-history,
+      },
+    ]
+- slug: drift-vaults
+  name: Drift Vaults
+  category: yield
+  website: https://app.drift.trade/vaults
+  docs_sources: [https://github.com/drift-labs/drift-vaults]
+  programs: [{ id: vAuLTsyrvSfZRuRB3XgvkPwNGgYSs9YRYymVebLKoxR, label: Vaults program }]
+  multisigs:
+    [
+      {
+        address: BBC5gSPh71YB2eUXdCqvkmL6kj6YDkUQJpX997qXUt2Q,
+        vault_index: 0,
+        role: upgrade_authority,
+        discovered_via: tx-history,
+      },
+    ]
+- slug: lulo
+  name: Lulo
+  category: yield
+  defillama_slug: lulo
+  website: https://lulo.fi
+  docs_sources: [https://docs.lulo.fi]
+  programs: [{ id: FL3X2pRsQ9zHENpZSKDRREtccwJuei8yg9fwDu9UN69Q, label: Lulo program }]
+  multisigs:
+    [
+      {
+        address: 8Sr4rQJL2aQT3EL97mbrk1T9VMw4pCS2mxMPp2QBzHQq,
+        vault_index: 0,
+        role: upgrade_authority,
+        discovered_via: tx-history,
+      },
+    ]
+- slug: lifinity
+  name: Lifinity v2
+  category: dex
+  website: https://lifinity.io
+  docs_sources: [https://docs.lifinity.io]
+  programs: [{ id: 2wT8Yq49kHgDzXuPxZSaeLaH1qbmGXtEyPy64bL7aD3c, label: AMM v2 }]
+- slug: meteora-damm
+  name: Meteora DAMM
+  category: dex
+  website: https://meteora.ag
+  docs_sources: [https://docs.meteora.ag]
+  programs:
+    - { id: cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG, label: DAMM v2 }
+    - { id: Eo7WjKq67rjJQSZxS6z3YkapzY3eMj6Xy8X5EQVn5UaB, label: DAMM v1 }
+    - { id: 24Uqj9JCLxUeoC3hGfh5W3s9FM9uCHDS2SG3LYwBpyTi, label: Dynamic vaults }
+- slug: phoenix
+  name: Phoenix
+  category: dex
+  website: https://phoenix.trade
+  docs_sources: [https://github.com/Ellipsis-Labs/phoenix-v1]
+  programs: [{ id: PhoeNiXZ8ByJGLkxNfZRnkUfjvmuYqLR89jjFHGqdXY, label: Order book program }]
+- slug: zeta
+  name: Zeta Markets
+  category: perps
+  website: https://zeta.markets
+  docs_sources: [https://docs.zeta.markets]
+  programs: [{ id: ZETAxsqBRek56DhiGXrn75yj2NHU3aYUnxvHXpkf3aD, label: Zeta program }]
+- slug: parcl
+  name: Parcl
+  category: perps
+  website: https://parcl.co
+  docs_sources: [https://docs.parcl.co]
+  programs: [{ id: 3parcLrT7WnXAcyPfkCz49oofuuf2guUKkjuFkAhZW8Y, label: Parcl v3 }]
+- slug: adrena
+  name: Adrena
+  category: perps
+  website: https://adrena.xyz
+  docs_sources: [https://docs.adrena.xyz]
+  programs: [{ id: 13gDzEXCdocbj8iAiqrScGo47NiSuYENGsRqi3SEAwet, label: Adrena program }]
+- slug: jito-restaking
+  name: Jito Restaking
+  category: restaking
+  website: https://www.jito.network/restaking
+  docs_sources: [https://docs.restaking.jito.network]
+  programs:
+    - { id: RestkWeAVL8fRGgzhfeoqFhsqKRchg6aa1XrcH96z4Q, label: Restaking program }
+    - { id: Vau1t6sLNxnzB7ZDsef8TLbPLfyZMYXH8WTNqUdm9g8, label: Vault program }
+- slug: pyth
+  name: Pyth (Solana receiver)
+  category: oracle
+  website: https://pyth.network
+  docs_sources: [https://docs.pyth.network/price-feeds/contract-addresses/solana]
+  programs:
+    - { id: rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ, label: Pyth Solana receiver }
+    - { id: pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT, label: Pyth push oracle }
+- slug: wormhole
+  name: Wormhole
+  category: bridge
+  website: https://wormhole.com
+  docs_sources: [https://wormhole.com/docs/products/reference/contract-addresses]
+  programs:
+    - { id: worm2ZoG2kUd4vFXhvjh93UUH596ayRfgQ2MgjNMTth, label: Core bridge }
+    - { id: wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb, label: Token bridge }
+- slug: squads
+  name: Squads v4
+  category: infra
+  website: https://squads.so
+  docs_sources: [https://docs.squads.so]
+  programs: [{ id: SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf, label: Squads v4 multisig program }]
