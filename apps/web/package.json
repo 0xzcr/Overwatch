@@ -23,6 +23,7 @@
     "@overwatch/db": "workspace:*",
     "@overwatch/sdk": "workspace:*",
     "@overwatch/solana": "workspace:*",
+    "@solana/web3.js": "^1.99.0",
     "@sqds/multisig": "^2.1.4",
     "@tanstack/react-table": "^8.21.3",
     "@vercel/analytics": "^2.0.1",

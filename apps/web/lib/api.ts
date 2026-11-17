@@ -1,7 +1,8 @@
 import "server-only";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
-import { db, apiKeys, eq, dsql } from "@overwatch/db";
+import { db, apiKeys, accounts, eq, dsql } from "@overwatch/db";
+import { effectivePlan } from "@overwatch/core";
 
 export const API_VERSION = "2026-10-11";
 const ANON_PER_MINUTE = 30;
@@ -60,14 +61,17 @@ export async function guard(req: NextRequest): Promise<NextResponse | { tier: st
     bucket = `ip:${clientIp(req)}`,
     tier = "anonymous";
   if (key) {
-    const [row] = await db()
-      .select()
+    const [hitRow] = await db()
+      .select({ key: apiKeys, account: accounts })
       .from(apiKeys)
+      .leftJoin(accounts, eq(apiKeys.accountId, accounts.id))
       .where(eq(apiKeys.keyHash, createHash("sha256").update(key).digest("hex")));
-    if (!row || row.revokedAt) return err(401, "invalid api key");
-    limit = row.rateLimit;
-    bucket = `key:${row.id}`;
-    tier = row.tier;
+    if (!hitRow || hitRow.key.revokedAt) return err(401, "invalid api key");
+    // an account's key follows its plan as it is now, so a lapsed plan drops to free limits at once
+    const plan = hitRow.account ? effectivePlan(hitRow.account) : null;
+    limit = plan ? plan.apiPerMinute : hitRow.key.rateLimit;
+    bucket = `key:${hitRow.key.id}`;
+    tier = plan ? plan.id : hitRow.key.tier;
   }
   const h = await hit(bucket, limit, 60);
   return h.ok ? { tier } : tooMany(limit, "minute", h.retryAfter);
