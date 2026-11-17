@@ -9,7 +9,10 @@ export interface AlertInput {
   txSignature: string | null;
   network: string;
   labels: string[];
+  /** where the alert links to; private watches live on the owner's dashboard, not a public page */
+  path?: string;
 }
+const pageOf = (a: AlertInput) => a.path ?? `/protocols/${a.slug}`;
 const EMOJI: Record<string, string> = { CRITICAL: "🚨", HIGH: "🟠", MEDIUM: "🟡", LOW: "⚪", INFO: "🟢" };
 const ACTION: Record<string, string> = {
   CRITICAL: "Consider withdrawing until the team explains this change. Check their official channels.",
@@ -29,14 +32,14 @@ export function telegramHtml(a: AlertInput, site: string): string {
     `<b>${esc(a.title)}</b>`,
     esc(a.explanation),
     `\n<i>What you can do:</i> ${ACTION[a.severity] ?? ""}`,
-    `${tx}<a href="${site}/protocols/${a.slug}">Protocol page</a>`,
+    `${tx}<a href="${site}${pageOf(a)}">Protocol page</a>`,
   ].join("\n");
 }
 
 export function emailHtml(a: AlertInput, site: string): { subject: string; html: string } {
   return {
     subject: `${EMOJI[a.severity] ?? ""} ${a.severity}: ${a.title}`,
-    html: `<div style="font-family:system-ui;max-width:560px"><p style="color:#888;font-size:12px;letter-spacing:.2em">OVERWATCH · ${a.severity}</p><h2>${esc(a.title)}</h2><p>${esc(a.explanation)}</p><p><b>What you can do:</b> ${ACTION[a.severity] ?? ""}</p><p><a href="${site}/protocols/${a.slug}">Open ${esc(a.name)} on Overwatch</a></p></div>`,
+    html: `<div style="font-family:system-ui;max-width:560px"><p style="color:#888;font-size:12px;letter-spacing:.2em">OVERWATCH · ${a.severity}</p><h2>${esc(a.title)}</h2><p>${esc(a.explanation)}</p><p><b>What you can do:</b> ${ACTION[a.severity] ?? ""}</p><p><a href="${site}${pageOf(a)}">Open ${esc(a.name)} on Overwatch</a></p></div>`,
   };
 }
 

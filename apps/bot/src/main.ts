@@ -2,7 +2,7 @@
 import "@overwatch/db/env";
 import { Bot } from "grammy";
 import { z } from "zod";
-import { db, protocols, subscriptions, eq, and, listEvents, getProtocol } from "@overwatch/db";
+import { db, protocols, subscriptions, telegramLinks, eq, and, listEvents, getProtocol } from "@overwatch/db";
 import { fmtDuration, type ControlSnapshot, type ProtocolConfig } from "@overwatch/core";
 import { mainnetRpc } from "@overwatch/solana";
 import { deliverPending } from "./deliver";
@@ -26,14 +26,41 @@ async function subFor(chatId: string) {
   return n!;
 }
 async function bySlug(slug: string) {
-  const [p] = await db().select().from(protocols).where(eq(protocols.slug, slug.toLowerCase()));
+  const [p] = await db()
+    .select()
+    .from(protocols)
+    .where(and(eq(protocols.slug, slug.toLowerCase()), eq(protocols.visibility, "public")));
   return p ?? null;
+}
+
+/**
+ * Connects this chat to a website account (the dashboard's "Connect Telegram" link sends /start link_<code>).
+ * The chat's existing subscription, if any, becomes the account's, so alerts are never sent twice.
+ */
+async function linkChat(chatId: string, code: string): Promise<string> {
+  const [link] = await db().delete(telegramLinks).where(eq(telegramLinks.code, code)).returning();
+  if (!link || link.expiresAt < new Date()) return "That link has expired. Open a new one from your dashboard.";
+  const [existing] = await db()
+    .select()
+    .from(subscriptions)
+    .where(and(eq(subscriptions.channel, "telegram"), eq(subscriptions.target, chatId)));
+  if (existing)
+    await db()
+      .update(subscriptions)
+      .set({ accountId: link.accountId, protocolIds: null, active: true })
+      .where(eq(subscriptions.id, existing.id));
+  else
+    await db()
+      .insert(subscriptions)
+      .values({ channel: "telegram", target: chatId, minSeverity: "HIGH", accountId: link.accountId });
+  return "Connected to your Overwatch account. Alerts for your watchlist will arrive here; change them on the dashboard.";
 }
 
 if (bot) {
   bot.command("start", async (ctx) => {
-    const s = await subFor(String(ctx.chat.id));
     const payload = ctx.match?.trim();
+    if (payload?.startsWith("link_")) return ctx.reply(await linkChat(String(ctx.chat.id), payload.slice(5)));
+    const s = await subFor(String(ctx.chat.id));
     let extra = "";
     if (payload?.startsWith("watch_")) {
       const p = await bySlug(payload.slice(6));
@@ -54,6 +81,7 @@ if (bot) {
     const p = await bySlug(ctx.match.trim());
     if (!p) return ctx.reply(`Unknown protocol. See ${SITE}/protocols for slugs.`);
     const s = await subFor(String(ctx.chat.id));
+    if (s.accountId) return ctx.reply(`This chat follows your account's watchlist. Change it at ${SITE}/app.`);
     await db()
       .update(subscriptions)
       .set({ protocolIds: [...new Set([...(s.protocolIds ?? []), p.id])], active: true })
@@ -63,6 +91,7 @@ if (bot) {
   bot.command("unwatch", async (ctx) => {
     const p = await bySlug(ctx.match.trim());
     const s = await subFor(String(ctx.chat.id));
+    if (s.accountId) return ctx.reply(`This chat follows your account's watchlist. Change it at ${SITE}/app.`);
     if (!p) return ctx.reply("Unknown protocol.");
     await db()
       .update(subscriptions)
@@ -72,7 +101,7 @@ if (bot) {
   });
   bot.command("list", async (ctx) => {
     const s = await subFor(String(ctx.chat.id));
-    const all = await db().select().from(protocols);
+    const all = await db().select().from(protocols).where(eq(protocols.visibility, "public"));
     const mine = all.filter((p) => (s.protocolIds ?? []).includes(p.id));
     await ctx.reply(
       mine.length
@@ -132,7 +161,7 @@ if (bot) {
         .filter((t) => t.account.data.parsed.info.tokenAmount.uiAmount > 0)
         .map((t) => t.account.data.parsed.info.mint),
     );
-    const all = await db().select().from(protocols);
+    const all = await db().select().from(protocols).where(eq(protocols.visibility, "public"));
     const lst = all.filter(
       (p) => p.category === "lst" && (p.config as ProtocolConfig).collateral_mints.some((m) => held.has(m)),
     );

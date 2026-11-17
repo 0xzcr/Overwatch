@@ -26,6 +26,7 @@ export async function deliverPending(bot: Bot | null, log: (m: string) => void) 
       txSignature: ev.txSignature,
       network: p.network,
       labels: (ev.labels as string[]) ?? [],
+      path: p.visibility === "private" ? `/app/watch/${p.slug}` : undefined,
     };
     try {
       if (sub.channel === "telegram") {
