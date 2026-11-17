@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ReactFlow, Background, Controls, type Node, type Edge } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import type { GEdge, GNode } from "@/lib/graph";
@@ -16,6 +16,11 @@ const KIND_LABEL: Record<GNode["kind"], string> = {
   admin: "Admin",
 };
 
+// Spacing of the graph grid, in pixels. A node is 172 wide and about 70 tall.
+const COLUMN_GAP = 190;
+const LAYER_GAP = 130;
+const ROW_GAP = 90;
+
 /** "Who can move your money": Program → upgrade authority -> multisig -> signers (-> nonce accounts), plus collateral and oracles. */
 export function ControlGraph({
   nodes,
@@ -29,17 +34,47 @@ export function ControlGraph({
   summary?: boolean;
 }) {
   const [sel, setSel] = useState<GNode | null>(null);
+  // A layer wider than this wraps onto more rows, so a 15-signer multisig stays readable. Phones get narrower rows.
+  const [perRow, setPerRow] = useState(8);
+  useEffect(() => {
+    if (window.innerWidth < 700) setPerRow(2);
+  }, []);
   const { rfNodes, rfEdges } = useMemo(() => {
     const counts = new Map<number, number>();
     const perLayer = new Map<number, number>();
     nodes.forEach((n) => perLayer.set(n.layer, (perLayer.get(n.layer) ?? 0) + 1));
+
+    // Where each layer starts: a wrapped layer pushes the layers below it down.
+    const layerTop = new Map<number, number>();
+    let nextTop = 0;
+    const layersInOrder = [...perLayer.keys()].sort((a, b) => a - b);
+    layersInOrder.forEach((layer) => {
+      layerTop.set(layer, nextTop);
+      const rows = Math.ceil((perLayer.get(layer) ?? 1) / perRow);
+      nextTop += LAYER_GAP + (rows - 1) * ROW_GAP;
+    });
+
+    // A program → multisig edge runs straight through layer 1, so collateral and oracles there sit to the right of
+    // every program instead of on top of that line.
+    const layerOf = new Map(nodes.map((n) => [n.id, n.layer]));
+    const edgeCrossesLayer1 = edges.some((e) => layerOf.get(e.from) === 0 && layerOf.get(e.to) === 2);
+    const programCount = perLayer.get(0) ?? 1;
+
     const rfNodes: Node[] = nodes.map((n) => {
       const i = counts.get(n.layer) ?? 0;
       counts.set(n.layer, i + 1);
       const total = perLayer.get(n.layer) ?? 1;
+      const row = Math.floor(i / perRow);
+      const nodesInRow = Math.min(perRow, total - row * perRow);
+      const centred = ((i % perRow) - (nodesInRow - 1) / 2) * COLUMN_GAP;
+      const beside = ((programCount - 1) / 2 + 1 + i) * COLUMN_GAP;
+      const toTheSide = n.layer === 1 && edgeCrossesLayer1;
       return {
         id: n.id,
-        position: { x: (i - (total - 1) / 2) * 190, y: n.layer * 130 },
+        position: {
+          x: toTheSide ? beside : centred,
+          y: (layerTop.get(n.layer) ?? 0) + (toTheSide ? 0 : row * ROW_GAP),
+        },
         data: {
           label: (
             <div className="cg__node">
@@ -61,12 +96,13 @@ export function ControlGraph({
       className: e.danger ? "cg__edge is-danger" : "cg__edge",
     }));
     return { rfNodes, rfEdges };
-  }, [nodes, edges]);
+  }, [nodes, edges, perRow]);
 
   if (!nodes.length) return <p className="mono page-note">No snapshot yet.</p>;
   return (
     <div className="cg" data-lenis-prevent>
       <ReactFlow
+        key={perRow} // a new layout needs a fresh fit-to-view
         nodes={rfNodes}
         edges={rfEdges}
         fitView

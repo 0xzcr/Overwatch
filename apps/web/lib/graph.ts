@@ -1,4 +1,4 @@
-import type { ControlSnapshot } from "@overwatch/core";
+import { AUTHORITY_LABEL, type ControlSnapshot } from "@overwatch/core";
 
 export type GNodeKind =
   "program" | "authority" | "multisig" | "signer" | "nonce" | "config" | "mint" | "oracle" | "admin";
@@ -17,6 +17,13 @@ export interface GEdge {
   label?: string;
   danger?: boolean;
 }
+
+// Short names that fit a graph node; anything not listed uses the full label from core.
+const SHORT_AUTHORITY: Record<string, string> = {
+  SINGLE_KEY: "Single key",
+  OTHER_PROGRAM_PDA: "Program-owned (unmapped)",
+  REALMS_GOVERNANCE: "Realms DAO",
+};
 
 const s = (a: string) => `${a.slice(0, 4)}…${a.slice(-4)}`;
 
@@ -52,13 +59,19 @@ export function buildGraph(snap: ControlSnapshot | null): { nodes: GNode[]; edge
     }
     const ms = snap.multisigs.find((m) => m.address === p.multisig);
     if (ms) {
-      edges.push({ from: p.programId, to: ms.address, label: `upgrade via vault #${ms.vaultIndex}` });
+      // Several programs often share one multisig; a label on every edge makes them overlap, so only the first gets one.
+      const alreadyLabelled = edges.some((e) => e.to === ms.address && e.label);
+      edges.push({
+        from: p.programId,
+        to: ms.address,
+        label: alreadyLabelled ? undefined : `upgrade via vault #${ms.vaultIndex}`,
+      });
     } else {
       const single = p.authorityKind === "SINGLE_KEY";
       add({
         id: p.upgradeAuthority,
         kind: "authority",
-        label: single ? "Single key" : p.authorityKind.replaceAll("_", " ").toLowerCase(),
+        label: SHORT_AUTHORITY[p.authorityKind] ?? AUTHORITY_LABEL[p.authorityKind],
         sub: s(p.upgradeAuthority),
         danger: single,
         address: p.upgradeAuthority,

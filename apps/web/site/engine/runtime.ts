@@ -143,18 +143,7 @@ function createRuntime(): Runtime {
         return fmtSlot();
       }
     } catch {
-      /* fall through to the public RPC */
-    }
-    try {
-      const r = await fetch("https://api.mainnet-beta.solana.com", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getSlot" }),
-      });
-      const j = (await r.json()) as { result?: number };
-      if (j.result) slot = j.result;
-    } catch {
-      /* offline */
+      /* offline: the counter shows "offline" */
     }
     fmtSlot();
   }
