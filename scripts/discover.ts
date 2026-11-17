@@ -7,10 +7,12 @@ export async function discoverSquadsMultisig(
   authority: string,
   maxTx = 40,
 ): Promise<{ multisig: string; vaultIndex: number } | null> {
-  const sigs = await rpc.getSignaturesForAddress(authority, { limit: maxTx });
+  // Recent history is enough to find the multisig, and asking for slot 0 needs a full archive node.
+  const recent = (await rpc.getSlot()) - 2_000_000;
+  const sigs = await rpc.getSignaturesForAddress(authority, { limit: maxTx }, recent);
   const seen = new Set<string>();
   for (const s of sigs) {
-    const tx = await rpc.getTransaction(s.signature).catch(() => null);
+    const tx = await rpc.getTransaction(s.signature, s.slot).catch(() => null);
     if (!tx) continue;
     const keys = [
       ...tx.transaction.message.accountKeys,
