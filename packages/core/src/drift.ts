@@ -48,7 +48,8 @@ const base = (
   date: string,
   ms: MultisigFacts,
   nonces: NonceFacts[],
-  adminKey = "drift-admin (council vault)",
+  // the admin was the council's vault, so it resolves to the council multisig itself
+  adminKey = ms.address,
 ): ControlSnapshot => ({
   protocol: "drift",
   slot: 0,

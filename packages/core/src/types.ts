@@ -123,7 +123,9 @@ export type EventType =
   | "COLLATERAL_RISKY_EXTENSION"
   | "ORACLE_DEPRECATED"
   | "ADMIN_PARAM_CHANGED"
-  | "MULTISIG_CONFIG_EXECUTED";
+  | "MULTISIG_CONFIG_EXECUTED"
+  | "GRADE_LOWERED"
+  | "GRADE_RAISED";
 
 export interface OverwatchEvent {
   protocol: string;

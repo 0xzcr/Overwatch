@@ -3,55 +3,52 @@ import { scoreSnapshot, FLAG, RED_MASK, isRed, gradeFor, flagNames, diffSnapshot
 import type { OverwatchEvent } from "../src";
 import { ms, snap } from "./helpers";
 
-describe("scoring", () => {
-  it("strong setup scores A", () => {
+describe("scoring (v4 grid ruleset)", () => {
+  const p = () => snap().programs[0]!;
+  const seven = ["A", "B", "C", "D", "E", "F", "G"].map((key) => ({ key, permissions: 7 }));
+
+  it("3-of-5 with 48h is C (three keys, 24h-7d), not red", () => {
     const r = scoreSnapshot(snap(), []);
-    expect(r.score).toBe(100);
+    expect(r.grade).toBe("C");
+    expect(r.score).toBe(65);
+    expect(r.red).toBe(false);
+    expect(r.ruleset).toBe("v4.1");
+    expect(r.capabilities[0]).toMatchObject({ capability: "CODE", grade: "C", keys: 3, delaySec: 172800 });
+  });
+  it("4-of-7 with 30 days is A", () => {
+    const r = scoreSnapshot(snap({ multisigs: [ms({ threshold: 4, members: seven, timeLockSec: 30 * 86400 })] }), []);
     expect(r.grade).toBe("A");
     expect(r.flags).toBe(0n);
-    expect(r.red).toBe(false);
   });
-  it("single key → −60, red", () => {
-    const p = snap().programs[0]!;
-    const r = scoreSnapshot(snap({ programs: [{ ...p, authorityKind: "SINGLE_KEY" }], multisigs: [] }), []);
-    expect(r.score).toBe(40);
-    expect(r.grade).toBe("D");
-    expect(r.flags & FLAG.SINGLE_KEY).toBeTruthy();
-    expect(r.red).toBe(true);
-  });
-  it("2-of-5, no timelock, controlled → F and red via NO_TIMELOCK_LOW_THRESHOLD", () => {
-    const r = scoreSnapshot(snap({ multisigs: [ms({ threshold: 2, timeLockSec: 0, configAuthority: "K" })] }), []);
-    expect(r.score).toBe(100 - 20 - 20 - 25);
+  it("single key with no delay is F and red, through both red bits", () => {
+    const r = scoreSnapshot(snap({ programs: [{ ...p(), authorityKind: "SINGLE_KEY" }], multisigs: [] }), []);
     expect(r.grade).toBe("F");
-    expect(flagNames(r.flags)).toEqual([
-      "NO_TIMELOCK",
-      "LOW_THRESHOLD",
-      "CONTROLLED_MULTISIG",
-      "NO_TIMELOCK_LOW_THRESHOLD",
-    ]);
     expect(r.red).toBe(true);
+    expect(flagNames(r.flags)).toEqual(expect.arrayContaining(["SINGLE_KEY", "DRAIN_PATH_F"]));
+    expect(isRed(r.flags)).toBe(true);
   });
-  it("no timelock alone is not red", () => {
-    const r = scoreSnapshot(snap({ multisigs: [ms({ timeLockSec: 0 })] }), []);
-    expect(r.flags & FLAG.NO_TIMELOCK).toBeTruthy();
+  it("2-of-5 with no delay is F and red; a config authority is a flag on top", () => {
+    const r = scoreSnapshot(snap({ multisigs: [ms({ threshold: 2, timeLockSec: 0, configAuthority: null })] }), []);
+    expect(r.grade).toBe("F");
+    expect(r.red).toBe(true);
+    expect(flagNames(r.flags)).toEqual(expect.arrayContaining(["NO_TIMELOCK", "LOW_THRESHOLD", "DRAIN_PATH_F"]));
+  });
+  it("no timelock with four keys is C, not red", () => {
+    const r = scoreSnapshot(snap({ multisigs: [ms({ threshold: 4, timeLockSec: 0 })] }), []);
+    expect(r.grade).toBe("C");
     expect(r.red).toBe(false);
-    expect(r.score).toBe(75);
+    expect(isRed(r.flags)).toBe(false);
   });
-  it("timelock tiers and ratio", () => {
-    expect(scoreSnapshot(snap({ multisigs: [ms({ timeLockSec: 3600 })] }), []).score).toBe(85);
-    expect(scoreSnapshot(snap({ multisigs: [ms({ timeLockSec: 90000 })] }), []).score).toBe(95);
-    const seven = ["A", "B", "C", "D", "E", "F", "G"].map((key) => ({ key, permissions: 7 }));
-    expect(scoreSnapshot(snap({ multisigs: [ms({ members: seven })] }), []).breakdown.map((d) => d.key)).toEqual([
-      "threshold_ratio",
-    ]);
+  it("a longer timelock never lowers the grade", () => {
+    const order = ["F", "D", "C", "B", "A"];
+    const grades = [0, 3600, 86400, 7 * 86400, 30 * 86400].map(
+      (t) => scoreSnapshot(snap({ multisigs: [ms({ threshold: 4, members: seven, timeLockSec: t })] }), []).grade,
+    );
+    grades.slice(1).forEach((g, i) => expect(order.indexOf(g)).toBeGreaterThanOrEqual(order.indexOf(grades[i]!)));
   });
-  it("nonce signers capped at −30 and red", () => {
+  it("nonce signers, pending weakening, recent events, collateral and oracle are flags: grade unchanged", () => {
+    const base = scoreSnapshot(snap(), []);
     const nonces = ["A", "B", "C", "D"].map((a, i) => ({ address: `N${i}`, authority: a, blockhash: "h" }));
-    const r = scoreSnapshot(snap({ nonces }), []);
-    expect(r.breakdown.find((d) => d.key === "signer_nonce")!.points).toBe(30);
-    expect(r.red).toBe(true);
-  });
-  it("pending weakening, recent events, collateral & oracle, unverified", () => {
     const pending = [
       {
         transactionIndex: 2,
@@ -82,59 +79,94 @@ describe("scoring", () => {
     };
     const ors = [1, 2].map((i) => ({ address: `O${i}`, owner: "x", kind: "SWITCHBOARD" as const, deprecated: true }));
     const r = scoreSnapshot(
-      snap({ multisigs: [ms({ pending })], mints: [mint], oracles: ors, verified: false }),
+      snap({ multisigs: [ms({ pending })], nonces, mints: [mint], oracles: ors }),
       ev,
       "2026-10-01T00:00:00Z",
     );
-    expect(r.score).toBe(100 - 10 - 10 - 20);
+    expect(r.grade).toBe(base.grade);
+    expect(r.red).toBe(false);
     for (const f of [
+      "SIGNER_NONCE",
       "PENDING_WEAKENING",
       "RECENT_WEAKENING",
       "RECENT_CRITICAL",
       "RISKY_COLLATERAL",
       "DEPRECATED_ORACLE",
-      "UNVERIFIED",
     ])
       expect(flagNames(r.flags)).toContain(f);
-    expect(r.red).toBe(true);
+    expect(isRed(r.flags)).toBe(false);
     expect(scoreSnapshot(snap(), ev, "2026-12-01T00:00:00Z").flags).toBe(0n); // event older than 30 days
   });
-  it("immutable programs skip upgrade-multisig deductions; clamps at 0", () => {
-    const p = snap().programs[0]!;
+  it("immutable programs are A when nothing else is expected", () => {
     const r = scoreSnapshot(
-      snap({
-        programs: [{ ...p, upgradeAuthority: null, authorityKind: "IMMUTABLE" }],
-        multisigs: [ms({ threshold: 1, timeLockSec: 0 })],
-      }),
+      snap({ programs: [{ ...p(), upgradeAuthority: null, authorityKind: "IMMUTABLE" }], multisigs: [] }),
       [],
     );
-    expect(r.score).toBe(100);
-    const worst = scoreSnapshot(
-      snap({
-        programs: [{ ...p, authorityKind: "SINGLE_KEY" }],
-        multisigs: [ms({ threshold: 1, timeLockSec: 0, configAuthority: "K" })],
-        nonces: ["A", "B", "C"].map((a) => ({ address: a + "n", authority: a, blockhash: "" })),
-      }),
-      [],
-    );
-    expect(worst.score).toBe(0);
-    expect(worst.grade).toBe("F");
+    expect(r.grade).toBe("A");
+    expect(r.score).toBe(95);
   });
-  it("unmapped control deducts 15 and flags UNVERIFIED", () => {
-    const p = snap().programs[0]!;
+  it("an immutable lending program with unmapped risk settings is B with PARTIAL_COVERAGE", () => {
     const r = scoreSnapshot(
-      snap({ programs: [{ ...p, authorityKind: "OTHER_PROGRAM_PDA", multisig: null }], multisigs: [] }),
+      snap({ programs: [{ ...p(), upgradeAuthority: null, authorityKind: "IMMUTABLE" }], multisigs: [] }),
+      [],
+      undefined,
+      { category: "lending" },
+    );
+    expect(r.grade).toBe("B");
+    expect(r.uncovered).toEqual(["RISK"]);
+    expect(flagNames(r.flags)).toContain("PARTIAL_COVERAGE");
+  });
+  it("unmapped control is unverified (no letter), published as C onchain, flags UNVERIFIED", () => {
+    const r = scoreSnapshot(
+      snap({ programs: [{ ...p(), authorityKind: "OTHER_PROGRAM_PDA", multisig: null }], multisigs: [] }),
       [],
     );
-    expect(r.score).toBe(85);
-    expect(flagNames(r.flags)).toEqual(["UNVERIFIED"]);
-    expect(scoreSnapshot(snap({ multisigs: [] }), []).breakdown[0]!.key).toBe("unmapped_control");
+    expect(r.grade).toBe("?");
+    expect(r.score).toBe(65);
+    expect(r.capabilities[0]).toMatchObject({ grade: null, provisional: true });
+    expect(r.provisional).toBe(true);
+    expect(flagNames(r.flags)).toContain("UNVERIFIED");
+    expect(r.breakdown.map((d) => d.key)).toContain("provisional");
   });
-  it("RED_MASK is exactly bits 0, 4, 10, 11 and grades map", () => {
+  it("a single-key admin makes a lending protocol red even with a strong upgrade multisig", () => {
+    const admin = {
+      account: "S",
+      adapter: "x:State",
+      admin: "H7PiGqqUaanBovwKgEtreJbKmQe6dbq6VTrw6guy7ZgL",
+      params: {},
+      oracles: [],
+      mints: [],
+    };
+    const r = scoreSnapshot(snap({ admin: [admin] }), [], undefined, { category: "lending" });
+    expect(r.grade).toBe("F");
+    expect(r.red).toBe(true);
+    expect(r.capabilities.find((c) => c.capability === "RISK")).toMatchObject({ grade: "F", keys: 1 });
+  });
+  it("an admin with no instructions in the deployed code is not graded, until the program is redeployed", () => {
+    const admin = {
+      account: "S",
+      adapter: "x:State",
+      admin: "H7PiGqqUaanBovwKgEtreJbKmQe6dbq6VTrw6guy7ZgL",
+      params: {},
+      oracles: [],
+      mints: [],
+    };
+    const dead = { adapter: "x:State", share: 0, source: "no admin instructions", deploy_slot: 100 };
+    const now = scoreSnapshot(snap({ admin: [admin] }), [], undefined, { category: "lending", adminLimits: [dead] });
+    expect(now.red).toBe(false);
+    expect(now.capabilities.find((c) => c.capability === "RISK")).toMatchObject({ grade: null });
+    // a redeploy (new deploy slot) voids the check: the one-key admin path is back, F and red
+    const redeployed = snap({ admin: [admin], programs: [{ ...p(), lastDeploySlot: 200 }] });
+    const after = scoreSnapshot(redeployed, [], undefined, { category: "lending", adminLimits: [dead] });
+    expect(after.grade).toBe("F");
+    expect(after.red).toBe(true);
+  });
+  it("RED_MASK keeps bits 0, 4, 10, 11 for the deployed registry, and grades map", () => {
     expect(RED_MASK).toBe((1n << 0n) | (1n << 4n) | (1n << 10n) | (1n << 11n));
     expect(isRed(FLAG.NO_TIMELOCK)).toBe(false);
-    expect(isRed(FLAG.NO_TIMELOCK_LOW_THRESHOLD)).toBe(true);
-    expect([85, 70, 55, 40, 39].map(gradeFor)).toEqual(["A", "B", "C", "D", "F"]);
+    expect(isRed(FLAG.DRAIN_PATH_F)).toBe(true);
+    expect(isRed(FLAG.SIGNER_NONCE)).toBe(false);
+    expect([95, 80, 65, 50, 20].map(gradeFor)).toEqual(["A", "B", "C", "D", "F"]);
   });
 });
 
