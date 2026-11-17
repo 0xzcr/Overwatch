@@ -7,7 +7,8 @@ import type { ScoreResult } from "@overwatch/core";
 import { log } from "./log";
 import { connection, publisherKey, send } from "./devnet";
 
-const GRADE_IDX = { A: 0, B: 1, C: 2, D: 3, F: 4 } as const;
+// the deployed registry has no unverified grade: "?" goes out as C, with the UNVERIFIED flag set in `flags`
+const GRADE_IDX = { A: 0, B: 1, C: 2, D: 3, F: 4, "?": 2 } as const;
 type Row = typeof protocols.$inferSelect;
 const lastPush = new Map<string, { at: number; score: number; flags: bigint }>();
 const pending = new Map<string, NodeJS.Timeout>();
