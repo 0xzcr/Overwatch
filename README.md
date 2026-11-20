@@ -31,7 +31,7 @@ assessment or a backtest, not a live catch.
 
 |                      |                                                                                                                                                  |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Control map**      | Grades (A–F, 0–100) for the top Solana protocols. Every point lost is an itemised deduction with a reason.                                       |
+| **Control map**      | Grades (A–F) for the top Solana protocols: keys to steal × usable delay, worst drain power wins, each with its reasons.                                     |
 | **Live events**      | Every change to who controls a watched protocol, within a minute of landing onchain, plus 180 days of history rebuilt from chain data.           |
 | **Alerts**           | Telegram bot, HMAC-signed webhooks with retries, and email. Each alert says what changed, why it matters and what to do.                         |
 | **API**              | Versioned REST (`/api/v1`), a Server-Sent Events stream and a small TypeScript SDK.                                                              |

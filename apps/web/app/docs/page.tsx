@@ -473,8 +473,8 @@ export default function Docs() {
               where it cannot see.
             </li>
             <li>
-              Some programs are controlled by addresses we have not attributed yet. They are labelled
-              &quot;unmapped&quot; and lose 15 points, because unknown is not safe.
+              Some programs are controlled by addresses we cannot read yet. They show as Unverified, with no letter,
+              unless what we can read is already a D or F.
             </li>
             <li>Realms DAO and Squads v3 governance parameters are not decoded yet (Squads v3 has limited support).</li>
             <li>
